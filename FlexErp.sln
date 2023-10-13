@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{07DF58B8-1B88-4524-AB4C-5FE21F7A9CF5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{50FA5C5D-DBD6-4BF1-AF7F-60507CB8D07C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{F2BC6E4C-F550-4BA1-B137-D79972E8377A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F2BC6E4C-F550-4BA1-B137-D79972E8377A} = {07DF58B8-1B88-4524-AB4C-5FE21F7A9CF5}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F2BC6E4C-F550-4BA1-B137-D79972E8377A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2BC6E4C-F550-4BA1-B137-D79972E8377A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2BC6E4C-F550-4BA1-B137-D79972E8377A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2BC6E4C-F550-4BA1-B137-D79972E8377A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
