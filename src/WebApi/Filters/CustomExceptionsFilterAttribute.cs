@@ -10,8 +10,23 @@ public class CustomExceptionsFilterAttribute : ExceptionFilterAttribute
     {
         context.ExceptionHandled = context switch
         {
-            { Exception: ExistException } => HandleExistException(context)
+            { Exception: ExistException } => HandleExistException(context),
+            { Exception: NotFoundException } => HandleNotFoundException(context)
         };
+    }
+
+    private bool HandleNotFoundException(ExceptionContext context)
+    {
+        var details = new ProblemDetails
+        {
+            Status = StatusCodes.Status404NotFound,
+            Title = context.Exception.Message,
+            Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4"
+        };
+
+        context.Result = new ObjectResult(details) { StatusCode = StatusCodes.Status404NotFound };
+
+        return true;
     }
 
     private bool HandleExistException(ExceptionContext context)
@@ -19,7 +34,7 @@ public class CustomExceptionsFilterAttribute : ExceptionFilterAttribute
         var details = new ProblemDetails
         {
             Status = StatusCodes.Status409Conflict,
-            Title = "Request was canceled.",
+            Title = context.Exception.Message,
             Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.8"
         };
 

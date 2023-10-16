@@ -11,4 +11,11 @@ public class ProductCategoryController : ApiControllerBase
         var result = await Mediator.Send(command);
         return Ok(result);
     }
+
+    [HttpPut]
+    public async Task<IActionResult> Update([FromBody] UpdateProductCategoryCommand command)
+    {
+        var result = await Mediator.Send(command);
+        return Ok(result);
+    }
 }
