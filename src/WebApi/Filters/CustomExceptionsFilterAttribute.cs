@@ -11,8 +11,23 @@ public class CustomExceptionsFilterAttribute : ExceptionFilterAttribute
         context.ExceptionHandled = context switch
         {
             { Exception: ExistException } => HandleExistException(context),
-            { Exception: NotFoundException } => HandleNotFoundException(context)
+            { Exception: NotFoundException } => HandleNotFoundException(context),
+            _ => HandleUnhandledException(context)
         };
+    }
+
+    private bool HandleUnhandledException(ExceptionContext context)
+    {
+        var details = new ProblemDetails
+        {
+            Status = StatusCodes.Status500InternalServerError,
+            Title = context.Exception.Message,
+            Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4"
+        };
+
+        context.Result = new ObjectResult(details) { StatusCode = StatusCodes.Status500InternalServerError };
+
+        return true;
     }
 
     private bool HandleNotFoundException(ExceptionContext context)

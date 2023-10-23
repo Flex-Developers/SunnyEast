@@ -1,9 +1,7 @@
-using Application.Common.Exceptions;
 using Application.Common.Interfaces.Contexts;
 using Application.Contract.ProductCategory.Commands;
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.ProductCategory.Commands;
 
@@ -20,11 +18,9 @@ public class CreateProductCategoryCommandHandler : IRequestHandler<CreateProduct
 
     public async Task<Guid> Handle(CreateProductCategoryCommand request, CancellationToken cancellationToken)
     {
-        if (await _context.ProductCategories.FirstOrDefaultAsync(s => s.Name.ToLower() == request.Name.ToLower(),
-                cancellationToken) != null)
-            throw new ExistException();
-
         var productCategory = _mapper.Map<CreateProductCategoryCommand, Domain.Entities.ProductCategory>(request);
+
+        productCategory.Name = productCategory.Name.Trim();
 
         await _context.ProductCategories.AddAsync(productCategory, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);

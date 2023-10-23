@@ -20,6 +20,8 @@ public class UpdateProductCategoryCommandHandler : IRequestHandler<UpdateProduct
         var old = await _context.ProductCategories.FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
         if (old == null) throw new NotFoundException($"ProductCategory with id {request.Id} is not found");
 
+        request.Name = request.Name.Trim();
+
         if (await _context.ProductCategories.FirstOrDefaultAsync(c => c.Name.ToLower() == request.Name.ToLower(),
                 cancellationToken) != null)
             throw new ExistException($"ProductCategory with name {request.Name} is already exists");
