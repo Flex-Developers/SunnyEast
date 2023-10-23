@@ -15,16 +15,8 @@
         <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1"/>
         <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0"/>
         <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.8.0"/>
+        <PackageReference Include="MediatR" Version="11.1.0"/>
+        <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.12"/>
     </ItemGroup>
-
-    <ItemGroup>
-        <Reference Include="MediatR">
-            <HintPath>..\..\..\..\.nuget\packages\mediatr\11.0.0\lib\netstandard2.1\MediatR.dll</HintPath>
-        </Reference>
-        <Reference Include="MediatR.Extensions.Microsoft.DependencyInjection">
-            <HintPath>..\..\..\..\.nuget\packages\mediatr.extensions.microsoft.dependencyinjection\11.1.0\lib\netstandard2.1\MediatR.Extensions.Microsoft.DependencyInjection.dll</HintPath>
-        </Reference>
-    </ItemGroup>
-
 </Project>
