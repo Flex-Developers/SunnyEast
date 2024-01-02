@@ -7,23 +7,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.ProductCategory.Queries;
 
-public class GetProductCategoriesQueryHandler : IRequestHandler<GetProductCategoriesQuery,
-    List<ProductCategoryResponse>>
+public class GetProductCategoriesQueryHandler(IApplicationDbContext context, IMapper mapper)
+    : IRequestHandler<GetProductCategoriesQuery,
+        List<ProductCategoryResponse>>
 {
-    private readonly IApplicationDbContext _context;
-    private readonly IMapper _mapper;
-
-    public GetProductCategoriesQueryHandler(IApplicationDbContext context, IMapper mapper)
-    {
-        _context = context;
-        _mapper = mapper;
-    }
-
     public async Task<List<ProductCategoryResponse>> Handle(GetProductCategoriesQuery request,
         CancellationToken cancellationToken)
     {
-        var productCategoriesResponse = await _context.ProductCategories
-            .Select(s => _mapper.Map<ProductCategoryResponse>(s))
+        var productCategoriesResponse = await context.ProductCategories
+            .Select(s => mapper.Map<ProductCategoryResponse>(s))
             .ToListAsync(cancellationToken);
         return productCategoriesResponse;
     }

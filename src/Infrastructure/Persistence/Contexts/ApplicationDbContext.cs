@@ -4,11 +4,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Contexts;
 #nullable disable
-public class ApplicationDbContext : DbContext, IApplicationDbContext
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+    : DbContext(options), IApplicationDbContext
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
-    {
-    }
-
     public DbSet<ProductCategory> ProductCategories { get; set; }
 }

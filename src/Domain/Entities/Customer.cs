@@ -1,12 +1,13 @@
 namespace Domain.Entities;
 
-public class Customer
+public class Customer : BaseEntity
 {
-    public Guid Id { get; set; }
-    public string Name { get; set; }
-    public string LName { get; set; }
-    public string Patronymic { get; set; }
-    public string Phone { get; set; }
+    public required string Slug { get; set; }
+    public required string Name { get; set; }
+
+    // public string LName { get; set; }
+    // public string Patronymic { get; set; }
+    public string? Phone { get; set; }
 
     public int ProductsPurchasedCount { get; set; }
     public decimal ProductsPurchasedSum { get; set; }

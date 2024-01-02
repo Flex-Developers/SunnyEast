@@ -17,7 +17,7 @@ public class CreateProductCategoryCommandTests : BaseTest
         var createResponse = await HttpClient.PostAsJsonAsync("/api/ProductCategory", createCommand);
         createResponse.EnsureSuccessStatusCode();
         var category =
-            await FindFirstOrDefaultAsync<Domain.Entities.ProductCategory>(s => s.Name == createCommand.Name);
+            await FirstOrDefaultAsync<Domain.Entities.ProductCategory>(s => s.Name == createCommand.Name);
 
         Assert.That(category, Is.Not.Null);
     }

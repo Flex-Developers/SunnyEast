@@ -60,7 +60,7 @@ public class BaseTest
         return await context.Set<TEntity>().CountAsync();
     }
 
-    public static async Task<TEntity?> FindFirstOrDefaultAsync<TEntity>(Expression<Func<TEntity, bool>> criteria)
+    public static async Task<TEntity?> FirstOrDefaultAsync<TEntity>(Expression<Func<TEntity, bool>> criteria)
         where TEntity : class
     {
         using var scope = _scopeFactory.CreateScope();

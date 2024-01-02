@@ -19,7 +19,7 @@ public class UpdateProductCategoryCommandTests : BaseTest
         var updateResponse = await HttpClient.PutAsJsonAsync("/api/ProductCategory", updateCommand);
         updateResponse.EnsureSuccessStatusCode();
         var category =
-            await FindFirstOrDefaultAsync<Domain.Entities.ProductCategory>(s => s.Name == updateCommand.Name);
+            await FirstOrDefaultAsync<Domain.Entities.ProductCategory>(s => s.Name == updateCommand.Name);
 
         Assert.That(category, Is.Not.Null);
     }
@@ -55,7 +55,7 @@ public class UpdateProductCategoryCommandTests : BaseTest
 
     private static async Task<Guid> GetCategoryIdAsync(string name)
     {
-        var category = await FindFirstOrDefaultAsync<Domain.Entities.ProductCategory>(s => s.Name == name);
+        var category = await FirstOrDefaultAsync<Domain.Entities.ProductCategory>(s => s.Name == name);
         if (category != null) return category.Id;
 
         category = new Domain.Entities.ProductCategory

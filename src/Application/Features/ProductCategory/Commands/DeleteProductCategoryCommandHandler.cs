@@ -6,26 +6,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.ProductCategory.Commands;
 
-public class DeleteProductCategoryCommandHandler : IRequestHandler<DeleteProductCategoryCommand>
+public class DeleteProductCategoryCommandHandler(IApplicationDbContext context)
+    : IRequestHandler<DeleteProductCategoryCommand>
 {
-    private readonly IApplicationDbContext _context;
-
-    public DeleteProductCategoryCommandHandler(IApplicationDbContext context)
-    {
-        _context = context;
-    }
-
     public async Task<Unit> Handle(DeleteProductCategoryCommand request, CancellationToken cancellationToken)
     {
         var category =
-            await _context.ProductCategories.FirstOrDefaultAsync(s => s.Id == request.Id,
+            await context.ProductCategories.FirstOrDefaultAsync(s => s.Id == request.Id,
                 cancellationToken);
         if (category == null) throw new NotFoundException("Product Category not found");
 
-        _context.ProductCategories.Remove(category);
+        context.ProductCategories.Remove(category);
 
-        await _context.SaveChangesAsync(cancellationToken);
-
+        await context.SaveChangesAsync(cancellationToken);
         return Unit.Value;
     }
 }

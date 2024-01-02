@@ -1,8 +1,9 @@
 namespace Domain.Entities;
 
-#nullable disable
-public class ProductCategory
+public class ProductCategory : BaseEntity
 {
-    public Guid Id { get; set; }
-    public string Name { get; set; }
+    public required string Name { get; set; }
+
+    public Guid? BaseProductCategoryId { get; set; }
+    public ProductCategory? BaseProductCategory { get; set; }
 }
