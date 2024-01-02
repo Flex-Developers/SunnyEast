@@ -42,7 +42,7 @@ public class CreateCustomerTests : BaseTest
         {
             Name = "name",
             Phone = "phone",
-            Slug = "slug"
+            Slug = "name"
         };
         await AddAsync(customer);
 

@@ -7,5 +7,6 @@ namespace Infrastructure.Persistence.Contexts;
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
     : DbContext(options), IApplicationDbContext
 {
+    public DbSet<Customer> Customers { get; set; }
     public DbSet<ProductCategory> ProductCategories { get; set; }
 }

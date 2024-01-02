@@ -26,7 +26,7 @@ public class DeleteProductCategoryCommandTests : BaseTest
         Assert.That(deleteResponse.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
     }
 
-    private static async Task<Guid> GetCategoryIdAsync()
+    private async Task<Guid> GetCategoryIdAsync()
     {
         var category = await FirstOrDefaultAsync<Domain.Entities.ProductCategory>(s => s.Name == " FasdfdsfasdF ");
         if (category != null) return category.Id;

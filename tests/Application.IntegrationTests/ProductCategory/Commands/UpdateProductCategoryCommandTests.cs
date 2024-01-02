@@ -53,7 +53,7 @@ public class UpdateProductCategoryCommandTests : BaseTest
         Assert.That(updateResponse.StatusCode, Is.EqualTo(HttpStatusCode.Conflict));
     }
 
-    private static async Task<Guid> GetCategoryIdAsync(string name)
+    private async Task<Guid> GetCategoryIdAsync(string name)
     {
         var category = await FirstOrDefaultAsync<Domain.Entities.ProductCategory>(s => s.Name == name);
         if (category != null) return category.Id;
