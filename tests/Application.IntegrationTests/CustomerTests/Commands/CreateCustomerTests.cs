@@ -1,10 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
 using Application.Contract.Customer.Commands;
+using Domain.Entities;
 
-namespace Application.IntegrationTests.Customer.Commands;
+namespace Application.IntegrationTests.CustomerTests.Commands;
 
-public class CreateCustomerTests : BaseTest
+public class CreateCustomerTests : CustomerTestsBase
 {
     [Test]
     public async Task CreateCustomer_ValidRequest_ReturnsOk()
@@ -12,7 +13,8 @@ public class CreateCustomerTests : BaseTest
         var command = new CreateCustomerCommand
         {
             Name = "this is a name",
-            Phone = "923331113"
+            Phone = "923331113",
+            LevelSlug = SampleLevel.Slug
         };
         var response = await HttpClient.PostAsJsonAsync("/api/Customer", command);
         response.EnsureSuccessStatusCode();
@@ -24,13 +26,14 @@ public class CreateCustomerTests : BaseTest
         var command = new CreateCustomerCommand
         {
             Name = "this is a name12",
-            Phone = "92333111213"
+            Phone = "92333111213",
+            LevelSlug = SampleLevel.Slug
         };
 
         await HttpClient.PostAsJsonAsync("/api/Customer", command);
 
         var customer =
-            await FirstOrDefaultAsync<Domain.Entities.Customer>(s =>
+            await FirstOrDefaultAsync<Customer>(s =>
                 s.Name == command.Name && s.Phone == command.Phone);
         Assert.That(customer, Is.Not.Null);
     }
@@ -38,18 +41,21 @@ public class CreateCustomerTests : BaseTest
     [Test]
     public async Task CreateCustomer_DuplicateName_ReturnsConflictResult()
     {
-        var customer = new Domain.Entities.Customer
+        var customer = new Customer
         {
             Name = "name",
             Phone = "phone",
-            Slug = "name"
+            Slug = "name",
+            LevelId = SampleLevel.Id,
+            LevelSlug = SampleLevel.Slug
         };
         await AddAsync(customer);
 
         var command = new CreateCustomerCommand
         {
             Name = customer.Name,
-            Phone = customer.Phone
+            Phone = customer.Phone,
+            LevelSlug = SampleLevel.Slug
         };
         var response = await HttpClient.PostAsJsonAsync("/api/Customer", command);
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Conflict));

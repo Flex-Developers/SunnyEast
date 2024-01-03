@@ -1,10 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
 using Application.Contract.Customer.Commands;
+using Domain.Entities;
 
-namespace Application.IntegrationTests.Customer.Commands;
+namespace Application.IntegrationTests.CustomerTests.Commands;
 
-public class UpdateCustomerTests : BaseTest
+public class UpdateCustomerTests : CustomerTestsBase
 {
     [Test]
     public async Task UpdateCustomer_ValidRequest_ReturnsOk()
@@ -31,7 +32,7 @@ public class UpdateCustomerTests : BaseTest
             Name = "newDlDs1"
         };
         await HttpClient.PutAsJsonAsync($"/api/customer/{command.Slug}", command);
-        var updatedCustomer = await FirstOrDefaultAsync<Domain.Entities.Customer>(s => s.Name == command.Name);
+        var updatedCustomer = await FirstOrDefaultAsync<Customer>(s => s.Name == command.Name);
         Assert.That(updatedCustomer, Is.Not.Null);
     }
 
@@ -50,16 +51,18 @@ public class UpdateCustomerTests : BaseTest
     }
 
 
-    private async Task<Domain.Entities.Customer> CreateOverrideSampleCustomer()
+    private async Task<Customer> CreateOverrideSampleCustomer()
     {
-        var customer = new Domain.Entities.Customer
+        var customer = new Customer
         {
             IsDeleted = false,
             Name = "this is a sample name",
             Phone = "this is a phone",
-            Slug = "this_is_a_slug"
+            Slug = "this_is_a_slug",
+            LevelId = SampleLevel.Id,
+            LevelSlug = SampleLevel.Slug
         };
-        var old = await FirstOrDefaultAsync<Domain.Entities.Customer>(s => s.Name == customer.Name);
+        var old = await FirstOrDefaultAsync<Customer>(s => s.Name == customer.Name);
         if (old != null) await RemoveAsync(old);
 
         await AddAsync(customer);

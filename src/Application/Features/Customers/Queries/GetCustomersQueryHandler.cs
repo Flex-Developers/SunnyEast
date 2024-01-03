@@ -19,6 +19,8 @@ public class GetCustomersQueryHandler(IApplicationDbContext context, IMapper map
 
         if (request.Phone != null) query = query.Where(s => s.Phone != null && s.Phone.Contains(request.Phone));
 
+        if (request.LevelSlug != null) query = query.Where(s => s.LevelSlug.Contains(request.LevelSlug));
+
         return (await query.ToArrayAsync(cancellationToken))
             .Select(mapper.Map<CustomerResponse>).ToList();
     }

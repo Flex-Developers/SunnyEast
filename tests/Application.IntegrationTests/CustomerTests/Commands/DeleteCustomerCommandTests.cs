@@ -1,8 +1,9 @@
 using System.Net;
+using Domain.Entities;
 
-namespace Application.IntegrationTests.Customer.Commands;
+namespace Application.IntegrationTests.CustomerTests.Commands;
 
-public class DeleteCustomerCommandTests : BaseTest
+public class DeleteCustomerCommandTests : CustomerTestsBase
 {
     [Test]
     public async Task DeleteCustomer_ValidRequest_ReturnsOk()
@@ -16,7 +17,7 @@ public class DeleteCustomerCommandTests : BaseTest
     {
         var slug = await GetCustomerAsync();
         await HttpClient.DeleteAsync($"api/Customer/{slug}");
-        var deletedCustomer = await FirstOrDefaultAsync<Domain.Entities.Customer>(s => s.Slug == slug);
+        var deletedCustomer = await FirstOrDefaultAsync<Customer>(s => s.Slug == slug);
         Assert.That(deletedCustomer, Is.EqualTo(null));
     }
 
@@ -30,10 +31,12 @@ public class DeleteCustomerCommandTests : BaseTest
 
     private async Task<string> GetCustomerAsync()
     {
-        var customer = new Domain.Entities.Customer
+        var customer = new Customer
         {
             Slug = "slug" + new Random().Next(1, 100),
-            Name = "name"
+            Name = "name",
+            LevelId = SampleLevel.Id,
+            LevelSlug = SampleLevel.Slug
         };
         await AddAsync(customer);
         return customer.Slug;

@@ -1,26 +1,26 @@
 using Application.Common.Exceptions;
 using Application.Common.Interfaces.Contexts;
-using Application.Contract.Customer.Commands;
+using Application.Contract.Level.Commands;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace Application.Features.Customers.Commands;
+namespace Application.Features.Levels.Commands;
 
-public class DeleteCustomerCommandHandler(IApplicationDbContext context)
+public class DeleteLevelCommandHandler(IApplicationDbContext context)
     : IRequestHandler<DeleteLevelCommand, Unit>
 {
     public async Task<Unit> Handle(DeleteLevelCommand request, CancellationToken cancellationToken)
     {
-        var customer = await context.Customers.FirstOrDefaultAsync(s => s.Slug == request.Slug,
+        var level = await context.Levels.FirstOrDefaultAsync(s => s.Slug == request.Slug,
             cancellationToken);
 
-        if (customer != null)
+        if (level != null)
         {
-            context.Customers.Remove(customer);
+            context.Levels.Remove(level);
             await context.SaveChangesAsync(cancellationToken);
             return Unit.Value;
         }
 
-        throw new NotFoundException($"customer with slug {request.Slug} not found");
+        throw new NotFoundException($"level with slug {request.Slug} not found");
     }
 }

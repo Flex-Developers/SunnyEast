@@ -15,9 +15,15 @@ public class CreateCustomerCommandHandler(IApplicationDbContext context, IMapper
     public async Task<string> Handle(CreateCustomerCommand request, CancellationToken cancellationToken)
     {
         var customer = mapper.Map<Customer>(request);
+
         customer.Slug = slugService.GenerateSlug(customer.Name);
         if (await context.Customers.AnyAsync(s => s.Slug == customer.Slug, cancellationToken))
             throw new ExistException($"Customer with name {customer.Name} and slug {customer.Slug} already exist");
+
+        var level = await context.Levels.FirstOrDefaultAsync(s => s.Slug == request.LevelSlug, cancellationToken);
+        if (level == null)
+            throw new NotFoundException($"Level with slug {request.LevelSlug} not found");
+        customer.LevelId = level.Id;
 
         await context.Customers.AddAsync(customer, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
