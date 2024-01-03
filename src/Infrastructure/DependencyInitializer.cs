@@ -1,5 +1,7 @@
 using Application.Common.Interfaces.Contexts;
+using Application.Common.Interfaces.Services;
 using Infrastructure.Persistence.Contexts;
+using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,5 +22,6 @@ public static class DependencyInitializer
         });
 
         services.AddScoped<IApplicationDbContext, ApplicationDbContext>();
+        services.AddScoped<ISlugService, SlugService>();
     }
 }

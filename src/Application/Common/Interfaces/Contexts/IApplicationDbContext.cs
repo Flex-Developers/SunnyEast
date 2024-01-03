@@ -5,6 +5,8 @@ namespace Application.Common.Interfaces.Contexts;
 
 public interface IApplicationDbContext
 {
+    public DbSet<Customer> Customers { get; set; }
     public DbSet<ProductCategory> ProductCategories { get; set; }
+    public DbSet<Level> Levels { get; set; }
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

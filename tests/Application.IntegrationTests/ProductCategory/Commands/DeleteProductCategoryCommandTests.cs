@@ -13,7 +13,7 @@ public class DeleteProductCategoryCommandTests : BaseTest
             await HttpClient.DeleteAsync($"/api/ProductCategory?id={categoryId}");
         deleteResponse.EnsureSuccessStatusCode();
         var category =
-            await FindFirstOrDefaultAsync<Domain.Entities.ProductCategory>(s => s.Id == categoryId);
+            await FirstOrDefaultAsync<Domain.Entities.ProductCategory>(s => s.Id == categoryId);
 
         Assert.That(category, Is.Null);
     }
@@ -26,9 +26,9 @@ public class DeleteProductCategoryCommandTests : BaseTest
         Assert.That(deleteResponse.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
     }
 
-    private static async Task<Guid> GetCategoryIdAsync()
+    private async Task<Guid> GetCategoryIdAsync()
     {
-        var category = await FindFirstOrDefaultAsync<Domain.Entities.ProductCategory>(s => s.Name == " FasdfdsfasdF ");
+        var category = await FirstOrDefaultAsync<Domain.Entities.ProductCategory>(s => s.Name == " FasdfdsfasdF ");
         if (category != null) return category.Id;
 
         category = new Domain.Entities.ProductCategory
