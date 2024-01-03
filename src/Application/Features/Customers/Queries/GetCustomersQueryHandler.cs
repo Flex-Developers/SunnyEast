@@ -13,13 +13,13 @@ public class GetCustomersQueryHandler(IApplicationDbContext context, IMapper map
     public async Task<List<CustomerResponse>> Handle(GetCustomersQuery request, CancellationToken cancellationToken)
     {
         var query = context.Customers.Where(s => true);
-        if (request.Slug != null) query = query.Where(s => s.Slug.Contains(request.Slug));
+        if (request.Slug != null) query = query.Where(s => s.Slug == request.Slug);
 
         if (request.Name != null) query = query.Where(s => s.Name.Contains(request.Name));
 
         if (request.Phone != null) query = query.Where(s => s.Phone != null && s.Phone.Contains(request.Phone));
 
-        if (request.LevelSlug != null) query = query.Where(s => s.LevelSlug.Contains(request.LevelSlug));
+        if (request.LevelSlug != null) query = query.Where(s => s.LevelSlug == request.LevelSlug);
 
         return (await query.ToArrayAsync(cancellationToken))
             .Select(mapper.Map<CustomerResponse>).ToList();
