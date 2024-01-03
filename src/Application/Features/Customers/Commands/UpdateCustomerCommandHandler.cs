@@ -13,5 +13,9 @@ public class UpdateCustomerCommandHandler(IApplicationDbContext context)
     {
         var customer = await context.Customers.FirstOrDefaultAsync(c => c.Slug == request.Slug, cancellationToken);
         if (customer == null) throw new NotFoundException($"Customer with slug {request.Slug}");
+        customer.Name = request.Name ?? customer.Name;
+        customer.Phone = request.Phone ?? customer.Phone;
+        await context.SaveChangesAsync(cancellationToken);
+        return Unit.Value;
     }
 }

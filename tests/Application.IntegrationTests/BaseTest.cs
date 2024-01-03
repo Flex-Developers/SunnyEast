@@ -33,7 +33,7 @@ public class BaseTest
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         context.Set<TEntity>().RemoveRange(context.Set<TEntity>());
-        await context.Set<TEntity>().ExecuteDeleteAsync();
+        await context.SaveChangesAsync();
     }
 
     protected async Task AddAsync<TEntity>(TEntity entity)

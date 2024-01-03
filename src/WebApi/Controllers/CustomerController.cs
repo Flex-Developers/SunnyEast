@@ -13,7 +13,7 @@ public class CustomerController : ApiControllerBase
         return Ok(response);
     }
 
-    [HttpPut("/{slug}")]
+    [HttpPut("{slug}")]
     public async Task<IActionResult> UpdateCustomer(string slug, [FromBody] UpdateCustomerCommand command)
     {
         command.Slug = slug;
@@ -21,7 +21,7 @@ public class CustomerController : ApiControllerBase
         return Ok(response);
     }
 
-    [HttpDelete("/{slug}")]
+    [HttpDelete("{slug}")]
     public async Task<IActionResult> DeleteCustomer(string slug)
     {
         await Mediator.Send(new DeleteCustomerCommand

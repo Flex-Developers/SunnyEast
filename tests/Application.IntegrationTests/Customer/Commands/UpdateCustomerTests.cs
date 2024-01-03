@@ -16,7 +16,7 @@ public class UpdateCustomerTests : BaseTest
             Phone = "newPhone",
             Name = "newDlDs"
         };
-        var response = await HttpClient.PutAsJsonAsync($"/api/customers/{command.Slug}", command);
+        var response = await HttpClient.PutAsJsonAsync($"/api/customer/{command.Slug}", command);
         response.EnsureSuccessStatusCode();
     }
 
@@ -30,7 +30,7 @@ public class UpdateCustomerTests : BaseTest
             Phone = "newPhone1",
             Name = "newDlDs1"
         };
-        await HttpClient.PutAsJsonAsync($"/api/customers/{command.Slug}", command);
+        await HttpClient.PutAsJsonAsync($"/api/customer/{command.Slug}", command);
         var updatedCustomer = await FirstOrDefaultAsync<Domain.Entities.Customer>(s => s.Name == command.Name);
         Assert.That(updatedCustomer, Is.Not.Null);
     }
@@ -45,7 +45,7 @@ public class UpdateCustomerTests : BaseTest
             Phone = "newPhone",
             Name = "newDlDs"
         };
-        var response = await HttpClient.PutAsJsonAsync($"/api/customers/{command.Slug}", command);
+        var response = await HttpClient.PutAsJsonAsync($"/api/customer/{command.Slug}", command);
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
     }
 

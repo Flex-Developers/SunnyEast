@@ -9,7 +9,7 @@ public class GetCustomersTests : BaseTest
     public async Task GetCustomers_NoCustomers_ReturnsEmptyList()
     {
         await ClearEntityAsync<Domain.Entities.Customer>();
-        var response = await HttpClient.GetFromJsonAsync<List<CustomerResponse>>("/api/customers");
+        var response = await HttpClient.GetFromJsonAsync<List<CustomerResponse>>("/api/customer");
         Assert.That(response?.Count, Is.EqualTo(0));
     }
 
@@ -19,7 +19,7 @@ public class GetCustomersTests : BaseTest
         await ClearEntityAsync<Domain.Entities.Customer>();
         for (var i = 0; i < 100; i++) await AddCustomer("slug" + i, "name" + i, "phone" + i);
 
-        var response = await HttpClient.GetFromJsonAsync<List<CustomerResponse>>("/api/customers");
+        var response = await HttpClient.GetFromJsonAsync<List<CustomerResponse>>("/api/customer");
         Assert.That(response?.Count, Is.EqualTo(100));
     }
 
@@ -31,7 +31,7 @@ public class GetCustomersTests : BaseTest
 
         var randomEntity = (await GetAllAsync<Domain.Entities.Customer>())[new Random().Next(0, 100)];
         var response =
-            await HttpClient.GetFromJsonAsync<List<CustomerResponse>>($"/api/customers?slug={randomEntity.Slug}");
+            await HttpClient.GetFromJsonAsync<List<CustomerResponse>>($"/api/customer?slug={randomEntity.Slug}");
         Assert.That(response?.FirstOrDefault()?.Slug, Is.EqualTo(randomEntity.Slug));
     }
 
@@ -44,7 +44,7 @@ public class GetCustomersTests : BaseTest
 
         var randomEntity = (await GetAllAsync<Domain.Entities.Customer>())[new Random().Next(0, 100)];
         var response = await HttpClient.GetFromJsonAsync<List<CustomerResponse>>(
-            $"/api/customers?slug={randomEntity.Slug}&Phone={randomEntity.Phone}&name={randomEntity.Name}");
+            $"/api/customer?slug={randomEntity.Slug}&Phone={randomEntity.Phone}&name={randomEntity.Name}");
         Assert.That(response?.FirstOrDefault()?.Slug, Is.EqualTo(randomEntity.Slug));
     }
 
