@@ -1,8 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using Application.Contract.ProductCategory.Commands;
+using Domain.Entities;
 
-namespace Application.IntegrationTests.ProductCategory.Commands;
+namespace Application.IntegrationTests.ProductCategoryTests.Commands;
 
 public class UpdateProductCategoryCommandTests : BaseTest
 {
@@ -19,7 +20,7 @@ public class UpdateProductCategoryCommandTests : BaseTest
         var updateResponse = await HttpClient.PutAsJsonAsync("/api/ProductCategory", updateCommand);
         updateResponse.EnsureSuccessStatusCode();
         var category =
-            await FirstOrDefaultAsync<Domain.Entities.ProductCategory>(s => s.Name == updateCommand.Name);
+            await FirstOrDefaultAsync<ProductCategory>(s => s.Name == updateCommand.Name);
 
         Assert.That(category, Is.Not.Null);
     }
@@ -47,7 +48,11 @@ public class UpdateProductCategoryCommandTests : BaseTest
             Id = categoryId,
             Name = "duplicate"
         };
-        await AddAsync(new Domain.Entities.ProductCategory { Name = updateCommand.Name });
+        await AddAsync(new ProductCategory
+        {
+            Name = updateCommand.Name,
+            Slug = "slugss"
+        });
 
         var updateResponse = await HttpClient.PutAsJsonAsync("/api/ProductCategory", updateCommand);
         Assert.That(updateResponse.StatusCode, Is.EqualTo(HttpStatusCode.Conflict));
@@ -55,12 +60,13 @@ public class UpdateProductCategoryCommandTests : BaseTest
 
     private async Task<Guid> GetCategoryIdAsync(string name)
     {
-        var category = await FirstOrDefaultAsync<Domain.Entities.ProductCategory>(s => s.Name == name);
+        var category = await FirstOrDefaultAsync<ProductCategory>(s => s.Name == name);
         if (category != null) return category.Id;
 
-        category = new Domain.Entities.ProductCategory
+        category = new ProductCategory
         {
-            Name = name
+            Name = name,
+            Slug = "slugss"
         };
         await AddAsync(category);
 

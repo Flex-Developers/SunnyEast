@@ -1,8 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using Application.Contract.ProductCategory.Commands;
+using Domain.Entities;
 
-namespace Application.IntegrationTests.ProductCategory.Commands;
+namespace Application.IntegrationTests.ProductCategoryTests.Commands;
 
 public class CreateProductCategoryCommandTests : BaseTest
 {
@@ -17,7 +18,7 @@ public class CreateProductCategoryCommandTests : BaseTest
         var createResponse = await HttpClient.PostAsJsonAsync("/api/ProductCategory", createCommand);
         createResponse.EnsureSuccessStatusCode();
         var category =
-            await FirstOrDefaultAsync<Domain.Entities.ProductCategory>(s => s.Name == createCommand.Name);
+            await FirstOrDefaultAsync<ProductCategory>(s => s.Name == createCommand.Name);
 
         Assert.That(category, Is.Not.Null);
     }
@@ -29,7 +30,11 @@ public class CreateProductCategoryCommandTests : BaseTest
         {
             Name = "TestCategoryConflict"
         };
-        await AddAsync(new Domain.Entities.ProductCategory { Name = createCommand.Name });
+        await AddAsync(new ProductCategory
+        {
+            Name = createCommand.Name,
+            Slug = createCommand.Name
+        });
 
         var createResponse = await HttpClient.PostAsJsonAsync("/api/ProductCategory", createCommand);
         Assert.That(createResponse.StatusCode, Is.EqualTo(HttpStatusCode.Conflict));
