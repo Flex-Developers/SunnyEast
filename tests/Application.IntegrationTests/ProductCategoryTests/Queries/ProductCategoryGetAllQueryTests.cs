@@ -40,9 +40,9 @@ public class ProductCategoryGetAllQueryTests : BaseTest
         {
             Assert.That(productCategories, Is.Not.Null);
             Assert.That(productCategories != null && productCategories.Any(c => c.Name == category1.Name), Is.True);
-            Assert.That(productCategories.Any(c => c.Name == category2.Name), Is.True);
-            Assert.That(productCategories.Any(c => c.Name == category3.Name), Is.True);
-            Assert.That(productCategories.Any(c => c.Name == category4.Name), Is.True);
+            Assert.That(productCategories!.Any(c => c.Name == category2.Name), Is.True);
+            Assert.That(productCategories!.Any(c => c.Name == category3.Name), Is.True);
+            Assert.That(productCategories!.Any(c => c.Name == category4.Name), Is.True);
         });
     }
 }

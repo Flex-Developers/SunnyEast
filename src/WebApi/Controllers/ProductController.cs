@@ -1,4 +1,3 @@
-using Application.Contract.Level.Commands;
 using Application.Contract.Product.Commands;
 using Application.Contract.Product.Queries;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +24,7 @@ public class ProductController : ApiControllerBase
     [HttpDelete("{slug}")]
     public async Task<IActionResult> DeleteProduct(string slug)
     {
-        await Mediator.Send(new DeleteLevelCommand
+        await Mediator.Send(new DeleteProductCommand
         {
             Slug = slug
         });

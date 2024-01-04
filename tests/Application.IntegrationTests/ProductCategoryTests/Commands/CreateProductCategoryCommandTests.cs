@@ -33,7 +33,7 @@ public class CreateProductCategoryCommandTests : BaseTest
         await AddAsync(new ProductCategory
         {
             Name = createCommand.Name,
-            Slug = "this is a slug"
+            Slug = createCommand.Name
         });
 
         var createResponse = await HttpClient.PostAsJsonAsync("/api/ProductCategory", createCommand);

@@ -16,7 +16,7 @@ public class DeleteProductCommandTests : ProductTestsBase
     public async Task DeleteProduct_ValidRequest_ShouldRemoveFromDb()
     {
         var slug = await GetProductAsync();
-        await HttpClient.DeleteAsync($"api/Product/{slug}");
+        await HttpClient.DeleteAsync($"/api/Product/{slug}");
         var deletedProduct = await FirstOrDefaultAsync<Product>(s => s.Slug == slug);
         Assert.That(deletedProduct, Is.EqualTo(null));
     }
