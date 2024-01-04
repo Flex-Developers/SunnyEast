@@ -10,4 +10,5 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Customer> Customers { get; set; }
     public DbSet<ProductCategory> ProductCategories { get; set; }
     public DbSet<Level> Levels { get; set; }
+    public DbSet<Product> Products { get; set; }
 }

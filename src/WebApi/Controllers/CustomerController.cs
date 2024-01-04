@@ -24,7 +24,7 @@ public class CustomerController : ApiControllerBase
     [HttpDelete("{slug}")]
     public async Task<IActionResult> DeleteCustomer(string slug)
     {
-        await Mediator.Send(new DeleteLevelCommand
+        await Mediator.Send(new DeleteCustomerCommand
         {
             Slug = slug
         });

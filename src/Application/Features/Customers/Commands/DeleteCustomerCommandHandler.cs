@@ -7,9 +7,9 @@ using Microsoft.EntityFrameworkCore;
 namespace Application.Features.Customers.Commands;
 
 public class DeleteCustomerCommandHandler(IApplicationDbContext context)
-    : IRequestHandler<DeleteLevelCommand, Unit>
+    : IRequestHandler<DeleteCustomerCommand, Unit>
 {
-    public async Task<Unit> Handle(DeleteLevelCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(DeleteCustomerCommand request, CancellationToken cancellationToken)
     {
         var customer = await context.Customers.FirstOrDefaultAsync(s => s.Slug == request.Slug,
             cancellationToken);

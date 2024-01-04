@@ -1,6 +1,7 @@
 using System.Net;
+using Domain.Entities;
 
-namespace Application.IntegrationTests.ProductCategory.Commands;
+namespace Application.IntegrationTests.ProductCategoryTests.Commands;
 
 public class DeleteProductCategoryCommandTests : BaseTest
 {
@@ -13,7 +14,7 @@ public class DeleteProductCategoryCommandTests : BaseTest
             await HttpClient.DeleteAsync($"/api/ProductCategory?id={categoryId}");
         deleteResponse.EnsureSuccessStatusCode();
         var category =
-            await FirstOrDefaultAsync<Domain.Entities.ProductCategory>(s => s.Id == categoryId);
+            await FirstOrDefaultAsync<ProductCategory>(s => s.Id == categoryId);
 
         Assert.That(category, Is.Null);
     }
@@ -28,12 +29,13 @@ public class DeleteProductCategoryCommandTests : BaseTest
 
     private async Task<Guid> GetCategoryIdAsync()
     {
-        var category = await FirstOrDefaultAsync<Domain.Entities.ProductCategory>(s => s.Name == " FasdfdsfasdF ");
+        var category = await FirstOrDefaultAsync<ProductCategory>(s => s.Name == " FasdfdsfasdF ");
         if (category != null) return category.Id;
 
-        category = new Domain.Entities.ProductCategory
+        category = new ProductCategory
         {
-            Name = " FasdfdsfasdF "
+            Name = " FasdfdsfasdF ",
+            Slug = "afdsfadsfa"
         };
         await AddAsync(category);
 
