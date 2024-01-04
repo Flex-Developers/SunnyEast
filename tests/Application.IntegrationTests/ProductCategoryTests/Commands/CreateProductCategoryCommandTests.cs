@@ -30,7 +30,11 @@ public class CreateProductCategoryCommandTests : BaseTest
         {
             Name = "TestCategoryConflict"
         };
-        await AddAsync(new ProductCategory { Name = createCommand.Name });
+        await AddAsync(new ProductCategory
+        {
+            Name = createCommand.Name,
+            Slug = "this is a slug"
+        });
 
         var createResponse = await HttpClient.PostAsJsonAsync("/api/ProductCategory", createCommand);
         Assert.That(createResponse.StatusCode, Is.EqualTo(HttpStatusCode.Conflict));
