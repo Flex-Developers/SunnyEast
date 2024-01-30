@@ -9,5 +9,6 @@ public interface IApplicationDbContext
     public DbSet<ProductCategory> ProductCategories { get; set; }
     public DbSet<Level> Levels { get; set; }
     public DbSet<Product> Products { get; set; }
+    public DbSet<Shop> Shops { get; set; }
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
