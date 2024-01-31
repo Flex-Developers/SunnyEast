@@ -12,7 +12,7 @@ public class UpdateProductCommandHandler(IApplicationDbContext context)
     public async Task<Unit> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
     {
         var product = await context.Products.FirstOrDefaultAsync(c => c.Slug == request.Slug, cancellationToken);
-        if (product == null) throw new NotFoundException($"Product with slug {request.Slug}");
+        if (product == null) throw new NotFoundException($"Product with slug {request.Slug} not found");
         product.Name = request.Name ?? product.Name;
         product.Price = request.Price ?? product.Price;
         product.ProductCategorySlug = request.ProductCategorySlug ?? product.ProductCategorySlug;

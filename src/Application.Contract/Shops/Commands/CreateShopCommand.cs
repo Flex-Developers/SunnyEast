@@ -1,11 +1,9 @@
-namespace Domain.Entities;
+﻿namespace Application.Contract.Shops.Commands;
 
-public sealed class Shop : BaseEntity
+public class CreateShopCommand :  IRequest<string>
 {
     public required string Slug { get; set; }
     public required string Address { get; set; }
     public string? AddressGoogle { get; set; }
     public string? AddressYandex { get; set; }
-
-    public List<ShopOrder>? ShopOrders { get; set; }
 }
