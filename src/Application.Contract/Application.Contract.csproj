@@ -10,9 +10,4 @@
         <PackageReference Include="MediatR.Contracts" Version="2.0.1"/>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Shops\Queries\" />
-      <Folder Include="Shops\Responses\" />
-    </ItemGroup>
-
 </Project>

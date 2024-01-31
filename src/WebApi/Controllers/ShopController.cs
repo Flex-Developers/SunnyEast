@@ -1,4 +1,5 @@
 ﻿using Application.Contract.Shops.Commands;
+using Application.Contract.Shops.Queries;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers;
@@ -23,6 +24,13 @@ public class ShopController : ApiControllerBase
     public async Task<IActionResult> UpdateShop([FromBody] UpdateShopCommand command)
     {
         var response = await Mediator.Send(command);
+        return Ok(response);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetShop([FromQuery] GetShopQuery query)
+    {
+        var response = await Mediator.Send(query);
         return Ok(response);
     }
 }
