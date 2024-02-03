@@ -1,4 +1,4 @@
-﻿using Domain.Enums;
+﻿using Application.Contract.Enums;
 
 namespace Application.Contract.Cart.Responses;
 
