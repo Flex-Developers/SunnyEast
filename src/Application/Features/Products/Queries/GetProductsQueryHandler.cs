@@ -13,9 +13,11 @@ public class GetProductsQueryHandler(IApplicationDbContext context, IMapper mapp
     public async Task<List<ProductResponse>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
     {
         var query = context.Products.Where(s => true);
-        if (request.Slug != null) query = query.Where(s => s.Slug == request.Slug);
+        if (request.Slug != null) 
+            query = query.Where(s => s.Slug == request.Slug);
 
-        if (request.Name != null) query = query.Where(s => s.Name.Contains(request.Name));
+        if (request.Name != null) 
+            query = query.Where(s => s.Name.Contains(request.Name));
 
 
         if (request.ProductCategorySlug != null)

@@ -22,6 +22,7 @@ public class SlugService : ISlugService
 
     public string GenerateSlug(string raw)
     {
-        return _slugHelper.GenerateSlug(raw);
+        var translatedText = NickBuhro.Translit.Transliteration.CyrillicToLatin(raw);
+        return _slugHelper.GenerateSlug(translatedText);
     }
 }
