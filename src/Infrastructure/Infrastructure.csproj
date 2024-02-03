@@ -16,6 +16,7 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="NickBuhro.Translit" Version="1.4.5" />
         <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.0-beta.2" />
         <PackageReference Include="Slugify.Core" Version="4.0.1"/>
     </ItemGroup>
