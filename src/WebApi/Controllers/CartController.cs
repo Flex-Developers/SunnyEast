@@ -2,9 +2,8 @@
 using Application.Contract.Cart.Queries;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using WebApi.Controllers;
 
-namespace WebApi;
+namespace WebApi.Controllers;
 
 [Authorize]
 public class CartController : ApiControllerBase
