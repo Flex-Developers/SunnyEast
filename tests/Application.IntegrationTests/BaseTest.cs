@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using Domain.Entities;
 using Infrastructure.Persistence.Contexts;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -28,7 +27,7 @@ public class BaseTest
         HttpClient = _factory.CreateClient();
     }
 
-    protected async Task ClearEntityAsync<TEntity>() where TEntity : BaseEntity
+    protected async Task ClearEntityAsync<TEntity>() where TEntity : class
     {
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -37,7 +36,7 @@ public class BaseTest
     }
 
     protected async Task AddAsync<TEntity>(TEntity entity)
-        where TEntity : BaseEntity
+        where TEntity : class
     {
         using var scope = _scopeFactory.CreateScope();
 
@@ -49,7 +48,7 @@ public class BaseTest
     }
 
     protected async Task RemoveAsync<TEntity>(TEntity entity)
-        where TEntity : BaseEntity
+        where TEntity : class
     {
         using var scope = _scopeFactory.CreateScope();
 
@@ -60,7 +59,7 @@ public class BaseTest
         await context.SaveChangesAsync();
     }
 
-    protected async Task<int> CountAsync<TEntity>() where TEntity : BaseEntity
+    protected async Task<int> CountAsync<TEntity>() where TEntity : class
     {
         using var scope = _scopeFactory.CreateScope();
 
@@ -70,7 +69,7 @@ public class BaseTest
     }
 
     protected async Task<TEntity?> FirstOrDefaultAsync<TEntity>(Expression<Func<TEntity, bool>> criteria)
-        where TEntity : BaseEntity
+        where TEntity : class
     {
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -78,14 +77,14 @@ public class BaseTest
     }
 
     protected async Task<List<TEntity>> GetAllAsync<TEntity>(Expression<Func<TEntity, bool>> criteria)
-        where TEntity : BaseEntity
+        where TEntity : class
     {
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         return await context.Set<TEntity>().Where(criteria).ToListAsync();
     }
 
-    protected async Task<List<TEntity>> GetAllAsync<TEntity>() where TEntity : BaseEntity
+    protected async Task<List<TEntity>> GetAllAsync<TEntity>() where TEntity : class
     {
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

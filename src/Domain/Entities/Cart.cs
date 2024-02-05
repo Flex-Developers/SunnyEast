@@ -12,7 +12,7 @@ public sealed class Cart : BaseEntity
     public string? ShopSlug { get; set; }
     
     public Guid CustomerId { get; set; }
-    public Customer? Customer { get; set; }
+    public ApplicationUser? Customer { get; set; }
 
     public OrderStatus Status { get; set; }
 }
