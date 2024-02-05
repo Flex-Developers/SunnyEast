@@ -1,6 +1,7 @@
 ﻿using Application.Contract.Cart.Commands;
-using Microsoft.AspNetCore.Authorization;
+using Application.Contract.Cart.Queries;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebApi.Controllers;
 
@@ -20,4 +21,19 @@ public class CartController : ApiControllerBase
         var response = await Mediator.Send(command);
         return Ok(response);
     }
+
+    [HttpGet(nameof(GetCart))]
+    public async Task<IActionResult> GetCart([FromQuery] GetCartQuery query)
+    {
+        var response = await Mediator.Send(query);
+        return Ok(response);
+    }
+
+    [HttpGet(nameof(GetCarts))]
+    public async Task<IActionResult> GetCarts([FromQuery] GetCartsQuery query)
+    {
+        var response = await Mediator.Send(query);
+        return Ok(response);
+    }
+    
 }

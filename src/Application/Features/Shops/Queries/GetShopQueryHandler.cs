@@ -16,6 +16,5 @@ public class GetShopQueryHandler(IApplicationDbContext context, IMapper mapper) 
                 .ToListAsync(cancellationToken)).Select(mapper.Map<ShopResponse>).ToList();
 
         return (await context.Shops.ToListAsync(cancellationToken)).Select(mapper.Map<ShopResponse>).ToList();
-
     }
 }
