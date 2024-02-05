@@ -1,9 +1,10 @@
 ﻿using Application.Contract.Cart.Commands;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WebApi.Controllers;
 
-namespace WebApi;
+namespace WebApi.Controllers;
 
+[Authorize]
 public class CartController : ApiControllerBase
 {
     [HttpPost]

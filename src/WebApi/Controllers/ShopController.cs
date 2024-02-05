@@ -1,9 +1,11 @@
-﻿using Application.Contract.Shops.Commands;
+﻿using Application.Contract.Identity;
+using Application.Contract.Shops.Commands;
 using Application.Contract.Shops.Queries;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers;
-
+[Authorize(Roles = ApplicationRoles.Administrator)]
 public class ShopController : ApiControllerBase
 {
     [HttpPost]
