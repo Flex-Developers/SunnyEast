@@ -15,13 +15,12 @@ public class ApplicationDbContextInitializer(UserManager<ApplicationUser> userMa
        }
 
        // Создание администратора, если он не существует
-       var adminUser = await userManager.FindByEmailAsync("admin@example.com");
+       var adminUser = await userManager.FindByNameAsync("admin");
        if (adminUser == null)
        {
            adminUser = new ApplicationUser
            {
-               UserName = "admin@example.com",
-               Email = "admin@example.com",
+               UserName = "admin",
                Name = null
            };
 
