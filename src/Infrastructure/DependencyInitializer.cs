@@ -4,6 +4,7 @@ using System.Text;
 using Application.Common.Interfaces.Contexts;
 using Application.Common.Interfaces.Services;
 using Domain.Entities;
+using Infrastructure.Persistence;
 using Infrastructure.Persistence.Contexts;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -29,6 +30,7 @@ public static class DependencyInitializer
         });
 
         services.AddScoped<IApplicationDbContext, ApplicationDbContext>();
+        services.AddScoped<ApplicationDbContextInitializer>();
         services.AddScoped<ISlugService, SlugService>();
         services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(identityOptions =>
             {
