@@ -9,15 +9,19 @@ using MediatR;
 
 namespace Application.Features.Cart.Commands;
 
-public class CreateCartCommandHandler(IApplicationDbContext context, IMapper mapper, ISlugService slugService)
-: IRequestHandler<CreateCartCommand,string>
+public class CreateCartCommandHandler(
+    IApplicationDbContext context,
+    IMapper mapper,
+    ISlugService slugService,
+    ICurrentUserService currentUserService)
+    : IRequestHandler<CreateCartCommand, string>
 {
     public async Task<string> Handle(CreateCartCommand request, CancellationToken cancellationToken)
     {
         var cart = mapper.Map<Domain.Entities.Cart>(request);
-        
+
         cart.Slug = slugService.GenerateSlug(request.ShopSlug);
-        cart.CustomerId = Guid.Empty;
+        cart.CustomerId = currentUserService.GetUserId();
 
         if (await context.Carts.AnyAsync(c => c.Slug == cart.Slug, cancellationToken))
             throw new ExistException($"The cart with slug '{cart.Slug}' already exists");
