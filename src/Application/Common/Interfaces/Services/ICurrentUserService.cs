@@ -3,5 +3,5 @@
 public interface ICurrentUserService
 {
     public string GetUserName();
-    public int GetUserId();
+    public Guid GetUserId();
 }

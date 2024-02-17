@@ -11,12 +11,12 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor) : ICur
         return httpContextAccessor.HttpContext?.User?.Identity?.Name!;
     }
 
-    public int GetUserId()
+    public Guid GetUserId()
     {
         var userIdClaim = httpContextAccessor.HttpContext?.User?.Claims
             .FirstOrDefault(c => c.Type == "UserId");
         
-        if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+        if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out Guid userId))
             return userId;
         
         throw new NotFoundException("User ID claim not found or not valid");
