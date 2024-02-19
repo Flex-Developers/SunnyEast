@@ -2,6 +2,6 @@
 
 public interface ICurrentUserService
 {
-    public string GetUserName();
+    public string? GetUserName();
     public Guid GetUserId();
 }

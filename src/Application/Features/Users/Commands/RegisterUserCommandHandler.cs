@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using Application.Common;
+using Application.Common.Exceptions;
 using Application.Common.Interfaces.Contexts;
 using Application.Contract.User.Commands;
 using Domain.Entities;
@@ -23,18 +25,18 @@ public class RegisterUserCommandHandler(
         {
             if (exitingUser.Email == request.Email && exitingUser.PhoneNumber == request.Phone)
             {
-                throw new DuplicateWaitObjectException(
+                throw new BadRequestException(
                     $"Email {request.Email} and Phone Number {request.Phone} are not available!");
             }
 
             if (exitingUser.PhoneNumber == request.Phone)
             {
-                throw new DuplicateWaitObjectException($"Phone Number {request.Phone} is not available!");
+                throw new BadRequestException($"Phone Number {request.Phone} is not available!");
             }
 
             if (exitingUser.Email == request.Email)
             {
-                throw new DuplicateWaitObjectException($"Email {request.Email} is not available!");
+                throw new BadRequestException($"Email {request.Email} is not available!");
             }
         }
 
@@ -51,35 +53,14 @@ public class RegisterUserCommandHandler(
         };
 
         var result = await userManager.CreateAsync(user, request.Password);
+        result.ThrowBadRequestIfError();
 
-        if (!result.Succeeded)
-        {
-            throw new UnauthorizedAccessException(result.Errors.First().Description);
-        }
+        result = await userManager.AddClaimsAsync(user, [
+            new Claim(ClaimTypes.NameIdentifier, user.UserName),
+            new Claim(ClaimTypes.Name, user.Name)
+        ]);
+        result.ThrowBadRequestIfError();
 
-        await context.SaveChangesAsync(cancellationToken);
-        await CreateClaimAsync(user.UserName, user.Id, user.Email, cancellationToken);
         return user.UserName;
-    }
-
-
-    private async Task CreateClaimAsync(string username, Guid id, string email,
-        CancellationToken cancellationToken = default)
-    {
-        var userClaims = new[]
-        {
-            new IdentityUserClaim<Guid>
-            {
-                UserId = id,
-                ClaimType = ClaimTypes.NameIdentifier,
-                ClaimValue = username,
-            },
-            new IdentityUserClaim<Guid>
-            {
-                UserId = id, ClaimType = ClaimTypes.Email, ClaimValue = email
-            }
-        };
-        await context.UserClaims.AddRangeAsync(userClaims, cancellationToken);
-        await context.SaveChangesAsync(cancellationToken);
     }
 }

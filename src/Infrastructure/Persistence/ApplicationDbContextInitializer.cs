@@ -1,55 +1,64 @@
-﻿using Application.Contract.Identity;
+﻿using System.Security.Claims;
+using Application.Common;
+using Application.Contract.Identity;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 
 namespace Infrastructure.Persistence;
 
-public class ApplicationDbContextInitializer(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+public class ApplicationDbContextInitializer(
+    UserManager<ApplicationUser> userManager,
+    RoleManager<IdentityRole<Guid>> roleManager)
 {
-   public async Task SeedAsync()
-   {
-       // Создание роли администратора, если не существует
-       if (!await roleManager.RoleExistsAsync(ApplicationRoles.Administrator))
-           await roleManager.CreateAsync(new IdentityRole(ApplicationRoles.Administrator));
-       
-       // Создание роли продавца, если не существует
-       if(!await roleManager.RoleExistsAsync(ApplicationRoles.Salesman))
-           await roleManager.CreateAsync(new IdentityRole(ApplicationRoles.Salesman));
+    public async Task SeedAsync()
+    {
+        // Создание роли администратора, если не существует
+        if (!await roleManager.RoleExistsAsync(ApplicationRoles.Administrator))
+            await roleManager.CreateAsync(new IdentityRole<Guid>(ApplicationRoles.Administrator));
 
-       // Создание администратора, если он не существует
-       var adminUser = await userManager.FindByNameAsync("admin");
-       if (adminUser == null)
-       {
-           adminUser = new ApplicationUser
-           {
-               UserName = "admin",
-               Name = null
-           };
+        // Создание роли продавца, если не существует
+        if (!await roleManager.RoleExistsAsync(ApplicationRoles.Salesman))
+            await roleManager.CreateAsync(new IdentityRole<Guid>(ApplicationRoles.Salesman));
 
-           var result = await userManager.CreateAsync(adminUser, "Admin@123"); // Пароль для администратора
-           
-           if (result.Succeeded)
-               await userManager.AddToRoleAsync(adminUser, ApplicationRoles.Administrator);
-           else
-               throw new InvalidOperationException($"Failed to create admin user: {result.Errors}");
-       }
-       
-       // Создание продавца, если он не существует
-       var salesmanUser = await userManager.FindByNameAsync("salesman");
-       if (salesmanUser is null)
-       {
-           salesmanUser = new ApplicationUser
-           {
-               UserName = "salesman",
-               Name = null
-           };
+        // Создание администратора, если он не существует
+        var adminUser = await userManager.FindByNameAsync("admin");
+        if (adminUser == null)
+        {
+            adminUser = new ApplicationUser
+            {
+                UserName = "admin",
+                Name = ""
+            };
 
-           var result = await userManager.CreateAsync(salesmanUser, "salesman@123"); // Пароль для продавца
+            var result = await userManager.CreateAsync(adminUser, "Admin@123"); // Пароль для администратора
+            result.ThrowInvalidOperationIfError();
 
-           if (result.Succeeded)
-               await userManager.AddToRoleAsync(salesmanUser, ApplicationRoles.Salesman);
-           else
-               throw new InvalidOperationException("Failed to create salesman user");
-       }
-   }
+            var addClaimResult = await userManager.AddClaimAsync(adminUser,
+                new Claim(ClaimTypes.NameIdentifier, adminUser.UserName));
+            addClaimResult.ThrowInvalidOperationIfError();
+
+            var addToRoleResult = await userManager.AddToRoleAsync(adminUser, ApplicationRoles.Administrator);
+            addToRoleResult.ThrowInvalidOperationIfError();
+        }
+
+        // Создание продавца, если он не существует
+        var salesmanUser = await userManager.FindByNameAsync("salesman");
+        if (salesmanUser is null)
+        {
+            salesmanUser = new ApplicationUser
+            {
+                UserName = "salesman",
+                Name = ""
+            };
+
+            var result = await userManager.CreateAsync(salesmanUser, "salesMan@123"); // Пароль для продавца
+            result.ThrowInvalidOperationIfError();
+
+            var addClaimResult = await userManager.AddClaimAsync(salesmanUser,
+                new Claim(ClaimTypes.NameIdentifier, salesmanUser.UserName));
+            addClaimResult.ThrowInvalidOperationIfError();
+
+            await userManager.AddToRoleAsync(salesmanUser, ApplicationRoles.Salesman);
+        }
+    }
 }

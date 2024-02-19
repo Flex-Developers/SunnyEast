@@ -28,7 +28,7 @@ public static class DependencyInitializer
             else
                 options.UseMySql(mySqlConnectionString, ServerVersion.AutoDetect(mySqlConnectionString));
         });
-
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IApplicationDbContext, ApplicationDbContext>();
         services.AddScoped<ApplicationDbContextInitializer>();
         services.AddScoped<ISlugService, SlugService>();
@@ -45,7 +45,7 @@ public static class DependencyInitializer
                 identityOptions.Password.RequireUppercase = true;
                 identityOptions.Password.RequireDigit = true;
 
-                identityOptions.User.RequireUniqueEmail = true;
+                identityOptions.User.RequireUniqueEmail = false;
             })
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
