@@ -2,5 +2,5 @@
 
 public class DeleteOrderCommand : IRequest<string>
 {
-    public required string OrderSlug { get; set; }
+    public required string Slug { get; set; }
 }
