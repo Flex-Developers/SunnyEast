@@ -2,6 +2,6 @@
 
 public class UpdateOrderCommand : IRequest<string>
 {
-    public required string OrderSlug { get; set; }
+    public required string Slug { get; set; }
     public int Quantity { get; set; } = 1;
 }
