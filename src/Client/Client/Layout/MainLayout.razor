@@ -1,0 +1,60 @@
+﻿@using Client.Enums
+@inherits LayoutComponentBase
+
+<MudThemeProvider @ref="@_mudThemeProvider" Theme="@LayoutService.CurrentTheme" IsDarkMode="@LayoutService.IsDarkMode" IsDarkModeChanged="LayoutService.SetDarkMode"/>
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@(_ => DrawerToggle())"/>
+        <MudText Typo="Typo.h5" Class="ml-3">Application</MudText>
+        <MudSpacer/>
+        <MudTooltip Duration="1000">
+            <MudIconButton Icon="@(LayoutService.CurrentThemeToggle switch { AppThemes.System => Icons.Material.Filled.AutoMode, AppThemes.Dark => Icons.Material.Rounded.LightMode, _ => Icons.Material.Outlined.DarkMode })" Color="Color.Inherit" OnClick="@ToggleDarkMode">
+            </MudIconButton>
+        </MudTooltip>
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+        <NavMenu></NavMenu>
+    </MudDrawer>
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    bool _drawerOpen = true;
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private void ToggleDarkMode(MouseEventArgs obj)
+    {
+        LayoutService.ToggleDarkMode();
+        _mudThemeProvider.Theme = LayoutService.CurrentTheme;
+    }
+
+    private MudThemeProvider _mudThemeProvider;
+
+    protected override void OnInitialized()
+    {
+        LayoutService.MajorUpdateOccured += UpdateState;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        LayoutService.IsSystemDark = await _mudThemeProvider.GetSystemPreference();
+    }
+
+    private void UpdateState(object? sender, EventArgs eventArgs)
+    {
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        LayoutService.MajorUpdateOccured -= UpdateState;
+    }
+
+}
