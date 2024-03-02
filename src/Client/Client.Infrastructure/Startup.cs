@@ -4,6 +4,7 @@ using Client.Infrastructure.Auth;
 using Client.Infrastructure.Common;
 using Client.Infrastructure.Consts;
 using Client.Infrastructure.Preferences;
+using Client.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +15,7 @@ namespace Client.Infrastructure;
 
 public static class Startup
 {
-    private const string ClientName = "SunnyEast";
+    public const string SunnyEastClientName = "SunnyEast";
 
     public static IServiceCollection AddClientServices(this IServiceCollection services, IConfiguration config) =>
         services
@@ -32,9 +33,8 @@ public static class Startup
             .AutoRegisterInterfaces<IAppService>()
             .AddAuthentication(config)
             .AddAuthorizationCore(RegisterPermissionClaims)
-
             // Add Api Http Client.
-            .AddHttpClient(ClientName, client =>
+            .AddHttpClient(SunnyEastClientName, client =>
             {
                 client.DefaultRequestHeaders.AcceptLanguage.Clear();
                 client.DefaultRequestHeaders.AcceptLanguage.ParseAdd(CultureInfo.DefaultThreadCurrentCulture
@@ -42,11 +42,12 @@ public static class Startup
                 client.BaseAddress = new Uri(config[Config.ApiBaseUrl]!);
             })
             .Services
-            .AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient(ClientName));
+            .AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient(SunnyEastClientName))
+            .AddSunnyEastApiServices();
 
     private static void RegisterPermissionClaims(AuthorizationOptions options)
     {
-            // options.AddPolicy(, policy => policy.RequireClaim(FSHClaims.Permission, permission.Name));
+        // options.AddPolicy(, policy => policy.RequireClaim(FSHClaims.Permission, permission.Name));
     }
 
     private static IServiceCollection AutoRegisterInterfaces<T>(this IServiceCollection services)

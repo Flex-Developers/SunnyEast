@@ -12,7 +12,7 @@ public class DeleteProductCategoryCommandHandler(IApplicationDbContext context)
     public async Task<Unit> Handle(DeleteProductCategoryCommand request, CancellationToken cancellationToken)
     {
         var category =
-            await context.ProductCategories.FirstOrDefaultAsync(s => s.Id == request.Id,
+            await context.ProductCategories.FirstOrDefaultAsync(s => s.Slug == request.Slug,
                 cancellationToken);
         if (category == null) throw new NotFoundException("Product Category not found");
 

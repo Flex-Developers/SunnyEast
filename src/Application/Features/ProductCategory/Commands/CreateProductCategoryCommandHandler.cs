@@ -11,9 +11,9 @@ public class CreateProductCategoryCommandHandler(
     IApplicationDbContext context,
     IMapper mapper,
     ISlugService slugService)
-    : IRequestHandler<CreateProductCategoryCommand, Guid>
+    : IRequestHandler<CreateProductCategoryCommand, string>
 {
-    public async Task<Guid> Handle(CreateProductCategoryCommand request, CancellationToken cancellationToken)
+    public async Task<string> Handle(CreateProductCategoryCommand request, CancellationToken cancellationToken)
     {
         var productCategory = mapper.Map<CreateProductCategoryCommand, Domain.Entities.ProductCategory>(request);
         productCategory.Slug = slugService.GenerateSlug(request.Name);
@@ -23,6 +23,6 @@ public class CreateProductCategoryCommandHandler(
         await context.ProductCategories.AddAsync(productCategory, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
 
-        return productCategory.Id;
+        return productCategory.Slug;
     }
 }

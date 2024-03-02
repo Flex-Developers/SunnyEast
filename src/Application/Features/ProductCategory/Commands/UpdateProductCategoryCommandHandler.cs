@@ -7,12 +7,12 @@ using Microsoft.EntityFrameworkCore;
 namespace Application.Features.ProductCategory.Commands;
 
 public class UpdateProductCategoryCommandHandler(IApplicationDbContext context)
-    : IRequestHandler<UpdateProductCategoryCommand, Guid>
+    : IRequestHandler<UpdateProductCategoryCommand, string>
 {
-    public async Task<Guid> Handle(UpdateProductCategoryCommand request, CancellationToken cancellationToken)
+    public async Task<string> Handle(UpdateProductCategoryCommand request, CancellationToken cancellationToken)
     {
-        var old = await context.ProductCategories.FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
-        if (old == null) throw new NotFoundException($"ProductCategory with id {request.Id} is not found");
+        var old = await context.ProductCategories.FirstOrDefaultAsync(s => s.Slug == request.Slug, cancellationToken);
+        if (old == null) throw new NotFoundException($"ProductCategory with id {request.Slug} is not found");
 
         request.Name = request.Name.Trim();
 
@@ -22,6 +22,6 @@ public class UpdateProductCategoryCommandHandler(IApplicationDbContext context)
 
         old.Name = request.Name;
         await context.SaveChangesAsync(cancellationToken);
-        return old.Id;
+        return old.Slug;
     }
 }

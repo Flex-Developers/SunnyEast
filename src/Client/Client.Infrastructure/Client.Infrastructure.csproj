@@ -12,19 +12,17 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
+        <PackageReference Include="Blazored.LocalStorage" Version="4.5.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.2"/>
         <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.1"/>
-        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.1" />
-        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="8.0.1" />
-        <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
-        <PackageReference Include="MudBlazor" Version="6.15.0" />
-        <PackageReference Include="System.Net.Http" Version="4.3.4" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.1"/>
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="8.0.1"/>
+        <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0"/>
+        <PackageReference Include="MudBlazor" Version="6.15.0"/>
+        <PackageReference Include="System.Net.Http" Version="4.3.4"/>
     </ItemGroup>
-
     <ItemGroup>
-      <Reference Include="Microsoft.AspNetCore.Components.Authorization">
-        <HintPath>..\..\..\..\..\.nuget\packages\microsoft.aspnetcore.components.authorization\8.0.0\lib\net8.0\Microsoft.AspNetCore.Components.Authorization.dll</HintPath>
-      </Reference>
+        <ProjectReference Include="..\..\Application.Contract\Application.Contract.csproj"/>
     </ItemGroup>
 
 </Project>

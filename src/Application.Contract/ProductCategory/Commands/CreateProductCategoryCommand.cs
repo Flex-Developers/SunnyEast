@@ -1,7 +1,7 @@
 namespace Application.Contract.ProductCategory.Commands;
 
-#nullable disable
-public class CreateProductCategoryCommand : IRequest<Guid>
+public class CreateProductCategoryCommand : IRequest<string>
 {
-    public string Name { get; set; }
+    public required string Name { get; set; }
+    public string? BaseCategorySlug { get; set; }
 }

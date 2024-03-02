@@ -1,0 +1,45 @@
+﻿@using Client.Infrastructure.Services.Category
+@using Application.Contract.ProductCategory.Commands
+
+@inject ICategoryService CategoryService
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3 mb-n1"/>
+            Добавить категорию
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField Value="@Command.Name" Label="Имя" ReadOnly="true"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(Cancel)">Cancel</MudButton>
+        <MudButton Color="Color.Error" OnClick="@(async () => await CreateAsync())">Создать</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public required CreateProductCategoryCommand Command { get; set; }
+
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task CreateAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(Command.Name))
+        {
+            var success = await CategoryService.Post(Command);
+            if (success)
+            {
+                MudDialog.Close();
+            }
+        }
+    }
+
+}
