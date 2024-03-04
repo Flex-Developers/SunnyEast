@@ -75,6 +75,10 @@ namespace Infrastructure.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -214,7 +218,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("ShopId");
 
-                    b.ToTable("ShopOrders");
+                    b.ToTable("ShopOrder");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>

@@ -22,31 +22,31 @@ public class CreateOrderCommandHandler(
     public async Task<string> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
     {
         var userName = currentUserService.GetUserName() ?? throw new ForbiddenException();
-        var order = mapper.Map<OrderResponse>(request);
+        var order = mapper.Map<Domain.Entities.Order>(request);
 
-       var user = await userManager.FindByNameAsync(userName) ?? throw new ForbiddenException();
+        order.Slug = slugService.GenerateSlug(
+            $"{request.ShopOrderSlug}-{userName}-{request.CartSlug}");
 
-       order.Slug = slugService.GenerateSlug(
-           $"{request.ShopOrderSlug}-{userName}-{request.CartSlug}");
+        var shopId = await context.ShopsOrders
+            .Where(s => s.ShopSlug == request.ShopOrderSlug)
+            .Select(s => s.Id)
+            .FirstOrDefaultAsync(cancellationToken);
 
-       var shopId = await context.ShopsOrders
-           .Where(s => s.ShopSlug == request.ShopOrderSlug)
-           .Select(s => s.Id)
-           .FirstOrDefaultAsync(cancellationToken);
-       
-       if (shopId == Guid.Empty)
-           throw new NotFoundException($"The shop with slug {request.ShopOrderSlug} not found.");
+        if (shopId == Guid.Empty)
+            throw new NotFoundException($"The shop with slug {request.ShopOrderSlug} not found.");
 
-       order.ShopOrderSlug = (await context.ShopsOrders.Select(s => s.ShopSlug)
-           .FirstOrDefaultAsync(cancellationToken))!;
+        order.ProductId = await context.ShopsOrders.Select(s => s.ProductId)
+            .FirstOrDefaultAsync(cancellationToken);
 
-       order.CartSlug = ((await context.Carts.Select(c => c.Slug).FirstOrDefaultAsync(cancellationToken))!);
-       
-       // TODO: Complete this
-       //order.Quantity = (await context.carts.Select(c => c.))
-       
-       await context.Orders.AddAsync(order, cancellationToken); // Error
-       await context.SaveChangesAsync(cancellationToken);
-       return order.Slug;
+        var cart = await context.Carts.FirstOrDefaultAsync(s => s.Slug == request.CartSlug, cancellationToken);
+        if (cart == null)
+            throw new NotFoundException($"The cart with slug {request.CartSlug} not found.");
+
+        order.CartSlug = cart.Slug;
+        order.CartId = cart.Id;
+
+        await context.Orders.AddAsync(order, cancellationToken); // Error
+        await context.SaveChangesAsync(cancellationToken);
+        return order.Slug;
     }
 }
