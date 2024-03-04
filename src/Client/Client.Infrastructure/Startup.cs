@@ -6,6 +6,7 @@ using Client.Infrastructure.Consts;
 using Client.Infrastructure.Preferences;
 using Client.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
@@ -31,7 +32,8 @@ public static class Startup
             })
             .AddScoped<IClientPreferenceManager, ClientPreferenceManager>()
             .AutoRegisterInterfaces<IAppService>()
-            .AddAuthentication(config)
+            .AddScoped<CustomAuthStateProvider>()
+            .AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<CustomAuthStateProvider>())
             .AddAuthorizationCore(RegisterPermissionClaims)
             // Add Api Http Client.
             .AddHttpClient(SunnyEastClientName, client =>

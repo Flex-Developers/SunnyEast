@@ -6,23 +6,23 @@
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6">
-            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3 mb-n1"/>
-            Добавить категорию
+            <MudIcon Icon="@Icons.Material.Filled.Update" Class="mr-3 mb-n1"/>
+            Обновить категорию
         </MudText>
     </TitleContent>
     <DialogContent>
-        <MudTextField Value="@Command.Name" Label="Имя" ReadOnly="true"/>
+        <MudTextField @bind-Value="Command.Name" Label="Имя"/>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(Cancel)">Cancel</MudButton>
-        <MudButton Color="Color.Error" OnClick="@(async () => await CreateAsync())">Создать</MudButton>
+        <MudButton OnClick="@(Cancel)">Отмена</MudButton>
+        <MudButton Color="Color.Primary" OnClick="@(async () => await UpdateAsync())">Обновить</MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
 
-    [Parameter] public required CreateProductCategoryCommand Command { get; set; }
+    [Parameter] public required UpdateProductCategoryCommand Command { get; set; }
 
 
     private void Cancel()
@@ -30,11 +30,11 @@
         MudDialog.Cancel();
     }
 
-    private async Task CreateAsync()
+    private async Task UpdateAsync()
     {
         if (!string.IsNullOrWhiteSpace(Command.Name))
         {
-            var success = await CategoryService.Post(Command);
+            var success = await CategoryService.Put(Command);
             if (success)
             {
                 MudDialog.Close();

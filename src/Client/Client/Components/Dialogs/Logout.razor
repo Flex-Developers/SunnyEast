@@ -1,27 +1,24 @@
-﻿@using Client.Infrastructure.Auth
-@inject IAuthenticationService AuthService
+﻿@using Client.Infrastructure.Services.Auth
+@inject IAuthService AuthService
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6">
             <MudIcon Icon="@Icons.Material.Filled.Logout" Class="mr-3 mb-n1"/>
-            Logout Confirmation
+            Выход
         </MudText>
     </TitleContent>
     <DialogContent>
-        <MudText>@ContentText</MudText>
+        <MudText>
+            Вы действительно хотите выйти?
+        </MudText>
     </DialogContent>
     <DialogActions>
-        <MudButton StartIcon="@Icons.Filled.Cancel" OnClick="Cancel">Cancel</MudButton>
-        <MudButton StartIcon="@Icons.Filled.Logout" Color="@Color" Variant="Variant.Filled" OnClick="Submit">@ButtonText</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.Cancel" OnClick="Cancel">Отмена</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.Logout" Variant="Variant.Filled" OnClick="Submit">Выход</MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
-    [Parameter] public string? ContentText { get; set; }
-
-    [Parameter] public string? ButtonText { get; set; }
-
-    [Parameter] public Color Color { get; set; }
 
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
 

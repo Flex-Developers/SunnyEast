@@ -26,7 +26,7 @@ public class CategoryService(IHttpClientService httpClient) : ICategoryService
 
     public async Task<bool> Delete(string slug)
     {
-        var serverResponse = await httpClient.DeleteAsync("/api/productCategory/slug");
+        var serverResponse = await httpClient.DeleteAsync($"/api/productCategory/{slug}");
         return serverResponse.Success;
     }
 }

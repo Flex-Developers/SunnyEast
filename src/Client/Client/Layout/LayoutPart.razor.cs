@@ -1,5 +1,6 @@
 using Client.Infrastructure.Preferences;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using MudBlazor;
 
 namespace Client.Layout;
@@ -44,22 +45,15 @@ public partial class LayoutPart
 
     private void Logout()
     {
-        var parameters = new DialogParameters
-        {
-            { nameof(Components.Dialogs.Logout.ContentText), "Logout Confirmation" },
-            { nameof(Components.Dialogs.Logout.ButtonText), "Logout" },
-            { nameof(Components.Dialogs.Logout.Color), Color.Error }
-        };
-
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
-        DialogService.Show<Components.Dialogs.Logout>("Logout", parameters, options);
+        DialogService.Show<Components.Dialogs.Logout>("Logout", options);
     }
 
     private void Profile()
     {
         Navigation.NavigateTo("/account");
     }
-    
+
     private async Task ToggleDarkLightMode(bool isDarkMode)
     {
         if (ThemePreference is not null)
@@ -67,5 +61,15 @@ public partial class LayoutPart
             ThemePreference.IsDarkMode = isDarkMode;
             await ThemePreferenceChanged.InvokeAsync(ThemePreference);
         }
+    }
+
+    private void SignUp()
+    {
+        Navigation.NavigateToLogin("/login");
+    }
+
+    private void SignIn()
+    {
+        Navigation.NavigateToLogin("/register");
     }
 }

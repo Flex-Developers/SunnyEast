@@ -1,4 +1,5 @@
-﻿using Client.Infrastructure.Services.Category;
+﻿using Client.Infrastructure.Services.Auth;
+using Client.Infrastructure.Services.Category;
 using Client.Infrastructure.Services.HttpClient;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,8 +11,7 @@ public static class DependencyInitializer
     {
         return services
             .AddScoped<ICategoryService, CategoryService>()
+            .AddScoped<IAuthService, AuthService>()
             .AddScoped<IHttpClientService, HttpClientService>();
-
-
     }
 }

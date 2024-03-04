@@ -1,0 +1,37 @@
+﻿@page "/Login"
+@using Application.Contract.User.Commands
+@using Client.Infrastructure.Services.Auth
+
+@inject IAuthService AuthService
+<MudCard>
+    <MudForm Model="@_loginCommand">
+        <MudCardContent>
+            <MudTextField @bind-Value="_loginCommand.UserName"
+                          InputType="InputType.Text"
+                          Immediate="true"
+                          Label="Имя пользователя"/>
+            <MudTextField @bind-Value="_loginCommand.Password"
+                          InputType="InputType.Password"
+                          Immediate="true"
+                          Label="Пароль"/>
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(async () => await Submit())">Войти</MudButton>
+        </MudCardActions>
+    </MudForm>
+</MudCard>
+
+@code {
+
+    private LoginUserCommand _loginCommand = new()
+    {
+        UserName = "",
+        Password = ""
+    };
+
+    private async Task Submit()
+    {
+        await AuthService.LoginAsync(_loginCommand);
+    }
+
+}

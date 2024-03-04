@@ -3,6 +3,9 @@
 @using Client.Components.Dialogs
 @using Client.Infrastructure.Services.Category
 @using Application.Contract.ProductCategory.Commands
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
 
 @inject IDialogService DialogService
 @inject ICategoryService CategoryService
@@ -27,10 +30,10 @@
     <RowTemplate>
         <MudTd>@context.Name</MudTd>
         <MudTd DataLabel="Изменить">
-            <MudButton OnClick="@(async () => await EditAsync(new UpdateProductCategoryCommand { Name = context.Name, Slug = context.Slug, BaseCategorySlug = context.BaseCategorySlug }))">Изменить</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(async () => await EditAsync(new UpdateProductCategoryCommand { Name = context.Name, Slug = context.Slug, BaseCategorySlug = context.BaseCategorySlug }))">Изменить</MudButton>
         </MudTd>
         <MudTd DataLabel="Удалить">
-            <MudButton OnClick="@(async () => await DeleteAsync())">Изменить</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="@(async () => await DeleteAsync(context.Slug))">Удалить</MudButton>
         </MudTd>
     </RowTemplate>
     <PagerContent>
@@ -44,26 +47,37 @@
     protected override async Task OnInitializedAsync()
     {
         _categories = await CategoryService.Get();
+        StateHasChanged();
     }
 
     private async Task AddAsync()
     {
         await DialogService.ShowAsync<CreateCategoryDialog>();
+        await OnInitializedAsync();
     }
 
     private async Task EditAsync(UpdateProductCategoryCommand updateCommand)
     {
         await DialogService.ShowAsync<EditCategoryDialog>("",
             new DialogParameters { { "Command", updateCommand } });
+        await OnInitializedAsync();
     }
 
-    private async Task DeleteAsync()
+    private async Task DeleteAsync(string slug)
     {
-        await DialogService.ShowAsync<DeleteConfirmation>("",
+        var delDialog = await DialogService.ShowAsync<DeleteConfirmation>("",
             new DialogParameters { { "ContentText", "Вы хотите удалить?" } }
             , new DialogOptions
             {
                 CloseButton = true
             });
+        var delDialogResult = await delDialog.Result;
+        if ((bool)delDialogResult.Data)
+        {
+            await CategoryService.Delete(slug);
+        }
+
+        await OnInitializedAsync();
     }
+
 }
