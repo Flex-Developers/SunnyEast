@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers;
+
 [Authorize(Roles = ApplicationRoles.Administrator)]
 public class ProductCategoryController : ApiControllerBase
 {
@@ -22,10 +23,10 @@ public class ProductCategoryController : ApiControllerBase
         return Ok(result);
     }
 
-    [HttpDelete]
-    public async Task<IActionResult> Delete([FromQuery] Guid id)
+    [HttpDelete("{slug}")]
+    public async Task<IActionResult> Delete(string slug)
     {
-        var command = new DeleteProductCategoryCommand { Id = id };
+        var command = new DeleteProductCategoryCommand { Slug = slug };
         await Mediator.Send(command);
         return Ok();
     }

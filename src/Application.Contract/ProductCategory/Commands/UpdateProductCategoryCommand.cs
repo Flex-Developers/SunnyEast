@@ -1,9 +1,8 @@
 namespace Application.Contract.ProductCategory.Commands;
 
-#nullable disable
-
-public class UpdateProductCategoryCommand : IRequest<Guid>
+public class UpdateProductCategoryCommand : IRequest<string>
 {
-    public Guid Id { get; set; }
-    public string Name { get; set; }
+    public required string Slug { get; set; }
+    public required string Name { get; set; }
+    public string? BaseCategorySlug { get; set; }
 }

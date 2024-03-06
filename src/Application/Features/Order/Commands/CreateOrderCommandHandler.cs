@@ -2,11 +2,8 @@
 using Application.Common.Interfaces.Contexts;
 using Application.Common.Interfaces.Services;
 using Application.Contract.Order.Commands;
-using Application.Contract.Order.Responses;
 using AutoMapper;
-using Domain.Entities;
 using MediatR;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Order.Commands;
@@ -15,9 +12,8 @@ public class CreateOrderCommandHandler(
     IApplicationDbContext context,
     ISlugService slugService,
     IMapper mapper,
-    ICurrentUserService currentUserService,
-    UserManager<ApplicationUser> userManager)
-    : IRequestHandler<CreateOrderCommand,string>
+    ICurrentUserService currentUserService)
+    : IRequestHandler<CreateOrderCommand, string>
 {
     public async Task<string> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
     {

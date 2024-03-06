@@ -9,7 +9,7 @@ public sealed class Order : BaseEntity
 {
     public Guid CartId { get; set; }
     public Cart? Cart { get; set; }
-    public required string CartSlug { get; set; }
+    public required string CartSlug { get; set; }   
 
     //какой продукт покупаем
     public Guid ProductId { get; set; }
@@ -19,5 +19,6 @@ public sealed class Order : BaseEntity
     public decimal SummaryPrice { get; set; } //quantity * product.Price
 
     public OrderStatus Status { get; set; }
-    public required string Slug {get; set; }
+
+    public required string Slug { get; set; }
 }

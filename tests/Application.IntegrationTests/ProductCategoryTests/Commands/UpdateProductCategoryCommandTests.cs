@@ -10,10 +10,10 @@ public class UpdateProductCategoryCommandTests : BaseTest
     [Test]
     public async Task UpdateProductCategory_ValidRequest_ReturnsOk()
     {
-        var categoryId = await GetCategoryIdAsync("validCategory");
+        var slug = await GetCategoryIdAsync("validCategory");
         var updateCommand = new UpdateProductCategoryCommand
         {
-            Id = categoryId,
+            Slug = slug,
             Name = "lsf jlkjalsk jsja;kj"
         };
 
@@ -28,10 +28,10 @@ public class UpdateProductCategoryCommandTests : BaseTest
     [Test]
     public async Task UpdateProductCategory_DoesntExistId_ReturnsNotFound()
     {
-        await GetCategoryIdAsync("validCategory");
+        var slug = await GetCategoryIdAsync("validCategory");
         var updateCommand = new UpdateProductCategoryCommand
         {
-            Id = Guid.NewGuid(),
+            Slug = slug,
             Name = "lsf jlkjalsk jsja;kj"
         };
 
@@ -42,10 +42,10 @@ public class UpdateProductCategoryCommandTests : BaseTest
     [Test]
     public async Task UpdateProductCategory_Exist_ReturnsConflict()
     {
-        var categoryId = await GetCategoryIdAsync("duplicate");
+        var slug = await GetCategoryIdAsync("duplicate");
         var updateCommand = new UpdateProductCategoryCommand
         {
-            Id = categoryId,
+            Slug = slug,
             Name = "duplicate"
         };
         await AddAsync(new ProductCategory
@@ -58,10 +58,10 @@ public class UpdateProductCategoryCommandTests : BaseTest
         Assert.That(updateResponse.StatusCode, Is.EqualTo(HttpStatusCode.Conflict));
     }
 
-    private async Task<Guid> GetCategoryIdAsync(string name)
+    private async Task<string> GetCategoryIdAsync(string name)
     {
         var category = await FirstOrDefaultAsync<ProductCategory>(s => s.Name == name);
-        if (category != null) return category.Id;
+        if (category != null) return category.Slug;
 
         category = new ProductCategory
         {
@@ -70,6 +70,6 @@ public class UpdateProductCategoryCommandTests : BaseTest
         };
         await AddAsync(category);
 
-        return category.Id;
+        return category.Slug;
     }
 }

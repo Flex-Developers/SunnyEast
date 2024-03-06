@@ -1,0 +1,35 @@
+﻿@using Client.Infrastructure.Services.Auth
+@inject IAuthService AuthService
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Logout" Class="mr-3 mb-n1"/>
+            Выход
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText>
+            Вы действительно хотите выйти?
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton StartIcon="@Icons.Material.Filled.Cancel" OnClick="Cancel">Отмена</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.Logout" Variant="Variant.Filled" OnClick="Submit">Выход</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+
+    async Task Submit()
+    {
+        await AuthService.LogoutAsync();
+        Snackbar.Add("Logged out", Severity.Info);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    void Cancel() =>
+        MudDialog.Cancel();
+
+}

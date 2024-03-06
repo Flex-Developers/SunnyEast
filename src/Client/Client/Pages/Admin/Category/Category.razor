@@ -1,0 +1,83 @@
+﻿@page "/admin/category"
+@using Application.Contract.ProductCategory.Responses
+@using Client.Components.Dialogs
+@using Client.Infrastructure.Services.Category
+@using Application.Contract.ProductCategory.Commands
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+@inject IDialogService DialogService
+@inject ICategoryService CategoryService
+
+
+<MudTable Items="@_categories" Hover="true" SortLabel="Sort By">
+    <ToolBarContent>
+        <MudSpacer/>
+        <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@(async () => await AddAsync())">Добавить</MudButton>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>
+            <MudTableSortLabel SortBy="new Func<ProductCategoryResponse, object>(x => x.Name)">Имя</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudText>Изменить</MudText>
+        </MudTh>
+        <MudTh>
+            <MudText>Удалить</MudText>
+        </MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Name</MudTd>
+        <MudTd DataLabel="Изменить">
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(async () => await EditAsync(new UpdateProductCategoryCommand { Name = context.Name, Slug = context.Slug, BaseCategorySlug = context.BaseCategorySlug }))">Изменить</MudButton>
+        </MudTd>
+        <MudTd DataLabel="Удалить">
+            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="@(async () => await DeleteAsync(context.Slug))">Удалить</MudButton>
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new[] { 10, 25, 50, 100 }"/>
+    </PagerContent>
+</MudTable>
+
+@code {
+    private List<ProductCategoryResponse>? _categories;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _categories = await CategoryService.Get();
+        StateHasChanged();
+    }
+
+    private async Task AddAsync()
+    {
+        await DialogService.ShowAsync<CreateCategoryDialog>();
+        await OnInitializedAsync();
+    }
+
+    private async Task EditAsync(UpdateProductCategoryCommand updateCommand)
+    {
+        await DialogService.ShowAsync<EditCategoryDialog>("",
+            new DialogParameters { { "Command", updateCommand } });
+        await OnInitializedAsync();
+    }
+
+    private async Task DeleteAsync(string slug)
+    {
+        var delDialog = await DialogService.ShowAsync<DeleteConfirmation>("",
+            new DialogParameters { { "ContentText", "Вы хотите удалить?" } }
+            , new DialogOptions
+            {
+                CloseButton = true
+            });
+        var delDialogResult = await delDialog.Result;
+        if ((bool)delDialogResult.Data)
+        {
+            await CategoryService.Delete(slug);
+        }
+
+        await OnInitializedAsync();
+    }
+
+}
