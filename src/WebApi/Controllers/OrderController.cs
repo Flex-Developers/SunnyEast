@@ -13,4 +13,11 @@ public class OrderController : ApiControllerBase
         var response = await Mediator.Send(command);
         return Ok(response);
     }
+    
+    [HttpPut]
+    public async Task<IActionResult> UpdateOrder([FromBody] UpdateOrderCommand command)
+    {
+        var response = await Mediator.Send(command);
+        return Ok(response);
+    }
 }
