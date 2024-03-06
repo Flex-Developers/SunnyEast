@@ -20,4 +20,11 @@ public class OrderController : ApiControllerBase
         var response = await Mediator.Send(command);
         return Ok(response);
     }
+    
+    [HttpDelete]
+    public async Task<IActionResult> DeleteOrder([FromBody] DeleteOrderCommand command)
+    {
+        var response = await Mediator.Send(command);
+        return Ok(response);
+    }
 }
