@@ -19,5 +19,6 @@ public sealed class Order : BaseEntity
     public decimal SummaryPrice { get; set; } //quantity * product.Price
 
     public OrderStatus Status { get; set; }
+
     public required string Slug { get; set; }
 }
