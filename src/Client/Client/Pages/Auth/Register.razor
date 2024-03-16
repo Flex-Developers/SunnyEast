@@ -1,0 +1,71 @@
+﻿@page "/Register"
+@using Application.Contract.User.Commands
+@using Client.Infrastructure.Services.Auth
+
+@inject IAuthService AuthService
+
+<MudContainer Class="register-container">
+    <MudPaper Class="register-paper" Elevation="3">
+        <MudForm Class="register-form">
+            <MudTextField Label="Имя" Required="true" Variant="Variant.Filled" @bind-Value="_name" />
+            <MudTextField Label="Фамилия" Required="true" Variant="Variant.Filled" @bind-Value="_surname" />
+            <MudTextField Label="Отчество" Variant="Variant.Filled" @bind-Value="_patronymic" />
+            <MudTextField Label="Номер телефона" Required="true" Variant="Variant.Filled" @bind-Value="_phoneNumber" />
+            <MudTextField Label="Электронная почта" Required="true" Variant="Variant.Filled" @bind-Value="_email" />
+            <MudTextField Label="Имя пользователя" Required="true" Variant="Variant.Filled" @bind-Value="_username" />
+            <MudTextField Label="Пароль" Required="true" Variant="Variant.Filled" @bind-Value="_password" InputType="InputType.Password" Immediate="true" />
+                      
+                       <MudTextField Label="Подтверждение пароля" Required="true" Variant="Variant.Filled" @bind-Value="_confirmPassword" InputType="InputType.Password" Immediate="true"  />
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="register-button" @onclick="SubmitRegister">Зарегистрироваться</MudButton>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private string _name;
+    private string _surname;
+    private string _patronymic;
+    private string _phoneNumber;
+    private string _email;
+    private string _username;
+    private string _password;
+    private string _confirmPassword;
+
+    private RegisterUserCommand _registerCommand = new()
+    {
+        Name = "",
+        Phone = "",
+        UserName = "",
+        Email = "",
+        Password = ""
+    };
+
+    private async Task SubmitRegister()
+    {
+        
+    }
+}
+
+<style>
+    .register-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .register-paper {
+        width: 400px;
+        padding: 20px;
+    }
+
+    .register-form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .register-button {
+        margin-top: 20px;
+    }
+</style>
