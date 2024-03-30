@@ -18,23 +18,23 @@ public class RegisterUserCommandHandler(
     public async Task<string> Handle(RegisterUserCommand request,
         CancellationToken cancellationToken)
     {
-        var exitingUser = await context.Users.FirstOrDefaultAsync(
+        var existingUser = await context.Users.FirstOrDefaultAsync(
             u => u.PhoneNumber == request.Phone || u.Email == request.Email,
             cancellationToken: cancellationToken);
-        if (exitingUser != null)
+        if (existingUser != null)
         {
-            if (exitingUser.Email == request.Email && exitingUser.PhoneNumber == request.Phone)
+            if (existingUser.Email == request.Email && existingUser.PhoneNumber == request.Phone)
             {
                 throw new BadRequestException(
                     $"Email {request.Email} and Phone Number {request.Phone} are not available!");
             }
 
-            if (exitingUser.PhoneNumber == request.Phone)
+            if (existingUser.PhoneNumber == request.Phone)
             {
                 throw new BadRequestException($"Phone Number {request.Phone} is not available!");
             }
 
-            if (exitingUser.Email == request.Email)
+            if (existingUser.Email == request.Email)
             {
                 throw new BadRequestException($"Email {request.Email} is not available!");
             }

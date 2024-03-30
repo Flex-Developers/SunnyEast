@@ -2,7 +2,7 @@
 @using Application.Contract.User.Commands
 @using Client.Infrastructure.Services.Auth
 
-@inject IAuthService AuthService
+@inject IAuthService AuthSService
 
 <MudContainer Class="register-container">
     <MudPaper Class="register-paper" Elevation="3">
@@ -13,11 +13,16 @@
             <MudTextField Label="Номер телефона" Required="true" Variant="Variant.Filled" @bind-Value="_phoneNumber" />
             <MudTextField Label="Электронная почта" Required="true" Variant="Variant.Filled" @bind-Value="_email" />
             <MudTextField Label="Имя пользователя" Required="true" Variant="Variant.Filled" @bind-Value="_username" />
+
             <MudTextField Label="Пароль" Required="true" Variant="Variant.Filled" @bind-Value="_password" InputType="InputType.Password" Immediate="true" />
-                      
-                       <MudTextField Label="Подтверждение пароля" Required="true" Variant="Variant.Filled" @bind-Value="_confirmPassword" InputType="InputType.Password" Immediate="true"  />
+            <MudTextField Label="Подтверждение пароля" Required="true" Variant="Variant.Filled" @bind-Value="_confirmPassword" InputType="InputType.Password" Immediate="true"  />
 
             <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="register-button" @onclick="SubmitRegister">Зарегистрироваться</MudButton>
+            
+            @if (_errorMessage != null)
+            {
+                <div class="error-message">@_errorMessage</div>
+            }
         </MudForm>
     </MudPaper>
 </MudContainer>
@@ -31,19 +36,57 @@
     private string _username;
     private string _password;
     private string _confirmPassword;
-
-    private RegisterUserCommand _registerCommand = new()
-    {
-        Name = "",
-        Phone = "",
-        UserName = "",
-        Email = "",
-        Password = ""
-    };
+    private string _errorMessage;
 
     private async Task SubmitRegister()
     {
+        // Проверка на длину пароля
+        if (string.IsNullOrEmpty(_password) || _password.Length < 8)
+        {
+            _errorMessage = "Пароль должен содержать не менее 8 символов.";
+            return;
+        }
+
+        // Проверка на совпадение пароля и его подтверждения
+        if (_password != _confirmPassword)
+        {
+            _errorMessage = "Пароль и его подтверждение должны совпадать.";
+            return;
+        }
+
+        // Проверка наличия аккаунта с таким же именем пользователя или адресом электронной почты
+        bool isUsernameExists = await AuthService.IsUsernameExistsAsync(_username);
+        bool isEmailExists = await AuthService.IsEmailExistsAsync(_email);
         
+        if (isUsernameExists)
+        {
+            _errorMessage = "Пользователь с таким именем пользователя уже существует.";
+            return;
+        }
+        
+        if (isEmailExists)
+        {
+            _errorMessage = "Пользователь с таким адресом электронной почты уже существует.";
+            return;
+        }
+
+        // Здесь можно добавить дополнительные проверки, например, проверку номера телефона на допустимые символы
+
+        // Пример сохранения пользователя:
+        var registerCommand = new RegisterUserCommand
+        {
+            Name = _name,
+            Phone = _phoneNumber,
+            UserName = _username,
+            Email = _email,
+            Password = _password
+        };
+
+        // Здесь можно вызвать метод AuthService для регистрации пользователя
+        // например: await AuthService.RegisterUserAsync(registerCommand);
+
+        // Очистить сообщение об ошибке после успешной регистрации
+        _errorMessage = null;
     }
 }
 
@@ -67,5 +110,10 @@
 
     .register-button {
         margin-top: 20px;
+    }
+
+    .error-message {
+        color: red;
+        margin-top: 10px;
     }
 </style>

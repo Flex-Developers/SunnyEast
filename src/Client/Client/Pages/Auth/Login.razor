@@ -6,11 +6,11 @@
 <MudCard>
     <MudForm Model="@_loginCommand">
         <MudCardContent>
-            <MudTextField @bind-Value="_loginCommand.UserName"
+            <MudTextField @bind-Value="@_loginCommand.UserName"
                           InputType="InputType.Text"
                           Immediate="true"
                           Label="Имя пользователя"/>
-            <MudTextField @bind-Value="_loginCommand.Password"
+            <MudTextField @bind-Value="@_loginCommand.Password"
                           InputType="InputType.Password"
                           Immediate="true"
                           Label="Пароль"/>
