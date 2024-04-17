@@ -1,0 +1,12 @@
+﻿@page "/Product"
+<MudPaper Elevation="25">
+    <MudToolBar>
+        <div></div>
+        <MudSpacer/>
+        <MudTextField @bind-Value="query" Label="Поиск"></MudTextField>
+    </MudToolBar>
+</MudPaper>
+
+@code {
+    private string query = "";
+}
