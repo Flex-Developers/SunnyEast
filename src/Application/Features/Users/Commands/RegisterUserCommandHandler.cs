@@ -50,6 +50,8 @@ public class RegisterUserCommandHandler(
             EmailConfirmed = false,
             PhoneNumber = request.Phone,
             Name = request.Name,
+            Surname = request.Surname,
+            Patronymic = request.Patronymic,
         };
 
         var result = await userManager.CreateAsync(user, request.Password);

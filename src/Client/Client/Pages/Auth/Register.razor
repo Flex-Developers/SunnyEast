@@ -1,0 +1,150 @@
+﻿@page "/Register"
+@using Application.Contract.User.Commands
+@using Client.Infrastructure.Services.HttpClient
+
+@inject IHttpClientService HttpClient
+
+<MudContainer Class="register-container">
+    <MudPaper Class="register-paper" Elevation="3">
+        <MudForm Class="register-form">
+            <MudTextField Label="Имя" Required="true" Variant="Variant.Filled" @bind-Value="_name" />
+            <MudTextField Label="Фамилия" Required="true" Variant="Variant.Filled" @bind-Value="_surname" />
+            <MudTextField Label="Отчество" Variant="Variant.Filled" @bind-Value="_patronymic" />
+            <MudTextField Label="Номер телефона" Required="true" Variant="Variant.Filled" @bind-Value="_phoneNumber" />
+            <MudTextField Label="Электронная почта" Required="true" Variant="Variant.Filled" @bind-Value="_email" />
+            <MudTextField Label="Имя пользователя" Required="true" Variant="Variant.Filled" @bind-Value="_username" />
+
+            <MudTextField Label="Пароль" Required="true" Variant="Variant.Filled" @bind-Value="_password" InputType="InputType.Password" Immediate="true" />
+            <MudTextField Label="Подтверждение пароля" Required="true" Variant="Variant.Filled" @bind-Value="_confirmPassword" InputType="InputType.Password" Immediate="true"  />
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="register-button" @onclick="SubmitRegister">Зарегистрироваться</MudButton>
+            
+            @if (_errorMessage != null)
+            {
+                <div class="error-message">@_errorMessage</div>
+            }
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private string _name;
+    private string _surname;
+    private string _patronymic;
+    private string _phoneNumber;
+    private string _email;
+    private string _username;
+    private string _password;
+    private string _confirmPassword;
+    private string _errorMessage;
+
+    // private async Task<string> ValidateEmail(string email)
+    // {
+    //     try
+    //     {
+    //         
+    //     }
+    //     catch (Exception e)
+    //     {
+    //         
+    //         throw;
+    //     }
+    // }
+
+    private async Task SubmitRegister()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(_password) || _password.Length < 8) // Проверка на длину пароля
+            {
+                _errorMessage = "Пароль должен содержать не менее 8 символов.";
+                return;
+            }
+            
+            if (_password != _confirmPassword) // Проверка на совпадение пароля и его подтверждения
+            {
+                _errorMessage = "Пароль и его подтверждение должны совпадать.";
+                return;
+            }
+
+            // Проверка наличия аккаунта с таким же именем пользователя или адресом электронной почты
+            var response = await HttpClient.GetAsync($"check-username?username={_username}");
+            bool isUsernameExists = response.Success;
+
+            response = await HttpClient.GetAsync($"check-email?email={_email}");
+            bool isEmailExists = response.Success;
+
+            response = await HttpClient.GetAsync($"check-phone?phone={_phoneNumber}");
+            bool isPhoneExists = response.Success;
+        
+            if (isUsernameExists)
+            {
+                _errorMessage = "Пользователь с таким именем пользователя уже существует.";
+                return;
+            }
+        
+            if (isEmailExists)
+            {
+                _errorMessage = "Пользователь с таким адресом электронной почты уже существует.";
+                return;
+            }
+
+            if (isPhoneExists)
+            {
+                _errorMessage = "Пользователь с таким телефонным номером уже существует";
+                return;
+            }
+
+            // Здесь можно добавить дополнительные проверки, например, проверку номера телефона на допустимые символы
+        
+            var registerCommand = new RegisterUserCommand
+            {
+                Name = _name,
+                Surname = _surname,
+                Patronymic = _patronymic,
+                Phone = _phoneNumber,
+                UserName = _username,
+                Email = _email,
+                Password = _password
+            };
+
+            response = await HttpClient.PostAsJsonAsync("register", registerCommand);
+            _errorMessage = response.Success ? "Успешная регистрация!" : "Ошибка регистрации";
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+       
+        
+    }
+}
+
+<style>
+    .register-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .register-paper {
+        width: 400px;
+        padding: 20px;
+    }
+
+    .register-form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .register-button {
+        margin-top: 20px;
+    }
+
+    .error-message {
+        color: red;
+        margin-top: 10px;
+    }
+</style>
