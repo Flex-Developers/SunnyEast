@@ -18,26 +18,23 @@ public class RegisterUserCommandHandler(
     public async Task<string> Handle(RegisterUserCommand request,
         CancellationToken cancellationToken)
     {
-        var exitingUser = await context.Users.FirstOrDefaultAsync(
+        var existingUser = await context.Users.FirstOrDefaultAsync(
             u => u.PhoneNumber == request.Phone || u.Email == request.Email,
             cancellationToken: cancellationToken);
-        if (exitingUser != null)
+        
+        if (existingUser != null) // Check if user already registered
         {
-            if (exitingUser.Email == request.Email && exitingUser.PhoneNumber == request.Phone)
-            {
-                throw new BadRequestException(
-                    $"Email {request.Email} and Phone Number {request.Phone} are not available!");
-            }
+            if (existingUser.Email == request.Email && existingUser.PhoneNumber == request.Phone)
+                throw new BadRequestException($"Почта: {request.Email} и номер: {request.Phone} уже зарегистрированы!");
 
-            if (exitingUser.PhoneNumber == request.Phone)
-            {
-                throw new BadRequestException($"Phone Number {request.Phone} is not available!");
-            }
+            if (existingUser.PhoneNumber == request.Phone)
+                throw new BadRequestException($"Телефон: {request.Phone} уже зарегистрирован!");
 
-            if (exitingUser.Email == request.Email)
-            {
-                throw new BadRequestException($"Email {request.Email} is not available!");
-            }
+            if (existingUser.Email == request.Email)
+                throw new BadRequestException($"Почта: {request.Email} уже зарегистрирована!");
+
+            if (await context.Users.AnyAsync(u => u.UserName == request.UserName, cancellationToken))
+                throw new BadRequestException($"Имя пользователя: {request.UserName} не доступно!");
         }
 
         ApplicationUser user = new()
@@ -64,5 +61,6 @@ public class RegisterUserCommandHandler(
         result.ThrowBadRequestIfError();
 
         return user.UserName;
+        
     }
 }
