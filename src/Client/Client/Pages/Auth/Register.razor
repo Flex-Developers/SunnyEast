@@ -47,49 +47,11 @@
     {
         try
         {
-            if (string.IsNullOrEmpty(user.Password) || user.Password.Length < 8) // Проверка на длину пароля
-            {
-                _errorMessage = "Пароль должен содержать не менее 8 символов.";
-                return;
-            }
-            
             if (user.Password != _confirmPassword) // Проверка на совпадение пароля и его подтверждения
             {
                 _errorMessage = "Пароль и его подтверждение должны совпадать.";
                 return;
             }
-            // Оказывается в RegisterHandler уже имеются эти проверки,
-            // я их немножко изменил, а эти проверки хочу удалить
-
-            
-            // Проверка наличия аккаунта с таким же именем пользователя или адресом электронной почты
-            // var response = await HttpClient.GetAsync($"check-username?username={user.UserName}");
-            // bool isUsernameExists = response.Success;
-            //
-            // response = await HttpClient.GetAsync($"check-email?email={user.Email}");
-            // bool isEmailExists = response.Success;
-            //
-            // response = await HttpClient.GetAsync($"check-phone?phone={user.Phone}");
-            // bool isPhoneExists = response.Success;
-            //
-            // if (isUsernameExists)
-            // {
-            //     _errorMessage = "Пользователь с таким именем пользователя уже существует.";
-            //     return;
-            // }
-            //
-            // if (isEmailExists)
-            // {
-            //     _errorMessage = "Пользователь с таким адресом электронной почты уже существует.";
-            //     return;
-            // }
-            //
-            // if (isPhoneExists)
-            // {
-            //     _errorMessage = "Пользователь с таким телефонным номером уже существует";
-            //     return;
-            // }
-            
             
             // Ниже перечисленные роуты не работают
             // /api/user/register

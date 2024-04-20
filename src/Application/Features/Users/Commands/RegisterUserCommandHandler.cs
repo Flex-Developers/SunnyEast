@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Application.Common;
 using Application.Common.Exceptions;
 using Application.Common.Interfaces.Contexts;
+using Application.Common.Interfaces.Services;
 using Application.Contract.User.Commands;
 using Domain.Entities;
 using MediatR;
@@ -12,16 +13,18 @@ namespace Application.Features.Users.Commands;
 
 public class RegisterUserCommandHandler(
     UserManager<ApplicationUser> userManager,
-    IApplicationDbContext context)
+    IApplicationDbContext context,
+    IValidationService validationService)
     : IRequestHandler<RegisterUserCommand, string>
 {
-    public async Task<string> Handle(RegisterUserCommand request,
-        CancellationToken cancellationToken)
+    public async Task<string> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
+        ValidateUser(request);
+        
         var existingUser = await context.Users.FirstOrDefaultAsync(
             u => u.PhoneNumber == request.Phone || u.Email == request.Email,
             cancellationToken: cancellationToken);
-        
+
         if (existingUser != null) // Check if user already registered
         {
             if (existingUser.Email == request.Email && existingUser.PhoneNumber == request.Phone)
@@ -53,14 +56,26 @@ public class RegisterUserCommandHandler(
 
         var result = await userManager.CreateAsync(user, request.Password);
         result.ThrowBadRequestIfError();
-
+        
+        await userManager.UpdateSecurityStampAsync(user);
+        
         result = await userManager.AddClaimsAsync(user, [
             new Claim(ClaimTypes.NameIdentifier, user.UserName),
             new Claim(ClaimTypes.Name, user.Name)
         ]);
+        
         result.ThrowBadRequestIfError();
+        await context.SaveChangesAsync(cancellationToken);
 
         return user.UserName;
-        
+    }
+
+    private void ValidateUser(RegisterUserCommand user)
+    {
+        validationService.ValidateEmailAsync(user.Email);
+        validationService.ValidatePasswordAsync(user.Password);
+        validationService.ValidatePhoneNumberAsync(user.Phone);
+        validationService.ValidateUsernameAsync(user.UserName);
+        validationService.ValidateNamesAsync(user.Name, user.Surname, user.Patronymic);
     }
 }

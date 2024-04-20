@@ -7,28 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers;
 
-public class UserController(IUserService userService) : ApiControllerBase
+public class UserController : ApiControllerBase
 {
-    // [HttpGet("check-phone")]
-    // public async Task<IActionResult> IsPhoneNumberExists(string phoneNumber)
-    // {
-    //     var result = await userService.IsPhoneNumberExistsAsync(phoneNumber, CancellationToken.None);
-    //     return Ok(result);
-    // }
-    // [HttpGet("check-email")]
-    // public async Task<IActionResult> CheckEmailExists(string email)
-    // {
-    //     var result = await userService.IsEmailExistsAsync(email, CancellationToken.None);
-    //     return Ok(result);
-    // }
-    //
-    // [HttpGet("check-username")]
-    // public async Task<IActionResult> CheckUsernameExists(string username)
-    // {
-    //     var result = await userService.IsUsernameExistsAsync(username, CancellationToken.None);
-    //     return Ok(result);
-    // }
-    
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterUserCommand command)
     {
