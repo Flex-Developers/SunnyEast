@@ -72,10 +72,10 @@ public class RegisterUserCommandHandler(
 
     private void ValidateUser(RegisterUserCommand user)
     {
-        validationService.ValidateEmailAsync(user.Email);
-        validationService.ValidatePasswordAsync(user.Password);
-        validationService.ValidatePhoneNumberAsync(user.Phone);
-        validationService.ValidateUsernameAsync(user.UserName);
-        validationService.ValidateNamesAsync(user.Name, user.Surname, user.Patronymic);
+        validationService.ValidateEmail(user.Email);
+        validationService.ValidatePassword(user.Password);
+        validationService.ValidatePhoneNumber(user.Phone);
+        validationService.ValidateUsername(user.UserName);
+        validationService.ValidateNames(user.Name, user.Surname, user.Patronymic);
     }
 }

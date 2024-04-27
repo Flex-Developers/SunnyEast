@@ -2,9 +2,9 @@
 
 public interface IValidationService
 {
-    public void ValidateEmailAsync(string username);
-    public void ValidatePasswordAsync(string email);
-    public void ValidatePhoneNumberAsync(string phoneNumber);
-    public void ValidateUsernameAsync(string username);
-    public void ValidateNamesAsync(string name, string surname, string patronymic);
+    public void ValidateEmail(string username);
+    public void ValidatePassword(string email);
+    public void ValidatePhoneNumber(string phoneNumber);
+    public void ValidateUsername(string username);
+    public void ValidateNames(string name, string surname, string patronymic);
 }

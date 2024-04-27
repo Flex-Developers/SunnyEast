@@ -6,7 +6,7 @@ namespace Infrastructure.Services;
 
 public class ValidationService : IValidationService
 {
-    public void ValidateEmailAsync(string email)
+    public void ValidateEmail(string email)
     {
         if (string.IsNullOrWhiteSpace(email))
             throw new ValidationException("Email не должен быть пустым.");
@@ -15,7 +15,7 @@ public class ValidationService : IValidationService
             throw new ValidationException("Email должен содержать символ '@' и домен.");
     }
 
-    public void ValidatePasswordAsync(string password)
+    public void ValidatePassword(string password)
     {
         if (string.IsNullOrWhiteSpace(password))
             throw new ValidationException("Пароль не должен быть пустым.");
@@ -33,7 +33,7 @@ public class ValidationService : IValidationService
             throw new ValidationException("Пароль должен содержать хотя бы одну цифру.");
     }
 
-    public void ValidatePhoneNumberAsync(string phoneNumber)
+    public void ValidatePhoneNumber(string phoneNumber)
     {
         if (string.IsNullOrWhiteSpace(phoneNumber))
             throw new ValidationException("Номер телефона не должен быть пустым.");
@@ -44,7 +44,7 @@ public class ValidationService : IValidationService
         }
     }
 
-    public void ValidateUsernameAsync(string username)
+    public void ValidateUsername(string username)
     {
         if (string.IsNullOrWhiteSpace(username))
             throw new ValidationException("Имя пользователя не должно быть пустым.");
@@ -56,7 +56,7 @@ public class ValidationService : IValidationService
             throw new ValidationException("Имя пользователя может содержать только буквы, цифры, символы '_', и '-'.");
     }
 
-    public void ValidateNamesAsync(string name, string surname, string patronymic)
+    public void ValidateNames(string name, string surname, string patronymic)
     {
         if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(surname) ||
             string.IsNullOrWhiteSpace(patronymic))
