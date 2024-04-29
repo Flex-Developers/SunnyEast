@@ -1,8 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Application.Common.Interfaces.Services;
-using System.Text.RegularExpressions;
 
-namespace Infrastructure.Services;
+namespace Client.Infrastructure.Services.Validation;
 
 public class ValidationService : IValidationService
 {

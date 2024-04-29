@@ -13,14 +13,11 @@ namespace Application.Features.Users.Commands;
 
 public class RegisterUserCommandHandler(
     UserManager<ApplicationUser> userManager,
-    IApplicationDbContext context,
-    IValidationService validationService)
+    IApplicationDbContext context)
     : IRequestHandler<RegisterUserCommand, string>
 {
     public async Task<string> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
-        ValidateUser(request);
-        
         var existingUser = await context.Users.FirstOrDefaultAsync(
             u => u.PhoneNumber == request.Phone || u.Email == request.Email,
             cancellationToken: cancellationToken);
@@ -56,26 +53,17 @@ public class RegisterUserCommandHandler(
 
         var result = await userManager.CreateAsync(user, request.Password);
         result.ThrowBadRequestIfError();
-        
+
         await userManager.UpdateSecurityStampAsync(user);
-        
+
         result = await userManager.AddClaimsAsync(user, [
             new Claim(ClaimTypes.NameIdentifier, user.UserName),
             new Claim(ClaimTypes.Name, user.Name)
         ]);
-        
+
         result.ThrowBadRequestIfError();
         await context.SaveChangesAsync(cancellationToken);
 
         return user.UserName;
-    }
-
-    private void ValidateUser(RegisterUserCommand user)
-    {
-        validationService.ValidateEmail(user.Email);
-        validationService.ValidatePassword(user.Password);
-        validationService.ValidatePhoneNumber(user.Phone);
-        validationService.ValidateUsername(user.UserName);
-        validationService.ValidateNames(user.Name, user.Surname, user.Patronymic);
     }
 }

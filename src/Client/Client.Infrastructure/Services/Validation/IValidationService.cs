@@ -1,4 +1,4 @@
-﻿namespace Application.Common.Interfaces.Services;
+﻿namespace Client.Infrastructure.Services.Validation;
 
 public interface IValidationService
 {

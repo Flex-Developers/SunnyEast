@@ -32,7 +32,6 @@ public static class DependencyInitializer
         services.AddScoped<IApplicationDbContext, ApplicationDbContext>();
         services.AddScoped<ApplicationDbContextInitializer>();
         services.AddScoped<ISlugService, SlugService>();
-        services.AddScoped<IValidationService, ValidationService>();
         services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(identityOptions =>
             {
                 identityOptions.ClaimsIdentity.RoleClaimType = ClaimTypes.Role;
