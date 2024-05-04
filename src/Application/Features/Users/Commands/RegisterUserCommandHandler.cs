@@ -25,16 +25,16 @@ public class RegisterUserCommandHandler(
         if (existingUser != null) // Check if user already registered
         {
             if (existingUser.Email == request.Email && existingUser.PhoneNumber == request.Phone)
-                throw new BadRequestException($"Почта: {request.Email} и номер: {request.Phone} уже зарегистрированы!");
+                throw new ExistException($"Почта: {request.Email} и номер: {request.Phone} уже зарегистрированы!");
 
             if (existingUser.PhoneNumber == request.Phone)
-                throw new BadRequestException($"Телефон: {request.Phone} уже зарегистрирован!");
+                throw new ExistException($"Телефон: {request.Phone} уже зарегистрирован!");
 
             if (existingUser.Email == request.Email)
-                throw new BadRequestException($"Почта: {request.Email} уже зарегистрирована!");
+                throw new ExistException($"Почта: {request.Email} уже зарегистрирована!");
 
             if (await context.Users.AnyAsync(u => u.UserName == request.UserName, cancellationToken))
-                throw new BadRequestException($"Имя пользователя: {request.UserName} не доступно!");
+                throw new ExistException($"Имя пользователя: {request.UserName} не доступно!");
         }
 
         ApplicationUser user = new()

@@ -25,6 +25,10 @@
             {
                 <div class="error-message">@_errorMessage</div>
             }
+            else if (_successMessage != null)
+            {
+                <div class="success-message">@_successMessage</div>
+            }
         </MudForm>
     </MudPaper>
 </MudContainer>
@@ -43,7 +47,8 @@
     };
     
     private string _confirmPassword;
-    private string _errorMessage;
+    private string? _errorMessage;
+    private string? _successMessage;
     
     private async Task SubmitRegister()
     {
@@ -56,13 +61,10 @@
                 _errorMessage = "Пароль и его подтверждение должны совпадать.";
                 return;
             }
-            
-            // Ниже перечисленные роуты не работают
-            // /api/user/register
-            // /api/auth/user/register
-            // /auth/register
-            var response = await HttpClient.PostAsJsonAsync("/api/user/register", _user);
-            _errorMessage = response.Success ? "Успешная регистрация!" : "Ошибка регистрации, Проверьте введнные данные!";
+
+            var response = (await HttpClient.PostAsJsonAsync("/api/user/register", _user));
+            _errorMessage = response.Success ? null : "Ошибка регистрации, Проверьте введнные данные!";
+            _successMessage = response.Success ? "Успешная регистрация!" : null;
         }
         catch (Exception exception)
         {
@@ -103,6 +105,10 @@
 
     .error-message {
         color: red;
+        margin-top: 10px;
+    }
+    .success-message {
+        color: green;
         margin-top: 10px;
     }
 </style>

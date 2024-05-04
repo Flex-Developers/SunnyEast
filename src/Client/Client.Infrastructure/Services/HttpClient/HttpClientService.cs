@@ -4,8 +4,10 @@ using System.Net.Http.Json;
 using Application.Contract.User.Responses;
 using Blazored.LocalStorage;
 using Client.Infrastructure.Consts;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using MudBlazor;
+using Newtonsoft.Json;
 
 namespace Client.Infrastructure.Services.HttpClient;
 
@@ -17,6 +19,7 @@ public class HttpClientService(
     : IHttpClientService
 {
     private readonly string _baseUrl = configuration[Config.ApiBaseUrl]!;
+    private string? _exceptionMessage;
 
     public async Task<ServerResponse> GetAsync(string url)
     {
@@ -44,10 +47,11 @@ public class HttpClientService(
     {
         var response = await SendAsync(new HttpRequestMessage(HttpMethod.Post, _baseUrl + url)
             { Content = JsonContent.Create(content) });
+        //  response!.EnsureSuccessStatusCode();
         return new ServerResponse
         {
             Success = response?.IsSuccessStatusCode ?? false,
-            StatusCode = response?.StatusCode
+            StatusCode = response?.StatusCode,
         };
     }
 
@@ -102,20 +106,44 @@ public class HttpClientService(
             }
 
             var response = await client.SendAsync(request);
-            if (response.StatusCode == HttpStatusCode.BadRequest)
-            {
-                //todo get message from api and show in snackbar
-            }
+            await CheckForException(response);
+            // if (!response.IsSuccessStatusCode)
+            // {
+            //     var errorMessage = await response.Content.ReadAsStringAsync();
+            //     snackbar.Add(errorMessage);
+            // }
+            // if (response.StatusCode == HttpStatusCode.BadRequest)
+            // {
+            //     //todo get message from api and show in snackbar
+            // }
 
             //todo create handlers for another status codes 409 500 and others;
             return response;
         }
         catch (Exception e)
         {
+            if (_exceptionMessage != null)
+                throw new Exception(_exceptionMessage);
+            
             snackbar.Add("Проблема соеденения с сервером. Попробуйте попытку позже.");
             Console.WriteLine(e);
         }
 
         return null;
+    }
+
+    private async Task CheckForException(HttpResponseMessage? response)
+    {
+        _exceptionMessage = null;
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorMessage = await response.Content.ReadAsStringAsync();
+            var problemDetails = JsonConvert.DeserializeObject<ProblemDetails>(errorMessage);
+            if (problemDetails != null && !string.IsNullOrEmpty(problemDetails.Title))
+            {
+                _exceptionMessage = problemDetails.Title;
+                throw new Exception(_exceptionMessage);
+            }
+        }
     }
 }

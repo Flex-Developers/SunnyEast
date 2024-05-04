@@ -26,6 +26,9 @@ public class ValidationService : IValidationService
 
         if (!password.Any(c => char.IsLetter(c) && char.IsUpper(c)))
             throw new ValidationException("Пароль должен содержать хотя бы одну заглавную букву.");
+        
+        if (!password.Any(c => char.IsLetter(c) && char.IsLower(c)))
+            throw new ValidationException("Пароль должен содержать хотя бы одну строчную букву.");
 
         if (!password.Any(char.IsDigit))
             throw new ValidationException("Пароль должен содержать хотя бы одну цифру.");

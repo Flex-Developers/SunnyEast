@@ -4,9 +4,11 @@ using Application.Contract.User.Commands;
 using Application.Contract.User.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebApi.Filters;
 
 namespace WebApi.Controllers;
 
+[CustomExceptionsFilter]
 public class UserController : ApiControllerBase
 {
     [HttpPost("register")]
