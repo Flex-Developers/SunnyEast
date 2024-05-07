@@ -9,11 +9,11 @@
 <MudContainer Class="register-container">
     <MudPaper Class="register-paper" Elevation="3">
         <MudForm Class="register-form">
-            <MudTextField Label="Имя" Required="true" Variant="Variant.Filled" @bind-Value="_user.Name" />
-            <MudTextField Label="Фамилия" Required="true" Variant="Variant.Filled" @bind-Value="_user.Surname" />
-            <MudTextField Label="Отчество" Variant="Variant.Filled" @bind-Value="_user.Patronymic" />
-            <MudTextField Label="Номер телефона" Required="true" Variant="Variant.Filled" @bind-Value="_user.Phone" />
-            <MudTextField Label="Электронная почта" Required="true" Variant="Variant.Filled" @bind-Value="_user.Email" />
+            <MudTextField Label="Имя" Required="true" Variant="Variant.Filled" @bind-Value="_user.Name" InputType="InputType.Text" InputMode="InputMode.text"/>
+            <MudTextField Label="Фамилия" Required="true" Variant="Variant.Filled" @bind-Value="_user.Surname" InputType="InputType.Text" InputMode="InputMode.text"/>
+            <MudTextField Label="Отчество" Variant="Variant.Filled" @bind-Value="_user.Patronymic" InputType="InputType.Text" InputMode="InputMode.text"/>
+            <MudTextField Label="Номер телефона" Required="true" Variant="Variant.Filled" @bind-Value="_user.Phone" InputType="InputType.Telephone" InputMode="InputMode.numeric"/>
+            <MudTextField Label="Электронная почта" Required="true" Variant="Variant.Filled" @bind-Value="_user.Email" InputType="InputType.Email" InputMode="InputMode.email"/>
             <MudTextField Label="Имя пользователя" Required="true" Variant="Variant.Filled" @bind-Value="_user.UserName" />
 
             <MudTextField Label="Пароль" Required="true" Variant="Variant.Filled" @bind-Value="_user.Password" InputType="InputType.Password" Immediate="true" />
@@ -62,7 +62,7 @@
                 return;
             }
 
-            var response = (await HttpClient.PostAsJsonAsync("/api/user/register", _user));
+            var response = await HttpClient.PostAsJsonAsync("/api/user/register", _user);
             _errorMessage = response.Success ? null : "Ошибка регистрации, Проверьте введнные данные!";
             _successMessage = response.Success ? "Успешная регистрация!" : null;
         }

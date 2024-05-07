@@ -4,7 +4,6 @@ using System.Net.Http.Json;
 using Application.Contract.User.Responses;
 using Blazored.LocalStorage;
 using Client.Infrastructure.Consts;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using MudBlazor;
 using Newtonsoft.Json;
@@ -19,7 +18,8 @@ public class HttpClientService(
     : IHttpClientService
 {
     private readonly string _baseUrl = configuration[Config.ApiBaseUrl]!;
-    private string? _exceptionMessage;
+    
+    public string? ExceptionMessage { get; private set; } // Оставил если вдруг пригодится в будущем
 
     public async Task<ServerResponse> GetAsync(string url)
     {
@@ -47,7 +47,7 @@ public class HttpClientService(
     {
         var response = await SendAsync(new HttpRequestMessage(HttpMethod.Post, _baseUrl + url)
             { Content = JsonContent.Create(content) });
-        //  response!.EnsureSuccessStatusCode();
+        
         return new ServerResponse
         {
             Success = response?.IsSuccessStatusCode ?? false,
@@ -107,25 +107,14 @@ public class HttpClientService(
 
             var response = await client.SendAsync(request);
             await CheckForException(response);
-            // if (!response.IsSuccessStatusCode)
-            // {
-            //     var errorMessage = await response.Content.ReadAsStringAsync();
-            //     snackbar.Add(errorMessage);
-            // }
-            // if (response.StatusCode == HttpStatusCode.BadRequest)
-            // {
-            //     //todo get message from api and show in snackbar
-            // }
+            
 
             //todo create handlers for another status codes 409 500 and others;
             return response;
         }
         catch (Exception e)
         {
-            if (_exceptionMessage != null)
-                throw new Exception(_exceptionMessage);
-            
-            snackbar.Add("Проблема соеденения с сервером. Попробуйте попытку позже.");
+            snackbar.Add("Проблема соеденения с сервером. Попробуйте попытку позже.", Severity.Error);
             Console.WriteLine(e);
         }
 
@@ -134,16 +123,26 @@ public class HttpClientService(
 
     private async Task CheckForException(HttpResponseMessage? response)
     {
-        _exceptionMessage = null;
+        ExceptionMessage = null;
         if (!response.IsSuccessStatusCode)
         {
             var errorMessage = await response.Content.ReadAsStringAsync();
             var problemDetails = JsonConvert.DeserializeObject<ProblemDetails>(errorMessage);
-            if (problemDetails != null && !string.IsNullOrEmpty(problemDetails.Title))
+            if (!string.IsNullOrEmpty(problemDetails!.Title))
             {
-                _exceptionMessage = problemDetails.Title;
-                throw new Exception(_exceptionMessage);
+                ExceptionMessage = problemDetails.Title;
+                snackbar.Add(problemDetails.Title, Severity.Warning);
             }
         }
     }
+}
+
+public class ProblemDetails
+{
+    public string? Type { get; set; }
+    public string? Title { get; set; }
+    
+    public int? Status { get; set; }
+    
+    public string? Detail { get; set; }
 }
