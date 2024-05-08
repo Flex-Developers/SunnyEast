@@ -65,11 +65,11 @@ public partial class LayoutPart
 
     private void SignUp()
     {
-        Navigation.NavigateToLogin("/login");
+        Navigation.NavigateToLogin("/register");
     }
 
     private void SignIn()
     {
-        Navigation.NavigateToLogin("/register");
+        Navigation.NavigateToLogin("/login");
     }
 }

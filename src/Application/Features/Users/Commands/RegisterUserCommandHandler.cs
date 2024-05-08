@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Application.Common;
 using Application.Common.Exceptions;
 using Application.Common.Interfaces.Contexts;
+using Application.Common.Interfaces.Services;
 using Application.Contract.User.Commands;
 using Domain.Entities;
 using MediatR;
@@ -15,29 +16,25 @@ public class RegisterUserCommandHandler(
     IApplicationDbContext context)
     : IRequestHandler<RegisterUserCommand, string>
 {
-    public async Task<string> Handle(RegisterUserCommand request,
-        CancellationToken cancellationToken)
+    public async Task<string> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
-        var exitingUser = await context.Users.FirstOrDefaultAsync(
+        var existingUser = await context.Users.FirstOrDefaultAsync(
             u => u.PhoneNumber == request.Phone || u.Email == request.Email,
             cancellationToken: cancellationToken);
-        if (exitingUser != null)
+
+        if (existingUser != null) // Check if user already registered
         {
-            if (exitingUser.Email == request.Email && exitingUser.PhoneNumber == request.Phone)
-            {
-                throw new BadRequestException(
-                    $"Email {request.Email} and Phone Number {request.Phone} are not available!");
-            }
+            if (existingUser.Email == request.Email && existingUser.PhoneNumber == request.Phone)
+                throw new ExistException($"Почта: {request.Email} и номер: {request.Phone} уже зарегистрированы!");
 
-            if (exitingUser.PhoneNumber == request.Phone)
-            {
-                throw new BadRequestException($"Phone Number {request.Phone} is not available!");
-            }
+            if (existingUser.PhoneNumber == request.Phone)
+                throw new ExistException($"Телефон: {request.Phone} уже зарегистрирован!");
 
-            if (exitingUser.Email == request.Email)
-            {
-                throw new BadRequestException($"Email {request.Email} is not available!");
-            }
+            if (existingUser.Email == request.Email)
+                throw new ExistException($"Почта: {request.Email} уже зарегистрирована!");
+
+            if (await context.Users.AnyAsync(u => u.UserName == request.UserName, cancellationToken))
+                throw new ExistException($"Имя пользователя: {request.UserName} не доступно!");
         }
 
         ApplicationUser user = new()
@@ -50,16 +47,22 @@ public class RegisterUserCommandHandler(
             EmailConfirmed = false,
             PhoneNumber = request.Phone,
             Name = request.Name,
+            Surname = request.Surname,
+            Patronymic = request.Patronymic,
         };
 
         var result = await userManager.CreateAsync(user, request.Password);
         result.ThrowBadRequestIfError();
 
+        await userManager.UpdateSecurityStampAsync(user);
+
         result = await userManager.AddClaimsAsync(user, [
             new Claim(ClaimTypes.NameIdentifier, user.UserName),
             new Claim(ClaimTypes.Name, user.Name)
         ]);
+
         result.ThrowBadRequestIfError();
+        await context.SaveChangesAsync(cancellationToken);
 
         return user.UserName;
     }
