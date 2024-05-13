@@ -7,9 +7,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Application.IntegrationTests;
 
-public class BaseTest
+[TestFixture]
+public class BaseTest : IDisposable
 {
-    private static WebApplicationFactory<Program> _factory = null!;
+    private static WebApplicationFactory<Program>? _factory;
     private static IServiceScopeFactory _scopeFactory = null!;
     protected HttpClient HttpClient = null!;
 
@@ -24,7 +25,7 @@ public class BaseTest
     [SetUp]
     public void Setup()
     {
-        HttpClient = _factory.CreateClient();
+        HttpClient = _factory?.CreateClient() ?? throw new ArgumentNullException();
     }
 
     protected async Task ClearEntityAsync<TEntity>() where TEntity : class
@@ -89,5 +90,12 @@ public class BaseTest
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         return await context.Set<TEntity>().ToListAsync();
+    }
+
+    [OneTimeTearDown]
+    public void Dispose()
+    {
+        _factory = null;
+        HttpClient.Dispose();
     }
 }

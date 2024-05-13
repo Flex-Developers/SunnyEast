@@ -1,12 +1,58 @@
-﻿@page "/Product"
+﻿@page "/admin/products"
+@using Application.Contract.Product.Queries
+@using Application.Contract.Product.Responses
+@using Client.Infrastructure.Services.Product
+@inject IProductService ProductService
 <MudPaper Elevation="25">
     <MudToolBar>
-        <div></div>
+        <MudButton OnClick="Create">Создать</MudButton>
         <MudSpacer/>
-        <MudTextField @bind-Value="query" Label="Поиск"></MudTextField>
+        <MudTextField @bind-Value="_query" Label="Поиск"></MudTextField>
     </MudToolBar>
 </MudPaper>
 
+<MudGrid Spacing="1" Justify="Justify.SpaceBetween" Style="flex-wrap: wrap;">
+    @foreach (var product in _products)
+    {
+        <MudItem>
+            <MudCard>
+                <MudCarousel ItemsSource="@product.Images" Context="imgContext" ShowArrows="true" ShowBullets="true" AutoCycle="false">
+                    <ItemTemplate>
+                        <MudCardMedia Image="@imgContext"></MudCardMedia>
+                    </ItemTemplate>
+                </MudCarousel>
+                <MudCardContent>
+                    <MudGrid Style="flex-wrap: wrap" Spacing="1">
+                        <MudItem lg="12" md="12" xs="12">
+                            <MudText Typo="Typo.h5">@product.Name</MudText>
+                        </MudItem>
+                        <MudItem lg="6" md="6" xs="6">
+                            <MudText Typo="Typo.body2">Цена:</MudText>
+                        </MudItem>
+                        <MudItem lg="6" md="6" xs="6">
+                            <MudText Typo="Typo.body2">@product.Price</MudText>
+                        </MudItem>
+                        <MudItem lg="6" md="6" xs="6">Описание:</MudItem>
+                        <MudItem lg="6" md="6" xs="6">@product.Description</MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    }
+</MudGrid>
+
 @code {
-    private string query = "";
+    private List<ProductResponse> _products = [];
+    protected override async Task OnInitializedAsync()
+    {
+        _products = await ProductService.Get(new GetProductsQuery());
+    }
+
+    private string _query = "";
+
+    private async Task Create()
+    {
+        
+    }
+
 }
