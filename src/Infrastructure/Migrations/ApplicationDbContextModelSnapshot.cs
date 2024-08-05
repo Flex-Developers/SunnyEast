@@ -174,6 +174,9 @@ namespace Infrastructure.Migrations
                     b.Property<string>("AddressYandex")
                         .HasColumnType("longtext");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("longtext");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 

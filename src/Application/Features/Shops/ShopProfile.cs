@@ -12,5 +12,7 @@ public class ShopProfile : Profile
     {
         CreateMap<CreateShopCommand, Shop>();
         CreateMap<Shop, ShopResponse>();
+        CreateMap<Shop, UpdateShopCommand>();
+        CreateMap<UpdateShopCommand, Shop>();
     }
 }

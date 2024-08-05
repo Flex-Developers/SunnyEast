@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers;
+
 [Authorize(Roles = ApplicationRoles.Administrator)]
 public class ShopController : ApiControllerBase
 {
@@ -15,11 +16,11 @@ public class ShopController : ApiControllerBase
         return Ok(response);
     }
 
-    [HttpDelete]
-    public async Task<IActionResult> DeleteShop([FromBody] DeleteShopCommand command)
+    [HttpDelete("{slug}")]
+    public async Task<IActionResult> DeleteShop(string slug)
     {
-        var response = await Mediator.Send(command);
-        return Ok(response);
+        await Mediator.Send(new DeleteShopCommand { Slug = slug });
+        return Ok();
     }
 
     [HttpPut]
@@ -29,8 +30,17 @@ public class ShopController : ApiControllerBase
         return Ok(response);
     }
 
-    [HttpGet]
+    [HttpGet(nameof(GetShop))]
+    [AllowAnonymous]
     public async Task<IActionResult> GetShop([FromQuery] GetShopQuery query)
+    {
+        var response = await Mediator.Send(query);
+        return Ok(response);
+    }
+
+    [HttpGet(nameof(GetShops))]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetShops([FromQuery] GetShopsQuery query)
     {
         var response = await Mediator.Send(query);
         return Ok(response);

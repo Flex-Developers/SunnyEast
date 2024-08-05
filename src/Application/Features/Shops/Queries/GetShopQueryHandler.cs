@@ -7,6 +7,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Shops.Queries;
 
+/// <summary>
+/// Search shop by address name (substring)
+/// </summary>
+/// <param name="context"></param>
+/// <param name="mapper"></param>
 public class GetShopQueryHandler(IApplicationDbContext context, IMapper mapper) : IRequestHandler<GetShopQuery, List<ShopResponse>>
 {
     public async Task<List<ShopResponse>> Handle(GetShopQuery request, CancellationToken cancellationToken)

@@ -9,15 +9,15 @@ using Microsoft.EntityFrameworkCore;
 namespace Application.Features.Cart.Queries;
 
 public class GetCartQueryHandler(IApplicationDbContext context, IMapper mapper)
-: IRequestHandler<GetCartQuery,CartResponse>
+    : IRequestHandler<GetCartQuery, CartResponse>
 {
     public async Task<CartResponse> Handle(GetCartQuery request, CancellationToken cancellationToken)
     {
         var cart = await context.Carts.FirstOrDefaultAsync(c => c.Slug == request.Slug, cancellationToken);
-        
-        if(cart == null)
+
+        if (cart == null)
             throw new NotFoundException($"The cart with slug: {request.Slug} not found.");
-        
+
         var response = mapper.Map<CartResponse>(cart);
 
         return response;
