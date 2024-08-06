@@ -34,7 +34,6 @@ public class HttpClientService(
 
     public async Task<ServerResponse<T>> GetFromJsonAsync<T>(string url)
     {
-        Console.WriteLine($"URL:{_baseUrl}{url}");
         var response = await SendAsync(new HttpRequestMessage(HttpMethod.Get, _baseUrl + url));
         return new ServerResponse<T>
         {
