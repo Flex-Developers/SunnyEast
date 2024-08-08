@@ -15,10 +15,8 @@ public static class DependencyInitializer
             .AddScoped<ICategoryService, CategoryService>()
             .AddScoped<IAuthService, AuthService>()
             .AddScoped<IProductService, ProductService>()
-            .AddScoped<IHttpClientService, HttpClientService>();
-                .AddScoped<IValidationService, ValidationService>()
-                .AddScoped<ICategoryService, CategoryService>()
-                .AddScoped<IAuthService, AuthService>()
-                .AddScoped<IHttpClientService, HttpClientService>();
+            .AddScoped<IHttpClientService, HttpClientService>()
+            .AddScoped<IValidationService, ValidationService>();
+
     }
 }
