@@ -6,6 +6,7 @@ using Blazored.LocalStorage;
 using Client.Infrastructure.Consts;
 using Microsoft.Extensions.Configuration;
 using MudBlazor;
+using Newtonsoft.Json;
 
 namespace Client.Infrastructure.Services.HttpClient;
 
@@ -17,6 +18,8 @@ public class HttpClientService(
     : IHttpClientService
 {
     private readonly string _baseUrl = configuration[Config.ApiBaseUrl]!;
+    
+    public string? ExceptionMessage { get; private set; } // Оставил если вдруг пригодится в будущем
 
     public async Task<ServerResponse> GetAsync(string url)
     {
@@ -44,10 +47,11 @@ public class HttpClientService(
     {
         var response = await SendAsync(new HttpRequestMessage(HttpMethod.Post, _baseUrl + url)
             { Content = JsonContent.Create(content) });
+        
         return new ServerResponse
         {
             Success = response?.IsSuccessStatusCode ?? false,
-            StatusCode = response?.StatusCode
+            StatusCode = response?.StatusCode,
         };
     }
 
@@ -102,20 +106,43 @@ public class HttpClientService(
             }
 
             var response = await client.SendAsync(request);
-            if (response.StatusCode == HttpStatusCode.BadRequest)
-            {
-                //todo get message from api and show in snackbar
-            }
+            await CheckForException(response);
+            
 
             //todo create handlers for another status codes 409 500 and others;
             return response;
         }
         catch (Exception e)
         {
-            snackbar.Add("Проблема соеденения с сервером. Попробуйте попытку позже.");
+            snackbar.Add("Проблема соеденения с сервером. Попробуйте попытку позже.", Severity.Error);
             Console.WriteLine(e);
         }
 
         return null;
     }
+
+    private async Task CheckForException(HttpResponseMessage? response)
+    {
+        ExceptionMessage = null;
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorMessage = await response.Content.ReadAsStringAsync();
+            var problemDetails = JsonConvert.DeserializeObject<ProblemDetails>(errorMessage);
+            if (!string.IsNullOrEmpty(problemDetails!.Title))
+            {
+                ExceptionMessage = problemDetails.Title;
+                snackbar.Add(problemDetails.Title, Severity.Warning);
+            }
+        }
+    }
+}
+
+public class ProblemDetails
+{
+    public string? Type { get; set; }
+    public string? Title { get; set; }
+    
+    public int? Status { get; set; }
+    
+    public string? Detail { get; set; }
 }

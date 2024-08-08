@@ -2,6 +2,7 @@
 
 public interface IHttpClientService
 {
+    public string? ExceptionMessage { get; }
     public Task<ServerResponse> GetAsync(string url);
     public Task<ServerResponse<T>> GetFromJsonAsync<T>(string url);
 

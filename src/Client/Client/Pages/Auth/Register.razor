@@ -1,0 +1,114 @@
+﻿@page "/Register"
+@using Application.Contract.User.Commands
+@using Client.Infrastructure.Services.HttpClient
+@using Client.Infrastructure.Services.Validation
+
+@inject IHttpClientService HttpClient
+@inject IValidationService ValidationService
+
+<MudContainer Class="register-container">
+    <MudPaper Class="register-paper" Elevation="3">
+        <MudForm Class="register-form">
+            <MudTextField Label="Имя" Required="true" Variant="Variant.Filled" @bind-Value="_user.Name" InputType="InputType.Text" InputMode="InputMode.text"/>
+            <MudTextField Label="Фамилия" Required="true" Variant="Variant.Filled" @bind-Value="_user.Surname" InputType="InputType.Text" InputMode="InputMode.text"/>
+            <MudTextField Label="Отчество" Variant="Variant.Filled" @bind-Value="_user.Patronymic" InputType="InputType.Text" InputMode="InputMode.text"/>
+            <MudTextField Label="Номер телефона" Required="true" Variant="Variant.Filled" @bind-Value="_user.Phone" InputType="InputType.Telephone" InputMode="InputMode.numeric"/>
+            <MudTextField Label="Электронная почта" Required="true" Variant="Variant.Filled" @bind-Value="_user.Email" InputType="InputType.Email" InputMode="InputMode.email"/>
+            <MudTextField Label="Имя пользователя" Required="true" Variant="Variant.Filled" @bind-Value="_user.UserName" />
+
+            <MudTextField Label="Пароль" Required="true" Variant="Variant.Filled" @bind-Value="_user.Password" InputType="InputType.Password" Immediate="true" />
+            <MudTextField Label="Подтверждение пароля" Required="true" Variant="Variant.Filled" @bind-Value="_confirmPassword" InputType="InputType.Password" Immediate="true"  />
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="register-button" @onclick="SubmitRegister">Зарегистрироваться</MudButton>
+            
+            @if (_errorMessage != null)
+            {
+                <div class="error-message">@_errorMessage</div>
+            }
+            else if (_successMessage != null)
+            {
+                <div class="success-message">@_successMessage</div>
+            }
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+
+    RegisterUserCommand _user = new()
+    {
+        Name = "",
+        Surname = "",
+        Patronymic = "",
+        Phone = "",
+        Email = "",
+        UserName = "",
+        Password = ""
+    };
+    
+    private string _confirmPassword;
+    private string? _errorMessage;
+    private string? _successMessage;
+    
+    private async Task SubmitRegister()
+    {
+        try
+        {
+            ValidateUser(_user);
+            
+            if (_user.Password != _confirmPassword) // Проверка на совпадение пароля и его подтверждения
+            {
+                _errorMessage = "Пароль и его подтверждение должны совпадать.";
+                return;
+            }
+
+            var response = await HttpClient.PostAsJsonAsync("/api/user/register", _user);
+            _errorMessage = response.Success ? null : "Ошибка регистрации, Проверьте введнные данные!";
+            _successMessage = response.Success ? "Успешная регистрация!" : null;
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = exception.Message;
+        }
+    }
+    private void ValidateUser(RegisterUserCommand user)
+    {
+        ValidationService.ValidateEmail(user.Email);
+        ValidationService.ValidatePassword(user.Password);
+        ValidationService.ValidatePhoneNumber(user.Phone!);
+        ValidationService.ValidateUsername(user.UserName);
+        ValidationService.ValidateNames(user.Name, user.Surname, user.Patronymic);
+    }
+}
+
+<style>
+    .register-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .register-paper {
+        width: 400px;
+        padding: 20px;
+    }
+
+    .register-form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .register-button {
+        margin-top: 20px;
+    }
+
+    .error-message {
+        color: red;
+        margin-top: 10px;
+    }
+    .success-message {
+        color: green;
+        margin-top: 10px;
+    }
+</style>
