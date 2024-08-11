@@ -10,5 +10,6 @@ public class ProductCategoryProfile : Profile
     {
         CreateMap<CreateProductCategoryCommand, Domain.Entities.ProductCategory>();
         CreateMap<Domain.Entities.ProductCategory, ProductCategoryResponse>();
+        CreateMap<ProductCategoryResponse, Domain.Entities.ProductCategory>();
     }
 }

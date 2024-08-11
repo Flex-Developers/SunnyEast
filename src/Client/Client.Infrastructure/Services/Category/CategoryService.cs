@@ -6,6 +6,12 @@ namespace Client.Infrastructure.Services.Category;
 
 public class CategoryService(IHttpClientService httpClient) : ICategoryService
 {
+    public async Task<ProductCategoryResponse?> GetByName(string name)
+    {
+        var serverResponse = await httpClient.GetFromJsonAsync<ProductCategoryResponse?>($"/api/productCategory/GetByName/{name}");
+        return serverResponse.Success ? serverResponse.Response : null;
+    }
+
     public async Task<List<ProductCategoryResponse>?> Get()
     {
         var serverResponse = await httpClient.GetFromJsonAsync<List<ProductCategoryResponse>>("/api/productCategory");
