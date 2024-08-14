@@ -1,58 +1,103 @@
 ﻿@page "/admin/products"
-@using Application.Contract.Product.Queries
 @using Application.Contract.Product.Responses
+@using Application.Contract.ProductCategory.Responses
+@using Client.Components.Dialogs
+@using Client.Infrastructure.Services.Category
 @using Client.Infrastructure.Services.Product
 @inject IProductService ProductService
+@inject ICategoryService CategoryService
+@inject IDialogService DialogService
+
 <MudPaper Elevation="25">
     <MudToolBar>
-        <MudButton OnClick="Create">Создать</MudButton>
+        <MudSelect T="string" Label="Категория" Style="margin-right: 15px" AnchorOrigin="Origin.BottomCenter" ValueChanged="@LoadProductsAsync">
+            @foreach (var category in _categories)
+            {
+            <MudSelectItem Value="@(category.Name)">@category.Name</MudSelectItem>
+            }
+        </MudSelect>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="CreateAsync">Создать➕</MudButton>
         <MudSpacer/>
-        <MudTextField @bind-Value="_query" Label="Поиск"></MudTextField>
+        <MudTextField @bind-Value="_query" Label="Поиск" Immediate="true"/>
     </MudToolBar>
 </MudPaper>
 
-<MudGrid Spacing="1" Justify="Justify.SpaceBetween" Style="flex-wrap: wrap;">
+<MudGrid Spacing="1" Justify="Justify.Center" Style="margin-top: 3px;">
     @foreach (var product in _products)
     {
-        <MudItem>
-            <MudCard>
-                <MudCarousel ItemsSource="@product.Images" Context="imgContext" ShowArrows="true" ShowBullets="true" AutoCycle="false">
-                    <ItemTemplate>
-                        <MudCardMedia Image="@imgContext"></MudCardMedia>
-                    </ItemTemplate>
-                </MudCarousel>
-                <MudCardContent>
-                    <MudGrid Style="flex-wrap: wrap" Spacing="1">
-                        <MudItem lg="12" md="12" xs="12">
-                            <MudText Typo="Typo.h5">@product.Name</MudText>
-                        </MudItem>
-                        <MudItem lg="6" md="6" xs="6">
-                            <MudText Typo="Typo.body2">Цена:</MudText>
-                        </MudItem>
-                        <MudItem lg="6" md="6" xs="6">
-                            <MudText Typo="Typo.body2">@product.Price</MudText>
-                        </MudItem>
-                        <MudItem lg="6" md="6" xs="6">Описание:</MudItem>
-                        <MudItem lg="6" md="6" xs="6">@product.Description</MudItem>
-                    </MudGrid>
-                </MudCardContent>
-            </MudCard>
-        </MudItem>
+    <MudItem xs="12" sm="6" md="4" lg="2">
+        <MudCard Style="max-width: 100%" Class="product-card">
+            <MudCarousel Style="height: 250px" ItemsSource="@product.Images" Context="imgContext" ShowArrows="true" ShowBullets="false" AutoCycle="false" TData="string">
+                <ItemTemplate>
+                    <MudCardMedia Image="@imgContext"></MudCardMedia>
+                </ItemTemplate>
+            </MudCarousel>
+
+            <MudCardContent>
+                <MudText Typo="Typo.h6" Align="Align.Left" Style="margin-bottom: 8px; white-space: normal; word-wrap: break-word;">@product.Name</MudText>
+                <MudText Typo="Typo.body2" Align="Align.Left" Style="margin-bottom: 4px;">Цена: @product.Price</MudText>
+                <MudLink Typo="Typo.body2" Style="padding-left: 0" OnClick="() => OpenDescription(product.Name, product.Description)">Читать описание... </MudLink>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
     }
 </MudGrid>
 
 @code {
-    private List<ProductResponse> _products = [];
-    protected override async Task OnInitializedAsync()
-    {
-        _products = await ProductService.Get(new GetProductsQuery());
-    }
-
+    private List<ProductResponse> _products = new();
+    private List<ProductCategoryResponse> _categories = new();
+    private string selectedCategory = "";
     private string _query = "";
 
-    private async Task Create()
+    protected override async Task OnInitializedAsync()
     {
-        
+        await LoadProductsAsync(selectedCategory);
+        _categories = (await CategoryService.Get())!;
+        StateHasChanged();
     }
 
+    private async Task OpenDescription(string name, string? description)
+    {
+        await DialogService.ShowAsync<ProductDescriptionDialog>("", 
+            new DialogParameters
+            {
+                {"ContentText",description},
+                {"ProductName",name}
+            });
+    }
+
+    private async Task LoadProductsAsync(string category)
+    {
+        selectedCategory = category;
+        if (!string.IsNullOrEmpty(selectedCategory))
+        {
+            _products = await ProductService.GetByCategoryName(selectedCategory);
+            StateHasChanged();
+        }
+    }
+    //TODO: Решить проблему с кривыми надписями, с верхней границей, описанием, и поиском
+    private async Task CreateAsync()
+    {
+        if (!string.IsNullOrEmpty(selectedCategory))
+        {
+            var parameters = new DialogParameters<CreateProductDialog>
+            {
+                { "CategoryName", selectedCategory },
+                { "OnSuccessfullyCreate", new Action(async () => await OnInitializedAsync()) }
+            };
+            await DialogService.ShowAsync<CreateProductDialog>("Create", parameters);
+        }
+        else
+            Snackbar.Add("Пожалуйста выберите категорию!", Severity.Warning);
+    }
 }
+<style>
+
+    .product-card {
+        transition: transform 0.3s ease;
+    }
+
+    .product-card:hover {
+        transform: scale(1.05);
+    }
+</style>
