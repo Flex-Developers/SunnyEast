@@ -37,4 +37,11 @@ public class ProductController : ApiControllerBase
         var response = await Mediator.Send(query);
         return Ok(response);
     }
+
+    [HttpGet("GetProductsByCategoryName/{categoryName}")]
+    public async Task<IActionResult> GetProductsByCategoryName([FromRoute]string categoryName)
+    {
+        var response = await Mediator.Send(new GetProductsByCategoryNameQuery { CategoryName = categoryName });
+        return Ok(response);
+    }
 }

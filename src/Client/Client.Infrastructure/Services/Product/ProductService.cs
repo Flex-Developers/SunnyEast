@@ -33,6 +33,12 @@ public class ProductService(IHttpClientService httpClient) : IProductService
         return serverResponse.Success ? serverResponse.Response ?? [] : [];
     }
 
+    public async Task<List<ProductResponse>> GetByCategoryName(string categoryName)
+    {
+        var serverResponse = await httpClient.GetFromJsonAsync<List<ProductResponse>>($"/api/product/GetProductsByCategoryName/{categoryName}");
+        return serverResponse.Success ? serverResponse.Response ?? [] : [];
+    }
+
     public async Task<bool> Delete(string slug)
     {
         var serverResponse = await httpClient.DeleteAsync($"{BaseProductUrl}/{slug}");
