@@ -21,6 +21,7 @@
 
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public Action OnSuccess { get; set; } = null!;
 
     private readonly CreateProductCategoryCommand _command = new() { Name = "" };
 
@@ -31,13 +32,13 @@
 
     private async Task CreateAsync()
     {
-        Console.WriteLine(_command.Name);
         if (!string.IsNullOrWhiteSpace(_command.Name))
         {
             var success = await CategoryService.Post(_command);
             if (success)
             {
                 MudDialog.Close();
+                OnSuccess?.Invoke();
             }
         }
     }

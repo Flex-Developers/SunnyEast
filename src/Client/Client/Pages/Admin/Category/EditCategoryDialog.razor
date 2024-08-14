@@ -23,7 +23,7 @@
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter] public required UpdateProductCategoryCommand Command { get; set; }
-
+    [Parameter] public Action OnSuccess { get; set; } = null!;
 
     private void Cancel()
     {
@@ -38,6 +38,7 @@
             if (success)
             {
                 MudDialog.Close();
+                OnSuccess?.Invoke();
             }
         }
     }
