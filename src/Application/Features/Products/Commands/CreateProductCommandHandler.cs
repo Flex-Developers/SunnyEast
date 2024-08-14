@@ -18,15 +18,15 @@ public class CreateProductCommandHandler(IApplicationDbContext context, IMapper 
 
         product.Slug = slugService.GenerateSlug(product.Name);
         if (await context.Products.AnyAsync(s => s.Slug == product.Slug, cancellationToken))
-            throw new ExistException($"Product with name {product.Name} and slug {product.Slug} already exist");
+            throw new ExistException($"(Такой продукт уже есть) Product with name {product.Name} and slug {product.Slug} already exist");
 
         var category =
             await context.ProductCategories.FirstOrDefaultAsync(s => s.Slug == request.ProductCategorySlug,
                 cancellationToken);
         if (category == null)
-            throw new NotFoundException($"Category with slug {request.ProductCategorySlug} not found");
+            throw new NotFoundException($"(Категория не найдена) Category with slug {request.ProductCategorySlug} not found");
         product.ProductCategoryId = category.Id;
-
+        
         await context.Products.AddAsync(product, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
         return product.Slug;
