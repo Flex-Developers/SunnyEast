@@ -18,7 +18,7 @@ public class CreateShopCommandHandler(IApplicationDbContext context, IMapper map
 
         shop.Slug = slugService.GenerateSlug(shop.Address);
         if (await context.Shops.AnyAsync(s => s.Slug == shop.Slug, cancellationToken))
-            throw new ExistException($"Shop with address {shop.Address} already exists");
+            throw new ExistException($"Магазин с адресом {shop.Address} уже существует");
 
         await context.Shops.AddAsync(shop, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);

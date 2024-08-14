@@ -6,4 +6,5 @@ public class CreateShopCommand : IRequest<string>
     public required string Address { get; set; }
     public string? AddressGoogle { get; set; }
     public string? AddressYandex { get; set; }
+    public string? ImageUrl { get; set; }
 }

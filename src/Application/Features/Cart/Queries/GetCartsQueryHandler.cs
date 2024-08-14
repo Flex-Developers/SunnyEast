@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Application.Features.Cart.Queries;
 
 public class GetCartsQueryHandler(IApplicationDbContext context, IMapper mapper)
-: IRequestHandler<GetCartsQuery, List<CartResponse>>
+    : IRequestHandler<GetCartsQuery, List<CartResponse>>
 {
     public async Task<List<CartResponse>> Handle(GetCartsQuery request, CancellationToken cancellationToken)
     {
