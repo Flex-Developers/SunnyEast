@@ -63,7 +63,7 @@
             }
 
             var response = await HttpClient.PostAsJsonAsync("/api/user/register", _user);
-            _errorMessage = response.Success ? null : "Ошибка регистрации, Проверьте введнные данные!";
+            _errorMessage = response.Success ? null : "Ошибка регистрации, Проверьте введенные данные!";
             _successMessage = response.Success ? "Успешная регистрация!" : null;
         }
         catch (Exception exception)
