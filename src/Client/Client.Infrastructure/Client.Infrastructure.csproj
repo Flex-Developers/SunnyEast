@@ -33,5 +33,10 @@
     <ItemGroup>
         <ProjectReference Include="..\..\Application.Contract\Application.Contract.csproj"/>
     </ItemGroup>
+    <ItemGroup>
+      <Reference Include="Microsoft.AspNetCore.WebUtilities">
+        <HintPath>..\..\..\..\..\..\..\..\Program Files\dotnet\shared\Microsoft.AspNetCore.App\8.0.8\Microsoft.AspNetCore.WebUtilities.dll</HintPath>
+      </Reference>
+    </ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
 ﻿@page "/admin/products"
+@using Application.Contract.Product.Queries
 @using Application.Contract.Product.Responses
 @using Application.Contract.ProductCategory.Responses
 @using Client.Components.Dialogs
@@ -9,88 +10,120 @@
 @inject IDialogService DialogService
 
 <MudPaper Elevation="25">
-    <MudToolBar>
-        <MudSelect T="string" Label="Категория" Style="margin-right: 15px" AnchorOrigin="Origin.BottomCenter" ValueChanged="@LoadProductsAsync">
+    <MudToolBar >
+        <MudSelect T="string" Label="Категория" Style="margin-right: 15px; padding-bottom: 3%" AnchorOrigin="Origin.BottomCenter" ValueChanged="@LoadProductsAsync">
             @foreach (var category in _categories)
             {
-            <MudSelectItem Value="@(category.Name)">@category.Name</MudSelectItem>
+                <MudSelectItem Value="@(category.Name)">@category.Name</MudSelectItem>
             }
         </MudSelect>
-        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="CreateAsync">Создать➕</MudButton>
+
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="CreateAsync" Style="vertical-align: middle;">Создать➕</MudButton>
+
         <MudSpacer/>
-        <MudTextField @bind-Value="_query" Label="Поиск" Immediate="true"/>
+
+        <MudAutocomplete T="ProductResponse" SearchFunc="SearchAsync" ToStringFunc="@(result => result.Name)" ResetValueOnEmptyText="true"
+                         Immediate="true" Clearable="true" Label="Поиск" DebounceInterval="300" AdornmentIcon="@Icons.Material.Filled.Search"
+                         Style="width: calc(100% - 15px); margin-bottom: 15px; margin-right: 15px;"/>
+
+        @if (IsSearching)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Medium" Class="ml-2"/>
+        }
+
     </MudToolBar>
+
 </MudPaper>
 
-<MudGrid Spacing="1" Justify="Justify.Center" Style="margin-top: 3px;">
+<MudGrid Spacing="1" Justify="Justify.FlexStart" Style="margin-top: 3px;">
     @foreach (var product in _products)
     {
-    <MudItem xs="12" sm="6" md="4" lg="2">
-        <MudCard Style="max-width: 100%" Class="product-card">
-            <MudCarousel Style="height: 250px" ItemsSource="@product.Images" Context="imgContext" ShowArrows="true" ShowBullets="false" AutoCycle="false" TData="string">
-                <ItemTemplate>
-                    <MudCardMedia Image="@imgContext"></MudCardMedia>
-                </ItemTemplate>
-            </MudCarousel>
+        <MudItem xs="12" sm="6" md="4" lg="2">
+            <MudCard Style="max-width: 100%" Class="product-card">
+                <MudCarousel Style="height: 250px" ItemsSource="@product.Images" Context="imgContext" ShowArrows="true" ShowBullets="false" AutoCycle="false" TData="string">
+                    <ItemTemplate>
+                        <MudCardMedia Image="@imgContext"></MudCardMedia>
+                    </ItemTemplate>
+                </MudCarousel>
 
-            <MudCardContent>
-                <MudText Typo="Typo.h6" Align="Align.Left" Style="margin-bottom: 8px; white-space: normal; word-wrap: break-word;">@product.Name</MudText>
-                <MudText Typo="Typo.body2" Align="Align.Left" Style="margin-bottom: 4px;">Цена: @product.Price</MudText>
-                <MudLink Typo="Typo.body2" Style="padding-left: 0" OnClick="() => OpenDescription(product.Name, product.Description)">Читать описание... </MudLink>
-            </MudCardContent>
-        </MudCard>
-    </MudItem>
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Align="Align.Left" Style="margin-bottom: 8px; white-space: normal; word-wrap: break-word;">@product.Name</MudText>
+                    <MudText Typo="Typo.body2" Align="Align.Left" Style="margin-bottom: 4px;">Цена: @product.Price</MudText>
+                    <MudLink Typo="Typo.caption" Style="padding-left: 0" OnClick="() => OpenDescription(product.Name, product.Description)">Читать описание... </MudLink>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
     }
 </MudGrid>
 
 @code {
     private List<ProductResponse> _products = new();
     private List<ProductCategoryResponse> _categories = new();
-    private string selectedCategory = "";
-    private string _query = "";
+    private readonly GetProductsQuery _query = new();
+    private string _selectedCategory = "";
+    private bool IsSearching { get; set; }
+
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadProductsAsync(selectedCategory);
+        await LoadProductsAsync(_selectedCategory);
         _categories = (await CategoryService.Get())!;
         StateHasChanged();
     }
 
+    private async Task OnProductSelected(ProductResponse selectedProduct)
+    {
+    }
+
+    private async Task<IEnumerable<ProductResponse>> SearchAsync(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return [];
+
+        IsSearching = true;
+        _query.Name = name;
+
+        var result = await ProductService.Get(_query);
+
+        IsSearching = false;
+        StateHasChanged();
+
+        return result;
+    }
+
     private async Task OpenDescription(string name, string? description)
     {
-        await DialogService.ShowAsync<ProductDescriptionDialog>("", 
+        await DialogService.ShowAsync<ProductDescriptionDialog>("",
             new DialogParameters
             {
-                {"ContentText",description},
-                {"ProductName",name}
+                { "ContentText", description },
+                { "ProductName", name }
             });
     }
 
     private async Task LoadProductsAsync(string category)
     {
-        selectedCategory = category;
-        if (!string.IsNullOrEmpty(selectedCategory))
+        _selectedCategory = category;
+        if (!string.IsNullOrEmpty(_selectedCategory))
         {
-            _products = await ProductService.GetByCategoryName(selectedCategory);
+            _products = await ProductService.GetByCategoryName(_selectedCategory);
             StateHasChanged();
         }
     }
-   
+
     private async Task CreateAsync()
     {
-        if (!string.IsNullOrEmpty(selectedCategory))
+        var parameters = new DialogParameters<CreateProductDialog>
         {
-            var parameters = new DialogParameters<CreateProductDialog>
-            {
-                { "CategoryName", selectedCategory },
-                { "OnSuccessfullyCreate", new Action(async () => await OnInitializedAsync()) }
-            };
-            await DialogService.ShowAsync<CreateProductDialog>("Create", parameters);
-        }
-        else
-            Snackbar.Add("Пожалуйста выберите категорию!", Severity.Warning);
+            { "CategoryName", _selectedCategory },
+            { "OnSuccessfullyCreate", new Action(async () => await OnInitializedAsync()) },
+            { "Categories", _categories.Select(c => c.Name).ToList() }
+        };
+        await DialogService.ShowAsync<CreateProductDialog>("Create", parameters);
     }
+
 }
+
 <style>
 
     .product-card {

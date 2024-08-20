@@ -2,6 +2,7 @@
 using Application.Contract.Product.Queries;
 using Application.Contract.Product.Responses;
 using Client.Infrastructure.Services.HttpClient;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace Client.Infrastructure.Services.Product;
 
@@ -29,7 +30,18 @@ public class ProductService(IHttpClientService httpClient) : IProductService
 
     public async Task<List<ProductResponse>> Get(GetProductsQuery query)
     {
-        var serverResponse = await httpClient.GetFromJsonAsync<List<ProductResponse>>(BaseProductUrl);
+        var queryDictionary = new Dictionary<string, string?>
+        {
+            { "Slug", query.Slug },
+            { "ProductCategorySlug", query.ProductCategorySlug },
+            { "Name", query.Name },
+            { "MinPrice", query.MinPrice?.ToString() },
+            { "MaxPrice", query.MaxPrice?.ToString() }
+        };
+        
+        var urlWithQuery = QueryHelpers.AddQueryString(BaseProductUrl, queryDictionary);
+        
+        var serverResponse = await httpClient.GetFromJsonAsync<List<ProductResponse>>(urlWithQuery);
         return serverResponse.Success ? serverResponse.Response ?? [] : [];
     }
 
