@@ -124,7 +124,21 @@
 
     private async Task DeleteProductAsync(ProductResponse product)
     {
-        
+        var delDialog = await DialogService.ShowAsync<DeleteConfirmation>("",
+            new DialogParameters { { "ContentText", $"Вы хотите удалить {product.Name}?" } });
+
+        var delDialogResult = await delDialog.Result;
+
+        if (delDialogResult.Canceled)
+            return;
+
+        // Проверка на null перед использованием результата
+        if (delDialogResult.Data is bool)
+        {
+            await ProductService.Delete(product.Slug);
+        }
+
+        await OnInitializedAsync();
     }
 
     private async Task OpenDescription(string name, string? description)
