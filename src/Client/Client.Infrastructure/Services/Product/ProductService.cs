@@ -18,7 +18,7 @@ public class ProductService(IHttpClientService httpClient) : IProductService
 
     public async Task<bool> Put(UpdateProductCommand command)
     {
-        var serverResponse = await httpClient.PutAsJsonAsync(BaseProductUrl, command);
+        var serverResponse = await httpClient.PutAsJsonAsync($"{BaseProductUrl}/{command.Slug}", command);
         return serverResponse.Success;
     }
 

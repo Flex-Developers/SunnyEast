@@ -1,4 +1,5 @@
 ﻿@page "/admin/products"
+@using Application.Contract.Product.Commands
 @using Application.Contract.Product.Queries
 @using Application.Contract.Product.Responses
 @using Application.Contract.ProductCategory.Responses
@@ -52,10 +53,10 @@
                     <MudLink Typo="Typo.caption" Style="padding-left: 0" OnClick="() => OpenDescription(product.Name, product.Description)">Читать описание...</MudLink>
 
 
-                    <MudButton Color="Color.Default" Variant="Variant.Text" Size="Size.Small" Style="min-width: 28px; margin-left: 30px">
+                    <MudButton Color="Color.Default" OnClick="@(async () => await EditProductAsync(product))" Variant="Variant.Text" Size="Size.Small" Style="min-width: 28px; margin-left: 30px">
                         <MudIcon Icon="@Icons.Material.Filled.Edit"/>
                     </MudButton>
-                    <MudButton Color="Color.Error" Variant="Variant.Text" Size="Size.Small" Style="min-width: 28px;">
+                    <MudButton Color="Color.Error" OnClick="@(async () => await DeleteProductAsync(product))" Variant="Variant.Text" Size="Size.Small" Style="min-width: 28px;">
                         <MudIcon Icon="@Icons.Material.Filled.Delete"/>
                     </MudButton>
 
@@ -98,6 +99,32 @@
         StateHasChanged();
 
         return result;
+    }
+
+    private async Task EditProductAsync(ProductResponse product)
+    {
+        var updateCommand = new UpdateProductCommand
+        {
+            Slug = product.Slug,
+            Name = product.Name,
+            Price = product.Price,
+            Images = product.Images,
+            Description = product.Description,
+        };
+        
+        var parameters = new DialogParameters<EditProductDialog>
+        {
+            {"UpdateCommand", updateCommand},
+            { "CategoryName", _selectedCategory },
+            { "OnSuccessfullyCreate", new Action(async () => await OnInitializedAsync()) },
+            { "Categories", _categories.Select(c => c.Name).ToList() }
+        };
+        await DialogService.ShowAsync<EditProductDialog>("Edit", parameters);
+    }
+
+    private async Task DeleteProductAsync(ProductResponse product)
+    {
+        
     }
 
     private async Task OpenDescription(string name, string? description)
