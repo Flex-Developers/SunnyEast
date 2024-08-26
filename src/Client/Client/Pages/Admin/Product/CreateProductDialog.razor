@@ -33,10 +33,10 @@
                 </MudGrid>
 
                 <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px;">
-                    <MudButton OnClick="SaveChanges" Color="Color.Primary" Variant="Variant.Filled">
+                    <MudButton OnClick="SaveImagesChanges" Color="Color.Primary" Variant="Variant.Filled">
                         Сохранить изменения
                     </MudButton>
-                    <MudButton OnClick="CancelChanges" Color="Color.Error" Variant="Variant.Outlined">
+                    <MudButton OnClick="CancelImagesChanges" Color="Color.Error" Variant="Variant.Outlined">
                         Отменить изменения
                     </MudButton>
                 </div>
@@ -69,15 +69,13 @@
     private void ShowImageTable()
     {
         _showTable = true;
-        StateHasChanged();
     }
 
-    private void SaveChanges()
+    private void SaveImagesChanges()
     {
         if (_images.All(string.IsNullOrEmpty)) // if images not added
         {
             _showTable = false;
-            StateHasChanged();
             return;
         }
 
@@ -109,25 +107,15 @@
         }
     }
 
-    private void CancelChanges()
+    private void CancelImagesChanges()
     {
-        if (_command.Images != null && _command.Images.Length > 0) // if at least one image added
-            _images = _command.Images.ToList()!;
-        else
-        {
-            if (_command.Images is null)
-                _images = new() { "", "", "", "", "", "", "", "", "", "" };
-            else
-                _images = _command.Images.ToList()!;
-        }
-
+        _images = (_command.Images?.ToList() ?? new List<string>(Enumerable.Repeat("", 10))!)!;
         _showTable = false;
     }
 
     private void Cancel()
     {
         MudDialog.Cancel();
-        MudDialog.Close();
     }
 
     private async Task CreateAsync()
@@ -137,7 +125,7 @@
         if (_form.IsValid)
         {
             _command.ProductCategorySlug = (await CategoryService.GetByName(CategoryName))!.Slug;
-            _command.Images = _images.Where(i => !string.IsNullOrEmpty(i)).ToArray(); // Избавляемся от пустых ссылок
+            _command.Images = _images.Where(i => !string.IsNullOrEmpty(i)).ToArray(); // Избавляемся от пустых ссылок-строк
 
             var success = await ProductService.Post(_command);
             if (success)
