@@ -33,7 +33,7 @@
             <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(async () => await EditAsync(new UpdateProductCategoryCommand { Name = context.Name, Slug = context.Slug, BaseCategorySlug = context.BaseCategorySlug }))">Изменить</MudButton>
         </MudTd>
         <MudTd DataLabel="Удалить">
-            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="@(async () => await DeleteAsync(context.Slug))">Удалить</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="@(async () => await DeleteAsync(context.Slug, context.Name))">Удалить</MudButton>
         </MudTd>
     </RowTemplate>
     <PagerContent>
@@ -66,10 +66,10 @@
             });
     }
 
-    private async Task DeleteAsync(string slug)
+    private async Task DeleteAsync(string slug, string name)
     {
         var delDialog = await DialogService.ShowAsync<DeleteConfirmation>("",
-            new DialogParameters { { "ContentText", "Вы хотите удалить категорию?" } },
+            new DialogParameters { { "ContentText", $"Вы хотите удалить {name}?" } },
             new DialogOptions { ClassBackground = "dialog-background" });
 
         var delDialogResult = await delDialog.Result;
