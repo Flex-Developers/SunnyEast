@@ -24,22 +24,23 @@
 
             @if (_showTable)
             {
-                <MudGrid>
-                    @foreach (var image in _images.Select((value, index) => new { value, index }))
-                    {
-                        <MudTextField HelperText="@((image.index + 1).ToString())" @bind-Value="_images[image.index]" Label="Url изображения"
-                                      InputType="InputType.Url" InputMode="InputMode.url" Clearable="true" FullWidth="true" AutoGrow="true"/>
-                    }
-                </MudGrid>
+            <MudGrid>
+                @foreach (var image in _images.Select((value, index) => new { value, index }))
+                {
+                <MudTextField HelperText="@((image.index + 1).ToString())" @bind-Value="_images[image.index]" Label="Url изображения"
+                              InputType="InputType.Url" InputMode="InputMode.url" Clearable="true" FullWidth="true" AutoGrow="true"
+                              Error="@_images[image.index].Contains(" ")" ErrorText="Ссылка не может содержать пробелы!" Immediate="true"/>
+                }
+            </MudGrid>
 
-                <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px;">
-                    <MudButton OnClick="SaveImagesChanges" Color="Color.Primary" Variant="Variant.Filled">
-                        Сохранить изменения
-                    </MudButton>
-                    <MudButton OnClick="CancelImagesChanges" Color="Color.Error" Variant="Variant.Outlined">
-                        Отменить изменения
-                    </MudButton>
-                </div>
+            <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px;">
+                <MudButton OnClick="SaveImagesChanges" Color="Color.Primary" Variant="Variant.Filled" Disabled="@_images.Any(url => url.Contains(" "))">
+                    Сохранить изменения
+                </MudButton>
+                <MudButton OnClick="CancelImagesChanges" Color="Color.Error" Variant="Variant.Outlined">
+                    Отменить изменения
+                </MudButton>
+            </div>
             }
         </DialogContent>
         <DialogActions>
@@ -125,7 +126,7 @@
         if (_form.IsValid)
         {
             _command.ProductCategorySlug = (await CategoryService.GetByName(CategoryName))!.Slug;
-            _command.Images = _images.Where(i => !string.IsNullOrEmpty(i)).ToArray(); // Избавляемся от пустых ссылок-строк
+            _command.Images = _images.Where(i => !string.IsNullOrWhiteSpace(i)).ToArray(); // Избавляемся от пустых ссылок-строк
 
             var success = await ProductService.Post(_command);
             if (success)
@@ -137,7 +138,7 @@
         }
         else
         {
-            Snackbar. Add("Пожалуйста, заполните все обязательные поля.", Severity.Warning);
+            Snackbar. Add("Пожалуйста, заполните все обязательные поля правильно!", Severity.Warning);
         }
     }
 
