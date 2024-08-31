@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Application.Contract.Product.Commands;
 
 public class CreateProductCommand : IRequest<string>

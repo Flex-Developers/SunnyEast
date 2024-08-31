@@ -12,8 +12,9 @@ public class UpdateProductCommandHandler(IApplicationDbContext context)
     public async Task<Unit> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
     {
         var product = await context.Products.FirstOrDefaultAsync(product => product.Slug == request.Slug, cancellationToken);
-        if (product == null) 
-            throw new NotFoundException($"Product with slug {request.Slug} not found");
+        
+        if (product is null) 
+            throw new NotFoundException($"Продукт не найден {request.Slug}");
         
         product.Name = request.Name ?? product.Name;
         product.Price = request.Price ?? product.Price;
@@ -23,8 +24,8 @@ public class UpdateProductCommandHandler(IApplicationDbContext context)
         var category = await context.ProductCategories
             .FirstOrDefaultAsync(s => s.Slug == request.ProductCategorySlug, cancellationToken);
         
-        if (category == null)
-            throw new NotFoundException($"(Категория не найдена) Category with slug {request.ProductCategorySlug} not found");
+        if (category is null)
+            throw new NotFoundException($"Категория не найдена {request.ProductCategorySlug}");
         
         product.ProductCategoryId = category.Id;
 

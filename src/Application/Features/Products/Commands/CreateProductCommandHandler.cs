@@ -17,14 +17,16 @@ public class CreateProductCommandHandler(IApplicationDbContext context, IMapper 
         var product = mapper.Map<Product>(request);
 
         product.Slug = slugService.GenerateSlug(product.Name);
+        
         if (await context.Products.AnyAsync(s => s.Slug == product.Slug, cancellationToken))
-            throw new ExistException($"(Такой продукт уже есть) Product with name {product.Name} and slug {product.Slug} already exist");
+            throw new ExistException($"Продукт с названием {product.Name} уже существует!");
 
-        var category =
-            await context.ProductCategories.FirstOrDefaultAsync(s => s.Slug == request.ProductCategorySlug,
-                cancellationToken);
-        if (category == null)
-            throw new NotFoundException($"(Категория не найдена) Category with slug {request.ProductCategorySlug} not found");
+        var category = await context.ProductCategories
+            .FirstOrDefaultAsync(s => s.Slug == request.ProductCategorySlug, cancellationToken);
+        
+        if (category is null)
+            throw new NotFoundException($"Категория не найдена {request.ProductCategorySlug}");
+        
         product.ProductCategoryId = category.Id;
         
         await context.Products.AddAsync(product, cancellationToken);
