@@ -18,6 +18,8 @@ public class UpdateProductCommandHandler(IApplicationDbContext context)
         
         product.Name = request.Name ?? product.Name;
         product.Price = request.Price ?? product.Price;
+        product.DiscountPrice = request.DiscountPrice?? product.DiscountPrice;
+        product.DiscountPercentage = request.DiscountPercentage?? product.DiscountPercentage;
         product.ProductCategorySlug = request.ProductCategorySlug ?? product.ProductCategorySlug;
         product.Description = request.Description?? product.Description;
         
