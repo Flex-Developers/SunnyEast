@@ -21,6 +21,6 @@ public class DeleteProductCommandHandler(IApplicationDbContext context)
             return Unit.Value;
         }
 
-        throw new NotFoundException($"product with slug {request.Slug} not found");
+        throw new NotFoundException($"Продукт не найден {request.Slug}");
     }
 }

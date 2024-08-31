@@ -11,14 +11,17 @@ public class UpdateProductCategoryCommandHandler(IApplicationDbContext context)
 {
     public async Task<string> Handle(UpdateProductCategoryCommand request, CancellationToken cancellationToken)
     {
-        var old = await context.ProductCategories.FirstOrDefaultAsync(s => s.Slug == request.Slug, cancellationToken);
-        if (old == null) throw new NotFoundException($"ProductCategory with id {request.Slug} is not found");
+        var old = await context.ProductCategories
+            .FirstOrDefaultAsync(s => s.Slug == request.Slug, cancellationToken);
+        
+        if (old is null) 
+            throw new NotFoundException($"Категория не найдена {request.Slug}");
 
         request.Name = request.Name.Trim();
 
-        if (await context.ProductCategories.FirstOrDefaultAsync(c => c.Name.ToLower() == request.Name.ToLower(),
+        if (await context.ProductCategories.FirstOrDefaultAsync(c => c.Name.Equals(request.Name, StringComparison.CurrentCultureIgnoreCase),
                 cancellationToken) != null)
-            throw new ExistException($"ProductCategory with name {request.Name} is already exists");
+            throw new ExistException($"Категория с названием {request.Name} уже существует!");
 
         old.Name = request.Name;
         await context.SaveChangesAsync(cancellationToken);

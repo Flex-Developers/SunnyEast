@@ -2,8 +2,8 @@
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6">
-            <MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3 mb-n1"/>
-            Подтверждение удаление
+            <MudIcon Icon="@Icons.Material.Filled.Delete"/>
+            Подтвердите удаление
         </MudText>
     </TitleContent>
     <DialogContent>
@@ -25,5 +25,5 @@
         MudDialog.Close(DialogResult.Ok(true));
     }
 
-    void Cancel() => MudDialog.Cancel();
+    void Cancel() => MudDialog.Close(DialogResult.Cancel());
 }

@@ -31,6 +31,14 @@ public class ProductCategoryController : ApiControllerBase
         return Ok();
     }
 
+    [HttpGet("GetByName/{name}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetByName([FromRoute]string name)
+    {
+        var result = await Mediator.Send(new GetProductCategoryQuery { Name = name });
+        return Ok(result);
+    }
+
     [HttpGet]
     [AllowAnonymous]
     public async Task<IActionResult> GetAll()

@@ -1,0 +1,23 @@
+﻿@namespace Client.Components.Dialogs
+<MudDialog AutoGrow="true" MaxWidth="MaxWidth.Large" Style="min-width: 400px; min-height: 100px;">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Description"/>
+            @ProductName
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField T="string" ReadOnly="true" Lines="10" Value="@ContentText" Style="width: 100%; height: auto; white-space: pre-wrap;"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Close">Закрыть</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+[CascadingParameter] private MudDialogInstance MudDialog { get; set; }
+[Parameter] public string? ContentText { get; set; }
+[Parameter] public string ProductName { get; set; }
+
+private void Close() => MudDialog.Close(DialogResult.Cancel());
+}

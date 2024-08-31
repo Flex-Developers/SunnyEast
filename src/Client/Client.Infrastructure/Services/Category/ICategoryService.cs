@@ -5,6 +5,7 @@ namespace Client.Infrastructure.Services.Category;
 
 public interface ICategoryService
 {
+    public Task<ProductCategoryResponse?> GetByName(string name);
     public Task<List<ProductCategoryResponse>?> Get();
     public Task<bool> Post(CreateProductCategoryCommand command);
     public Task<bool> Put(UpdateProductCategoryCommand command);
