@@ -17,7 +17,19 @@
                 }
             </MudSelect>
             <MudTextField Required="true" Label="Название" @bind-Value="UpdateCommand.Name" InputType="InputType.Text" FullWidth="true" Clearable="true" AutoGrow="true"/>
-            <MudTextField Required="true" Label="Цена" @bind-Value="UpdateCommand.Price" Format="F1" Clearable="true" FullWidth="true"/>
+            <MudGrid>
+                <MudItem xs="4">
+                    <MudNumericField T="decimal?" Value="UpdateCommand.Price" Min="0" Required="true" Label="Цена" Format="F2" Clearable="true" Immediate="true" FullWidth="true"
+                                     ValueChanged="@(price => { UpdateCommand.Price = price; UpdateDiscountPrice(UpdateCommand.DiscountPercentage); })"/>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudNumericField T="byte?" Label="Скидка (%)" Min="0" Max="100" Immediate="true" FullWidth="true" Clearable="true"
+                                     Value="UpdateCommand.DiscountPercentage" ValueChanged="@(percentage => UpdateDiscountPrice(percentage))"/>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudTextField Label="Цена со скидкой" @bind-Value="UpdateCommand.DiscountPrice" ReadOnly="true" FullWidth="true"/>
+                </MudItem>
+            </MudGrid>
             <MudTextField Label="Описание" @bind-Value="UpdateCommand.Description" InputType="InputType.Text" Clearable="true" FullWidth="true" AutoGrow="true"/>
 
             <MudButton Color="Color.Success" OnClick="ShowImageTable" StartIcon="@Icons.Material.Filled.Add">Изменить изображения</MudButton>
@@ -62,6 +74,8 @@
 
     protected override void OnInitialized()
     {
+        Console.WriteLine($"Percentage of discount: {UpdateCommand.DiscountPercentage}");
+        Console.WriteLine($"Discount price: {UpdateCommand.DiscountPrice}");
         _images = UpdateCommand.Images!.ToList();
         
         for (int i = _images.Count; i < 10; i++) // Добавление пустых строк, чтобы было предварительно 10 полей
@@ -142,6 +156,21 @@
         else
         {
             Snackbar.Add("Пожалуйста, заполните все обязательные поля правильно!", Severity.Warning);
+        }
+    }
+    
+    private void UpdateDiscountPrice(byte? percentage)
+    {
+        UpdateCommand.DiscountPercentage = percentage;
+        
+        if (UpdateCommand.Price.HasValue && UpdateCommand.DiscountPercentage.HasValue)
+        {
+            var discount = UpdateCommand.Price * (UpdateCommand.DiscountPercentage / 100m);
+            UpdateCommand.DiscountPrice = Math.Round((decimal)(UpdateCommand.Price - discount), 2);
+        }
+        else
+        {
+            UpdateCommand.DiscountPrice = null;
         }
     }
 
