@@ -60,19 +60,19 @@
 
                         @if (product.DiscountPrice.HasValue)
                         {
-                        <MudText Typo="Typo.body2" Align="Align.Left" Style="margin-left: 5px; color: red;">
-                            @($"{product.DiscountPrice}")
-                        </MudText>
+                            <MudText Typo="Typo.body2" Align="Align.Left" Style="margin-left: 5px; color: red;">
+                                @($"{product.DiscountPrice}")
+                            </MudText>
 
-                        <MudText Typo="Typo.body1" Align="Align.Right" Style="margin-left: auto; margin-right: 15px; text-decoration: line-through; font-size: larger;">
-                            @($"{product.Price}")
-                        </MudText>
+                            <MudText Typo="Typo.body1" Align="Align.Right" Style="margin-left: auto; margin-right: 15px; text-decoration: line-through; font-size: larger;">
+                                @($"{product.Price}")
+                            </MudText>
                         }
                         else
                         {
-                        <MudText Typo="Typo.body2" Align="Align.Left" Style="margin-left: 5px;">
-                            @($"{product.Price}")
-                        </MudText>
+                            <MudText Typo="Typo.body2" Align="Align.Left" Style="margin-left: 5px;">
+                                @($"{product.Price}")
+                            </MudText>
                         }
                     </div>
 
