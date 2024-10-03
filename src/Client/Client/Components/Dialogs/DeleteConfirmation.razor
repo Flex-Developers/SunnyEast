@@ -1,13 +1,13 @@
 ﻿@namespace Client.Components.Dialogs
-<MudDialog>
+<MudDialog MaxWidth="MaxWidth.Medium" FullWidth="true">
     <TitleContent>
-        <MudText Typo="Typo.h6">
-            <MudIcon Icon="@Icons.Material.Filled.Delete"/>
+        <MudText Typo="Typo.h6" Class="d-flex align-items-center">
+            <MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-2" />
             Подтвердите удаление
         </MudText>
     </TitleContent>
     <DialogContent>
-        <MudText>@ContentText</MudText>
+        <MudText Class="mb-3">@ContentText</MudText>
     </DialogContent>
     <DialogActions>
         <MudButton StartIcon="@Icons.Filled.Cancel" OnClick="Cancel">Отмена</MudButton>
