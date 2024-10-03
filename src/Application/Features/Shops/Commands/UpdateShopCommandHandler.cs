@@ -16,7 +16,7 @@ public class UpdateShopCommandHandler(IApplicationDbContext context) : IRequestH
             throw new NotFoundException($"Shop with slug {request.Slug} not found");
 
         shop.Address = request.Address;
-        shop.ImageUrl = request.ImageUrl;
+        shop.Images = request.Images;
         shop.AddressGoogle = request.AddressGoogle ?? null;
         shop.AddressYandex = request.AddressYandex ?? null;
 

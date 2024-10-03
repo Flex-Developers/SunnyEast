@@ -20,6 +20,7 @@ public class CreateShopCommandHandler(IApplicationDbContext context, IMapper map
         if (await context.Shops.AnyAsync(s => s.Slug == shop.Slug, cancellationToken))
             throw new ExistException($"Магазин с адресом {shop.Address} уже существует");
 
+        shop.Images = request.Images;
         await context.Shops.AddAsync(shop, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
         return shop.Slug;

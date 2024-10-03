@@ -30,7 +30,8 @@
     <RowTemplate>
         <MudTd>@context.Name</MudTd>
         <MudTd DataLabel="Изменить">
-            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(async () => await EditAsync(new UpdateProductCategoryCommand { Name = context.Name, Slug = context.Slug, BaseCategorySlug = context.BaseCategorySlug }))">Изменить</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" 
+                       OnClick="@(async () => await EditAsync(new UpdateProductCategoryCommand { Name = context.Name, Slug = context.Slug, BaseCategorySlug = context.BaseCategorySlug }))">Изменить</MudButton>
         </MudTd>
         <MudTd DataLabel="Удалить">
             <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="@(async () => await DeleteAsync(context.Slug, context.Name))">Удалить</MudButton>

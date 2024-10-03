@@ -144,11 +144,11 @@
     private async Task DeleteProductAsync(ProductResponse product)
     {
         var delDialog = await DialogService.ShowAsync<DeleteConfirmation>("",
-            new DialogParameters { { "ContentText", $"Вы хотите удалить {product.Name}?" } });
+            new DialogParameters { { "ContentText", $"Вы хотите удалить {product.Name} ?" } });
 
         var delDialogResult = await delDialog.Result;
 
-        if (delDialogResult.Canceled)
+        if (delDialogResult.Canceled) //TODO: check without this (delete)
             return;
         
         if (delDialogResult.Data is bool)

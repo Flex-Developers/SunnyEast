@@ -1,26 +1,17 @@
-﻿@using Application.Contract.Product.Commands
-@using Client.Infrastructure.Services.Category
-@using Client.Infrastructure.Services.Product
-@inject ICategoryService CategoryService
-@inject IProductService ProductService
-<MudForm Model="UpdateCommand" @ref="_form">
+﻿@using Application.Contract.Shops.Commands
+@using Client.Infrastructure.Services.HttpClient
+@inject IHttpClientService HttpClient
+<MudForm Model="UpdateShop" @ref="_form">
     <MudDialog Style="width:40%">
         <TitleContent>
-            <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Create" Class="mr-3 mb-n1"/>Изменить продукт</MudText>
+            <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Create" Class="mr-3 mb-n1"/>Изменить магазин</MudText>
         </TitleContent>
 
         <DialogContent>
-            <MudSelect T="string" Required="true" Label="Категория" AnchorOrigin="Origin.BottomCenter" @bind-Value="CategoryName" FullWidth="true">
-                @foreach (var category in Categories)
-                {
-                    <MudSelectItem Value="@category">@category</MudSelectItem>
-                }
-            </MudSelect>
-            <MudTextField Required="true" Label="Название" @bind-Value="UpdateCommand.Name" InputType="InputType.Text" FullWidth="true" Clearable="true" AutoGrow="true"/>
-            <MudTextField Required="true" Label="Цена" @bind-Value="UpdateCommand.Price" Format="F1" Clearable="true" FullWidth="true"/>
-            <MudTextField Label="Описание" @bind-Value="UpdateCommand.Description" InputType="InputType.Text" Clearable="true" FullWidth="true" AutoGrow="true"/>
 
-            <MudButton Color="Color.Success" OnClick="ShowImageTable" StartIcon="@Icons.Material.Filled.Add">Изменить изображения</MudButton>
+            <MudTextField Required="true" Label="Адрес" @bind-Value="UpdateShop.Address" InputType="InputType.Text" FullWidth="true" Clearable="true" AutoGrow="true"/>
+
+            <MudButton Color="Color.Success" OnClick="ShowImageTable" StartIcon="@Icons.Material.Filled.Add">Добавить изображения</MudButton>
 
             @if (_showTable)
             {
@@ -45,30 +36,32 @@
         </DialogContent>
         <DialogActions>
             <MudButton OnClick="Cancel">Отмена</MudButton>
-            <MudButton Disabled="@_showTable" Color="Color.Primary" Variant="Variant.Filled" OnClick="EditAsync">Сохранить</MudButton>
+            <MudButton Disabled="@_showTable" Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveChangesAsync">Сохранить</MudButton>
         </DialogActions>
     </MudDialog>
 </MudForm>
 
 @code {
+
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
-    [Parameter] public string CategoryName { get; set; } = string.Empty;
     [Parameter] public Action OnSuccessfullyCreate { get; set; } = null!;
-    [Parameter] public List<string> Categories { get; set; } = null!;
-    [Parameter] public UpdateProductCommand UpdateCommand { get; set; } = null!;
-    private List<string> _images;
+    [Parameter] public UpdateShopCommand UpdateShop { get; set; } = null!;
+    MudForm form;
+
+    private List<string> _images = new() { "", "", "", "", "" }; // 5
     private MudForm _form = null!;
     private bool _showTable;
 
     protected override void OnInitialized()
     {
-        _images = UpdateCommand.Images!.ToList();
+        _images = UpdateShop.Images!.ToList();
 
-        for (int i = _images.Count; i < 10; i++) // Добавление пустых строк, чтобы было предварительно 10 полей
+        for (int i = _images.Count; i < 5; i++) // Добавление пустых строк, чтобы было предварительно 10 полей
             _images.Add("");
 
-        UpdateCommand.Images = _images.ToArray(); // Чтобы при изменении, добавленные пустые строки не исчезли
+        UpdateShop.Images = _images.ToArray(); // Чтобы при изменении, добавленные пустые строки не исчезли
     }
+
 
     private void ShowImageTable()
     {
@@ -85,11 +78,11 @@
 
         _showTable = false;
         _images = SortList(_images);
-        UpdateCommand.Images = _images.ToArray();
+        UpdateShop.Images = _images.ToArray();
 
         Snackbar.Add("Изображения сохранены", Severity.Success);
 
-        List<string> SortList(List<string> images)
+        List<string> SortList(List<string> images) //TODO: replace with UrlService
         {
             // Сортирует список на случай если пользователь не введет данные подряд и оставит строки пустыми 
             for (int i = 0; i < images.Count; i++)
@@ -100,7 +93,7 @@
                     {
                         if (!string.IsNullOrEmpty(images[j]))
                         {
-                            (images[j], images[i]) = (images[i], images[j]); // swap
+                            (images[j], images[i]) = (images[i], images[j]);
                             j = images.Count;
                         }
                     }
@@ -113,7 +106,7 @@
 
     private void CancelImagesChanges()
     {
-        _images = UpdateCommand.Images?.ToList() ?? new List<string>(Enumerable.Repeat("", 10));
+        _images = (UpdateShop.Images?.ToList() ?? new List<string>(Enumerable.Repeat("", 5))!)!;
         _showTable = false;
     }
 
@@ -122,22 +115,23 @@
         MudDialog.Cancel();
     }
 
-    private async Task EditAsync()
+    private async Task SaveChangesAsync()
     {
         await _form.Validate();
 
         if (_form.IsValid)
         {
-            UpdateCommand.ProductCategorySlug = (await CategoryService.GetByName(CategoryName))!.Slug;
-            UpdateCommand.Images = _images.Where(i => !string.IsNullOrWhiteSpace(i)).ToArray(); // Избавляемся от пустых ссылок-строк
+            UpdateShop.Images = _images.Where(i => !string.IsNullOrWhiteSpace(i)).ToArray(); // Избавляемся от пустых ссылок-строк
 
-            var success = await ProductService.Put(UpdateCommand);
-            if (success)
+            var response = await HttpClient.PutAsJsonAsync("/api/shop/", UpdateShop);
+            if (response.Success)
             {
-                Snackbar.Add("Продукт успешно изменен!", Severity.Success);
+                Snackbar.Add("Магазин успешно изменён!", Severity.Success);
                 MudDialog.Close();
                 OnSuccessfullyCreate();
             }
+            else
+                Snackbar.Add("Произошла ошибка!", Severity.Error);
         }
         else
         {
