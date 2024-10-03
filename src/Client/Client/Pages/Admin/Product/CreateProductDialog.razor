@@ -21,12 +21,12 @@
 
             <MudGrid>
                 <MudItem xs="4">
-                    <MudNumericField T="decimal?" Min="0" Required="true" Label="Цена" Format="F2" Clearable="true" Immediate="true" FullWidth="true" 
+                    <MudNumericField T="decimal?" Min="0" Required="true" Label="Цена" Format="F2" Clearable="true" Immediate="true" FullWidth="true"
                                      ValueChanged="@(price => { _command.Price = price; UpdateDiscountPrice(_command.DiscountPercentage); })"/>
                 </MudItem>
                 <MudItem xs="4">
-                    <MudNumericField T="byte?" Label="Скидка (%)" ValueChanged="@(percentage => UpdateDiscountPrice(percentage))" 
-                                  Min="0" Max="100" Immediate="true" FullWidth="true" Clearable="true" />
+                    <MudNumericField T="byte?" Label="Скидка (%)" ValueChanged="@(percentage => UpdateDiscountPrice(percentage))"
+                                     Min="0" Max="100" Immediate="true" FullWidth="true" Clearable="true"/>
                 </MudItem>
                 <MudItem xs="4">
                     <MudTextField Label="Цена со скидкой" @bind-Value="_command.DiscountPrice" ReadOnly="true" FullWidth="true"/>
