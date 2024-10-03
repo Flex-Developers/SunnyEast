@@ -180,7 +180,7 @@ namespace Infrastructure.Migrations
                     b.Property<string>("AddressYandex")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("ImageUrl")
+                    b.Property<string>("Images")
                         .HasColumnType("longtext");
 
                     b.Property<bool>("IsDeleted")
