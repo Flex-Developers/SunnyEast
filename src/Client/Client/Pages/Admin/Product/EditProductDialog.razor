@@ -63,7 +63,7 @@
     protected override void OnInitialized()
     {
         _images = UpdateCommand.Images!.ToList();
-        
+
         for (int i = _images.Count; i < 10; i++) // Добавление пустых строк, чтобы было предварительно 10 полей
             _images.Add("");
 

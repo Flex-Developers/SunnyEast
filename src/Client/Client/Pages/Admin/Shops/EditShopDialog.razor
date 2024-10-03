@@ -10,7 +10,7 @@
         <DialogContent>
 
             <MudTextField Required="true" Label="Адрес" @bind-Value="UpdateShop.Address" InputType="InputType.Text" FullWidth="true" Clearable="true" AutoGrow="true"/>
-            
+
             <MudButton Color="Color.Success" OnClick="ShowImageTable" StartIcon="@Icons.Material.Filled.Add">Добавить изображения</MudButton>
 
             @if (_showTable)
@@ -51,11 +51,11 @@
     private List<string> _images = new() { "", "", "", "", "" }; // 5
     private MudForm _form = null!;
     private bool _showTable;
-    
+
     protected override void OnInitialized()
     {
         _images = UpdateShop.Images!.ToList();
-        
+
         for (int i = _images.Count; i < 5; i++) // Добавление пустых строк, чтобы было предварительно 10 полей
             _images.Add("");
 
@@ -82,7 +82,7 @@
 
         Snackbar.Add("Изображения сохранены", Severity.Success);
 
-        List<string> SortList(List<string> images)
+        List<string> SortList(List<string> images) //TODO: replace with UrlService
         {
             // Сортирует список на случай если пользователь не введет данные подряд и оставит строки пустыми 
             for (int i = 0; i < images.Count; i++)

@@ -8,9 +8,9 @@
         </TitleContent>
 
         <DialogContent>
-            
+
             <MudTextField Required="true" Label="Адрес" @bind-Value="_command.Address" InputType="InputType.Text" FullWidth="true" Clearable="true" AutoGrow="true"/>
-           
+
 
             <MudButton Color="Color.Success" OnClick="ShowImageTable" StartIcon="@Icons.Material.Filled.Add">Добавить изображения</MudButton>
 
@@ -43,11 +43,11 @@
 </MudForm>
 
 @code {
-    
+
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public Action OnSuccessfullyCreate { get; set; } = null!;
     MudForm form;
-    
+
     private List<string> _images = new() { "", "", "", "", "" }; // 5
     private MudForm _form = null!;
     private bool _showTable;
@@ -58,7 +58,7 @@
         Address = string.Empty,
     };
 
-    
+
     private void ShowImageTable()
     {
         _showTable = true;
