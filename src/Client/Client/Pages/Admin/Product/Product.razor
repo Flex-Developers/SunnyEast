@@ -9,15 +9,17 @@
 @inject IProductService ProductService
 @inject ICategoryService CategoryService
 @inject IDialogService DialogService
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 
 <MudPaper Elevation="25">
     <MudToolBar>
-        <MudSelect T="string" Label="Категория" Style="margin-right: 15px; padding-bottom: 3%" AnchorOrigin="Origin.BottomCenter" ValueChanged="@LoadProductsAsync">
+        <MudSelect T="string" Label="Категория" Style="margin-right: 15px; padding-bottom: 3%" Value="@_selectedCategory" ValueChanged="@(async (string value) => await OnCategoryChanged(value))">
             @foreach (var category in _categories)
             {
                 <MudSelectItem Value="@(category.Name)">@category.Name</MudSelectItem>
             }
         </MudSelect>
+
 
         <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="CreateAsync" Style="vertical-align: middle;">Создать➕</MudButton>
 
@@ -111,8 +113,16 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadProductsAsync(_selectedCategory);
         _categories = (await CategoryService.Get())!;
+        _selectedCategory = await LoadSelectedCategoryAsync();
+        await LoadProductsAsync(_selectedCategory);
+        StateHasChanged();
+    }
+
+    private async Task OnCategoryChanged(string value)
+    {
+        _selectedCategory = value; // Устанавливаем выбранную категорию
+        await LoadProductsAsync(_selectedCategory); // Загружаем продукты
         StateHasChanged();
     }
 
@@ -189,12 +199,25 @@
 
     private async Task LoadProductsAsync(string category)
     {
-        _selectedCategory = category;
-        if (!string.IsNullOrEmpty(_selectedCategory))
+        if (!string.IsNullOrEmpty(category))
         {
-            _products = await ProductService.GetByCategoryName(_selectedCategory);
-            StateHasChanged();
+            _products = await ProductService.GetByCategoryName(category);
+            await SaveSelectedCategoryAsync(category);
         }
+    }
+
+    private async Task SaveSelectedCategoryAsync(string category)
+    {
+        await LocalStorage.SetItemAsync("selectedCategory", category);
+    }
+
+    private async Task<string> LoadSelectedCategoryAsync()
+    {
+        string selectedCategory = (await LocalStorage.GetItemAsync<string>("selectedCategory"))!; // ?? string.Empty;
+        if (_categories.Any(c => c.Name == selectedCategory))
+            return selectedCategory;
+
+        return string.Empty;
     }
 
     private async Task CreateAsync()
