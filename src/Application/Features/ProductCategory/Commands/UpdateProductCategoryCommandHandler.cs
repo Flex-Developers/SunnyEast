@@ -19,11 +19,13 @@ public class UpdateProductCategoryCommandHandler(IApplicationDbContext context)
 
         request.Name = request.Name.Trim();
 
-        if (await context.ProductCategories.FirstOrDefaultAsync(c => c.Name.Equals(request.Name, StringComparison.CurrentCultureIgnoreCase),
-                cancellationToken) != null)
-            throw new ExistException($"Категория с названием {request.Name} уже существует!");
+        // if (await context.ProductCategories.FirstOrDefaultAsync(c => c.Name.Equals(request.Name, StringComparison.CurrentCultureIgnoreCase),
+        //         cancellationToken) != null)
+        //     throw new ExistException($"Категория с названием {request.Name} уже существует!");
 
         old.Name = request.Name;
+        old.ImageUrl = request.ImageUrl;
+        
         await context.SaveChangesAsync(cancellationToken);
         return old.Slug;
     }

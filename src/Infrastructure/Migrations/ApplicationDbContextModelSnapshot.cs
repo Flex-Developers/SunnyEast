@@ -155,6 +155,9 @@ namespace Infrastructure.Migrations
                     b.Property<byte?>("DiscountPercentage")
                         .HasColumnType("tinyint unsigned");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("longtext");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 

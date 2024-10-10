@@ -23,6 +23,7 @@ public class CreateProductCategoryCommandHandler(
             throw new ExistException($"Такая категория уже существует {productCategory.Slug}");
         
         productCategory.Name = productCategory.Name.Trim();
+        productCategory.ImageUrl = request.ImageUrl;
         
         await context.ProductCategories.AddAsync(productCategory, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
