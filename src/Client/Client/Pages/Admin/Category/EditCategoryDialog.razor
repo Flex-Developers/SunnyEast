@@ -3,21 +3,28 @@
 
 @inject ICategoryService CategoryService
 
-<MudDialog>
+<MudDialog Class="category-dialog">
     <TitleContent>
-        <MudText Typo="Typo.h6">
-            <MudIcon Icon="@Icons.Material.Filled.Update" Class="mr-3 mb-n1"/>
-            Обновить категорию
+        <MudText Typo="Typo.h6" Class="dialog-title">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-2 mb-n1"/>
+            Изменить категорию
         </MudText>
     </TitleContent>
+
     <DialogContent>
-        <MudTextField @bind-Value="Command.Name" Label="Имя"/>
+        <!-- Поле с именем категории -->
+        <MudTextField @bind-Value="Command.Name" Label="Имя" Required="true" Class="dialog-text-field"/>
+
+        <!-- Поле для ссылки на изображение -->
+        <MudTextField @bind-Value="Command.ImageUrl" Label="Ссылка на изображение" AutoGrow="true" FullWidth="true" Clearable="true" Class="dialog-text-field"/>
     </DialogContent>
+
     <DialogActions>
-        <MudButton OnClick="@(Cancel)">Отмена</MudButton>
-        <MudButton Color="Color.Primary" OnClick="@(async () => await UpdateAsync())">Обновить</MudButton>
+        <MudButton OnClick="@(Cancel)" Color="Color.Secondary" Variant="Variant.Outlined">Отмена</MudButton>
+        <MudButton Color="Color.Primary" OnClick="@(async () => await UpdateAsync())">Сохранить</MudButton>
     </DialogActions>
 </MudDialog>
+
 
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
@@ -44,3 +51,22 @@
     }
 
 }
+<style>
+    .category-dialog {
+        width: 60%; /* Установите ширину на 80% от экрана */
+        max-width: 600px; /* Задайте максимальную ширину */
+    }
+
+    .dialog-title {
+        display: flex;
+        align-items: center;
+        font-weight: 600;
+        margin-bottom: 16px;
+    }
+
+    .dialog-text-field {
+        margin-bottom: 16px;
+        width: 100%;
+    }
+    
+</style>
