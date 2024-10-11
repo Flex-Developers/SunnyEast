@@ -11,7 +11,7 @@
 @inject ICategoryService CategoryService
 
 <div style="position: relative; display: flex; align-items: center; margin-bottom: 20px;">
-    <h3 style="display: inline-block; margin-right: 20px">Категория товаров</h3>
+    <h3 style="display: inline-block; margin-right: 1px">Категория товаров</h3>
     <MudButton StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled" Color="Color.Success" OnClick="@(async () => await AddAsync())"
                Style="position: absolute; right: 0; bottom: 5px;">
         Добавить
@@ -24,20 +24,26 @@
         foreach (var category in _categories)
         {
             <MudItem xs="12" sm="6" md="4" lg="2">
-                <MudCard Style="max-width: 100%; height: 300px; width: 400px; display: flex; flex-direction: column; justify-content: space-between;" Class="product-card" OnClick="@(async () => await EditAsync(category))">
+                <MudCard Style="max-width: 100%; height: 300px; width: 100%; display: flex; flex-direction: column; justify-content: space-between;" Class="product-card" OnClick="@(async () => await EditAsync(category))">
                     <!-- Изображение категории -->
                     @if (!string.IsNullOrEmpty(category.ImageUrl))
                     {
                         <div class="category-image" style="position: relative; height: 350px;">
                             <MudCardMedia Image="@category.ImageUrl" Alt="Image not available" Style="height: 100%; width: 100%; object-fit: cover;"></MudCardMedia>
-                            <div class="image-overlay"></div> <!-- Псевдоэлемент для затемнения изображения -->
                             <div class="category-title">
                                 @(category.Name.Length > 40 ? category.Name.Substring(0, 40) + "..." : category.Name)
                             </div>
                         </div>
                     }
+                    else
+                    {
+                        <!-- Название категории, если нет изображения -->
+                        <div class="category-title" style="height: 100%; display: flex; align-items: center; justify-content: center;">
+                            @(category.Name.Length > 40 ? category.Name.Substring(0, 40) + "..." : category.Name)
+                        </div>
+                    }
 
-                    <MudCardContent Style="padding: 5px 0 7px 8px; flex-grow: 1; display: flex; align-items: center; flex-direction: column; justify-content: center;">
+                    <MudCardContent Style="padding: 5px 0 7px 8px; flex-grow: 1; display: flex; align-items: flex-end; justify-content: flex-end;">
                         <!-- Контейнер с кнопками, выровненный по правому краю -->
                         <div style="display: flex; justify-content: flex-end; width: 100%; margin-bottom: 0; margin-right: 0">
                             <MudButton Color="Color.Default" OnClick="@(async () => await EditAsync(category))"
@@ -101,7 +107,6 @@
         if (delDialogResult.Canceled)
             return;
 
-// Проверка на null перед использованием результата
         if (delDialogResult.Data is bool)
         {
             await CategoryService.Delete(slug);
@@ -118,12 +123,15 @@
     }
 
     .product-card {
-        transition: transform 0.3s ease; /* Убираем затемнение карточки */
-        cursor: pointer; /* Указатель при наведении */
+        position: relative;
+        transition: transform 0.3s ease, background-color 0.3s ease;
+        cursor: pointer;
+        background-color: transparent;
     }
 
     .product-card:hover {
         transform: scale(1.05);
+        background-color: rgba(0, 0, 0, 0.4); /* Затемнение карточки */
     }
 
     .category-image {
@@ -135,30 +143,37 @@
         justify-content: center;
     }
 
-    .image-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(0, 0, 0, 0.4); /* Черный цвет с прозрачностью */
-        opacity: 0; /* Изначально скрыт */
-        transition: opacity 0.3s ease; /* Плавный переход */
+    /* Фильтр затемнения применяется только к изображению */
+    .category-image .mud-card-media {
+        transition: filter 0.3s ease;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
 
-    .product-card:hover .image-overlay {
-        opacity: 1; /* Показывать при наведении */
+    .product-card:hover .category-image .mud-card-media {
+        filter: brightness(0.7); /* Затемнение изображения */
     }
 
     .category-title {
         position: absolute;
-        color: white; /* Цвет текста */
-        font-size: 25px; /* Размер текста */
-        font-weight: 510; /* Неподчеркнутый текст */
-        text-align: center; /* Центрирование текста */
-        top: 50%; /* Центрирование вертикально */
-        left: 50%; /* Центрирование горизонтально */
-        transform: translate(-50%, -50%); /* Центрирование текста */
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7); /* Тень для лучшей читаемости */
+        color: white;
+        font-size: 25px;
+        font-weight: 510;
+        text-align: center;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7); /* Тень для текста */
+        z-index: 1; /* Обеспечивает, что текст будет поверх изображения */
+        pointer-events: none; /* Исключает текст из взаимодействия при наведении */
+    }
+
+    /* Для карточки без изображения */
+    .product-card .category-title {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 </style>
