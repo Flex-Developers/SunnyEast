@@ -4,7 +4,7 @@
 @inject ICategoryService CategoryService
 @inject IProductService ProductService
 <MudForm Model="_command" @ref="_form">
-    <MudDialog Style="width:40%">
+    <MudDialog Class="product-dialog" >
         <TitleContent>
             <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Create" Class="mr-3 mb-n1"/>Добавить продукт</MudText>
         </TitleContent>
@@ -132,7 +132,7 @@
 
     private void Cancel()
     {
-        MudDialog.Cancel();
+        MudDialog.Close(DialogResult.Cancel());
     }
 
     private async Task CreateAsync()
@@ -173,3 +173,10 @@
         }
     }
 }
+
+<style>
+    .product-dialog {
+        width: 95%; /* Устанавливает ширину на 90% */
+        max-width: 600px; /* Задаёт максимальную ширину */
+    }
+</style>

@@ -24,7 +24,7 @@
         foreach (var category in _categories)
         {
             <MudItem xs="12" sm="6" md="4" lg="2">
-                <MudCard Style="max-width: 100%; height: 300px; width: 100%; display: flex; flex-direction: column; justify-content: space-between;" Class="product-card" OnClick="@(async () => await EditAsync(category))">
+                <MudCard Style="max-width: 100%; height: 300px; width: 100%; display: flex; flex-direction: column; justify-content: space-between;" Class="product-card">
                     <!-- Изображение категории -->
                     @if (!string.IsNullOrEmpty(category.ImageUrl))
                     {
@@ -75,7 +75,6 @@
     private async Task AddAsync()
     {
         await DialogService.ShowAsync<CreateCategoryDialog>("", new DialogParameters { { "OnSuccess", new Action(async () => await OnInitializedAsync()) } });
-        await OnInitializedAsync();
     }
 
     private async Task EditAsync(ProductCategoryResponse category)
@@ -85,7 +84,9 @@
             Name = category.Name,
             Slug = category.Slug,
             BaseCategorySlug = category.BaseCategorySlug,
-            ImageUrl = category.ImageUrl
+            ImageUrl = category.ImageUrl,
+            DiscountPercentage = category.DiscountPercentage,
+            ApplyDiscountToAllProducts = category.ApplyDiscountToAllProducts
         };
 
         await DialogService.ShowAsync<EditCategoryDialog>("",
@@ -99,20 +100,14 @@
     private async Task DeleteAsync(string slug, string name)
     {
         var delDialog = await DialogService.ShowAsync<DeleteConfirmation>("",
-            new DialogParameters { { "ContentText", $"Вы хотите удалить {name}?" } },
+            new DialogParameters { { "Name", name } },
             new DialogOptions { ClassBackground = "dialog-background" });
 
-        var delDialogResult = await delDialog.Result;
-
-        if (delDialogResult.Canceled)
-            return;
-
-        if (delDialogResult.Data is bool)
+        if ((await delDialog.Result).Canceled is false)
         {
             await CategoryService.Delete(slug);
+            await OnInitializedAsync();
         }
-
-        await OnInitializedAsync();
     }
 
 }

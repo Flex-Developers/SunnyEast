@@ -17,6 +17,14 @@
 
         <!-- Поле для ссылки на изображение -->
         <MudTextField @bind-Value="Command.ImageUrl" Label="Ссылка на изображение" AutoGrow="true" FullWidth="true" Clearable="true" Class="dialog-text-field"/>
+
+        <MudNumericField T="byte?" Label="Скидка (%)" @bind-Value="Command.DiscountPercentage" Min="0" Max="100" Immediate="true" FullWidth="true" Clearable="true"/>
+
+        <MudCheckBox @bind-Value="Command.ApplyDiscountToAllProducts"
+                     Label="Изменить также продукты со скидкой"
+                     Color="Color.Secondary"
+                     Style="margin-left: -15px; padding-left: -15px; width: 100%; justify-content: flex-start;">
+        </MudCheckBox>
     </DialogContent>
 
     <DialogActions>
@@ -32,9 +40,15 @@
     [Parameter] public required UpdateProductCategoryCommand Command { get; set; }
     [Parameter] public Action OnSuccess { get; set; } = null!;
 
+    protected override Task OnInitializedAsync()
+    {
+        Console.WriteLine("Helllo");
+        return Task.CompletedTask;
+    }
+
     private void Cancel()
     {
-        MudDialog.Cancel();
+        MudDialog.Close(DialogResult.Cancel());
     }
 
     private async Task UpdateAsync()
@@ -46,6 +60,7 @@
             {
                 MudDialog.Close();
                 OnSuccess?.Invoke();
+                Snackbar.Add($"\"{Command.Name}\" Изменён!", Severity.Success);
             }
         }
     }
@@ -53,7 +68,7 @@
 }
 <style>
     .category-dialog {
-        width: 60%; /* Установите ширину на 80% от экрана */
+        width: 95%; /* Установите ширину на 95% от экрана */
         max-width: 600px; /* Задайте максимальную ширину */
     }
 

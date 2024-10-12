@@ -17,6 +17,9 @@
 
         <!-- Поле для ссылки на изображение -->
         <MudTextField @bind-Value="_command.ImageUrl" Label="Ссылка на изображение" AutoGrow="true" FullWidth="true" Clearable="true" Class="dialog-text-field"/>
+
+        <MudNumericField T="byte?" Label="Скидка (%)" @bind-Value="_command.DiscountPercentage" Min="0" Max="100" Immediate="true" FullWidth="true" Clearable="true"/>
+
     </DialogContent>
 
     <DialogActions>
@@ -33,7 +36,7 @@
 
     private void Cancel()
     {
-        MudDialog.Cancel();
+        MudDialog.Close(DialogResult.Cancel());
     }
 
     private async Task CreateAsync()
@@ -45,6 +48,7 @@
             {
                 MudDialog.Close();
                 OnSuccess?.Invoke();
+                Snackbar.Add($"\"{_command.Name}\" создан!", Severity.Success);
             }
         }
     }
@@ -53,7 +57,7 @@
 
 <style>
     .category-dialog {
-        width: 60%; /* Установите ширину на 80% от экрана */
+        width: 95%; /* Установите ширину на 80% от экрана */
         max-width: 600px; /* Задайте максимальную ширину */
     }
 

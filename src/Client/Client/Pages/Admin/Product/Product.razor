@@ -14,7 +14,7 @@
 <MudPaper Elevation="25">
     <MudToolBar>
         <MudSelect T="string" Label="Категория" Style="margin-right: 15px; padding-bottom: 3%"
-                   Value="@_selectedCategory" ValueChanged="@(async (string value) => await OnCategoryChanged(value))">
+                   Value="@SelectedCategory" ValueChanged="@(async (string value) => await OnCategoryChanged(value))">
             @foreach (var category in _categories)
             {
                 <MudSelectItem Value="@(category.Name)">@category.Name</MudSelectItem>
@@ -92,7 +92,7 @@
 
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: -7px">
                         <MudLink Typo="Typo.caption" Style="padding-left: 0"
-                                 OnClick="() => OpenDescription(product.Name, product.Description)">
+                                 OnClick="() => OpenDescriptionAsync(product.Name, product.Description)">
                             Читать описание...
                         </MudLink>
 
@@ -119,22 +119,23 @@
     private List<ProductResponse> _products = new();
     private List<ProductCategoryResponse> _categories = new();
     private readonly GetProductsQuery _query = new();
-    private string _selectedCategory = "";
     private bool IsSearching { get; set; }
+    
+    [Parameter] public string SelectedCategory { get; set; } = string.Empty;
 
 
     protected override async Task OnInitializedAsync()
     {
         _categories = (await CategoryService.Get())!;
-        _selectedCategory = await LoadSelectedCategoryAsync();
-        await LoadProductsAsync(_selectedCategory);
+        SelectedCategory = await LoadSelectedCategoryAsync();
+        await LoadProductsAsync(SelectedCategory);
         StateHasChanged();
     }
 
     private async Task OnCategoryChanged(string value)
     {
-        _selectedCategory = value; // Устанавливаем выбранную категорию
-        await LoadProductsAsync(_selectedCategory); // Загружаем продукты
+        SelectedCategory = value; // Устанавливаем выбранную категорию
+        await LoadProductsAsync(SelectedCategory); // Загружаем продукты
         StateHasChanged();
     }
 
@@ -174,7 +175,7 @@
         var parameters = new DialogParameters<EditProductDialog>
         {
             { "UpdateCommand", updateCommand },
-            { "CategoryName", _selectedCategory },
+            { "CategoryName", SelectedCategory },
             { "OnSuccessfullyCreate", new Action(async () => await OnInitializedAsync()) },
             { "Categories", _categories.Select(c => c.Name).ToList() }
         };
@@ -184,22 +185,16 @@
     private async Task DeleteProductAsync(ProductResponse product)
     {
         var delDialog = await DialogService.ShowAsync<DeleteConfirmation>("",
-            new DialogParameters { { "ContentText", $"Вы хотите удалить {product.Name}?" } });
+            new DialogParameters { { "Name", product.Name } });
 
-        var delDialogResult = await delDialog.Result;
-
-        if (delDialogResult.Canceled)
-            return;
-
-        if (delDialogResult.Data is bool)
+        if ((await delDialog.Result).Canceled is false)
         {
             await ProductService.Delete(product.Slug);
+            await OnInitializedAsync();
         }
-
-        await OnInitializedAsync();
     }
 
-    private async Task OpenDescription(string name, string? description)
+    private async Task OpenDescriptionAsync(string name, string? description)
     {
         await DialogService.ShowAsync<ProductDescriptionDialog>("",
             new DialogParameters
@@ -236,7 +231,7 @@
     {
         var parameters = new DialogParameters<CreateProductDialog>
         {
-            { "CategoryName", _selectedCategory },
+            { "CategoryName", SelectedCategory },
             { "OnSuccessfullyCreate", new Action(async () => await OnInitializedAsync()) },
             { "Categories", _categories.Select(c => c.Name).ToList() }
         };
