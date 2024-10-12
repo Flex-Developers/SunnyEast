@@ -1,12 +1,13 @@
 using Application.Common.Exceptions;
 using Application.Common.Interfaces.Contexts;
+using Application.Common.Interfaces.Services;
 using Application.Contract.Product.Commands;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Products.Commands;
 
-public class UpdateProductCommandHandler(IApplicationDbContext context)
+public class UpdateProductCommandHandler(IApplicationDbContext context, ISlugService slugService)
     : IRequestHandler<UpdateProductCommand, Unit>
 {
     public async Task<Unit> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
@@ -30,7 +31,8 @@ public class UpdateProductCommandHandler(IApplicationDbContext context)
             throw new NotFoundException($"Категория не найдена {request.ProductCategorySlug}");
         
         product.ProductCategoryId = category.Id;
-
+        product.Slug = slugService.GenerateSlug(request.Name!);
+        
         if (request.Images != null && request.Images.Length > 0)
             product.Images = request.Images;
         
