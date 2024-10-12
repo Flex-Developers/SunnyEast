@@ -6,5 +6,6 @@ public class UpdateProductCategoryCommand : IRequest<string>
     public required string Name { get; set; }
     public string? BaseCategorySlug { get; set; }
     public byte? DiscountPercentage { get; set; }
+    public bool ApplyDiscountToAllProducts { get; set; }
     public string? ImageUrl { get; set; }
 }

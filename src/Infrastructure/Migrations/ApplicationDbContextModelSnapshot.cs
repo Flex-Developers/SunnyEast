@@ -149,6 +149,9 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
+                    b.Property<bool>("ApplyDiscountToAllProducts")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<Guid?>("BaseProductCategoryId")
                         .HasColumnType("char(36)");
 
