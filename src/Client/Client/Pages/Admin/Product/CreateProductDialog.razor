@@ -28,9 +28,12 @@
                     <MudNumericField T="byte?" Label="Скидка (%)" ValueChanged="@(percentage => UpdateDiscountPrice(percentage))"
                                      Min="0" Max="100" Immediate="true" FullWidth="true" Clearable="true"/>
                 </MudItem>
-                <MudItem xs="4">
-                    <MudTextField Label="Цена со скидкой" @bind-Value="_command.DiscountPrice" ReadOnly="true" FullWidth="true"/>
-                </MudItem>
+                @if (_command.DiscountPercentage is >= 0)
+                {
+                    <MudItem xs="4">
+                        <MudTextField Label="Цена со скидкой" @bind-Value="_command.DiscountPrice" ReadOnly="true" FullWidth="true"/>
+                    </MudItem>
+                }
             </MudGrid>
 
             <MudTextField Label="Описание" @bind-Value="_command.Description" InputType="InputType.Text" Clearable="true" FullWidth="true" AutoGrow="true"/>
@@ -71,7 +74,7 @@
     [Parameter] public string CategoryName { get; set; } = string.Empty;
     [Parameter] public Action OnSuccessfullyCreate { get; set; } = null!;
     [Parameter] public List<string> Categories { get; set; } = null!;
-    private List<string> _images = new() { "", "", "", "", "", "", "", "", "", "" }; // 10
+    private List<string> _images = Enumerable.Repeat(string.Empty, 10).ToList();
     private MudForm _form = null!;
     private bool _showTable;
 
@@ -126,7 +129,7 @@
 
     private void CancelImagesChanges()
     {
-        _images = (_command.Images?.ToList() ?? new List<string>(Enumerable.Repeat("", 10))!)!;
+        _images = ((_command.Images?.ToList() ?? Enumerable.Repeat(string.Empty, 10).ToList()!)!);
         _showTable = false;
     }
 
@@ -176,7 +179,7 @@
 
 <style>
     .product-dialog {
-        width: 95%; /* Устанавливает ширину на 90% */
-        max-width: 600px; /* Задаёт максимальную ширину */
+        width: 95%; 
+        max-width: 600px; 
     }
 </style>

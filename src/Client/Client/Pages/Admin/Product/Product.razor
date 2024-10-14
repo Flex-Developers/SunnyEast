@@ -120,7 +120,7 @@
     private List<ProductCategoryResponse> _categories = new();
     private readonly GetProductsQuery _query = new();
     private bool IsSearching { get; set; }
-    
+
     [Parameter] public string SelectedCategory { get; set; } = string.Empty;
 
 
@@ -134,8 +134,8 @@
 
     private async Task OnCategoryChanged(string value)
     {
-        SelectedCategory = value; // Устанавливаем выбранную категорию
-        await LoadProductsAsync(SelectedCategory); // Загружаем продукты
+        SelectedCategory = value; 
+        await LoadProductsAsync(SelectedCategory); 
         StateHasChanged();
     }
 
@@ -220,7 +220,7 @@
 
     private async Task<string> LoadSelectedCategoryAsync()
     {
-        string selectedCategory = (await LocalStorage.GetItemAsync<string>("selectedCategory"))!; // ?? string.Empty;
+        string selectedCategory = (await LocalStorage.GetItemAsync<string>("selectedCategory"))!;
         if (_categories.Any(c => c.Name == selectedCategory))
             return selectedCategory;
 
@@ -242,45 +242,41 @@
 
 <style>
     .product-card {
-        transition: transform 0.3s ease, background-color 0.3s ease; /* Добавляем переход для фона */
-        position: relative; /* Для позиционирования псевдоэлемента */
-        overflow: hidden; /* Прячем переполнение */
+        transition: transform 0.3s ease, background-color 0.3s ease; 
+        position: relative; 
+        overflow: hidden; 
     }
 
     .product-card:hover {
-        transform: scale(1.05);
-        background-color: rgba(0, 0, 0, 0.1); /* Цвет фона карточки при наведении */
+        /*transform: scale(1.05);*/
+        background-color: rgba(0, 0, 0, 0.1); 
     }
 
-    /* Эффект затемнения на изображениях */
-    .image-container {
-        position: relative; /* Для псевдоэлемента */
-        height: 250px; /* Задаем фиксированную высоту для контейнера изображений */
-        overflow: hidden; /* Прячем переполнение */
+        .image-container {
+        position: relative; 
+        height: 250px; 
+        overflow: hidden; 
     }
 
     .image-container::before {
         content: "";
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.3); /* Черный цвет с 30% прозрачностью */
-        opacity: 0; /* Исходная непрозрачность */
-        transition: opacity 0.3s ease; /* Плавный переход для эффекта затемнения */
-        z-index: 1; /* Обеспечиваем, чтобы затемнение было выше изображения */
+        inset: 0; 
+        background: rgba(0, 0, 0, 0.3);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 1;
     }
+
 
     .product-card:hover .image-container::before {
-        opacity: 1; /* Полная непрозрачность при наведении на карточку */
+        opacity: 1; 
     }
-
-    /* Убедитесь, что изображения имеют правильный порядок наложения */
+    
     .image-container img {
         width: 100%;
         height: 100%;
-        object-fit: cover; /* Обеспечиваем правильное отображение изображений */
-        z-index: 0; /* Задаем низкий z-index для изображений */
+        object-fit: cover; 
+        z-index: 0; 
     }
 </style>

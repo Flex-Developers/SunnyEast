@@ -3,10 +3,6 @@
 @using Client.Components.Dialogs
 @using Client.Infrastructure.Services.Category
 @using Application.Contract.ProductCategory.Commands
-@using Microsoft.AspNetCore.Authorization
-
-@* @attribute [Authorize] *@
-
 @inject IDialogService DialogService
 @inject ICategoryService CategoryService
 
@@ -66,7 +62,7 @@
 @code {
     private List<ProductCategoryResponse>? _categories;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() //TODO: Complete Navigation to product
     {
         _categories = await CategoryService.Get();
         StateHasChanged();
@@ -137,8 +133,7 @@
         align-items: center;
         justify-content: center;
     }
-
-    /* Фильтр затемнения применяется только к изображению */
+    
     .category-image .mud-card-media {
         transition: filter 0.3s ease;
         width: 100%;
@@ -160,7 +155,7 @@
         left: 50%;
         transform: translate(-50%, -50%);
         text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7); /* Тень для текста */
-        z-index: 1; /* Обеспечивает, что текст будет поверх изображения */
+        z-index: 1;
         pointer-events: none; /* Исключает текст из взаимодействия при наведении */
     }
 

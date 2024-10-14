@@ -12,13 +12,14 @@
     </TitleContent>
 
     <DialogContent>
-        <!-- Поле с именем категории -->
+        
         <MudTextField @bind-Value="Command.Name" Label="Название" Required="true" Class="dialog-text-field"/>
 
-        <!-- Поле для ссылки на изображение -->
-        <MudTextField @bind-Value="Command.ImageUrl" Label="Ссылка на изображение" AutoGrow="true" FullWidth="true" Clearable="true" Class="dialog-text-field"/>
+        <MudTextField @bind-Value="Command.ImageUrl" Label="Ссылка на изображение" AutoGrow="true" FullWidth="true"
+                      Clearable="true" Class="dialog-text-field"/>
 
-        <MudNumericField T="byte?" Label="Скидка (%)" @bind-Value="Command.DiscountPercentage" Min="0" Max="100" Immediate="true" FullWidth="true" Clearable="true"/>
+        <MudNumericField T="byte?" Label="Скидка (%)" @bind-Value="Command.DiscountPercentage" Min="0" Max="100"
+                         Immediate="true" FullWidth="true" Clearable="true"/>
 
         <MudCheckBox @bind-Value="Command.ApplyDiscountToAllProducts"
                      Label="Изменить также продукты со скидкой"
@@ -35,16 +36,10 @@
 
 
 @code {
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
 
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public required UpdateProductCategoryCommand Command { get; set; }
     [Parameter] public Action OnSuccess { get; set; } = null!;
-
-    protected override Task OnInitializedAsync()
-    {
-        Console.WriteLine("Helllo");
-        return Task.CompletedTask;
-    }
 
     private void Cancel()
     {
@@ -66,10 +61,11 @@
     }
 
 }
+
 <style>
     .category-dialog {
-        width: 95%; /* Установите ширину на 95% от экрана */
-        max-width: 600px; /* Задайте максимальную ширину */
+        width: 95%;
+        max-width: 600px;
     }
 
     .dialog-title {
@@ -83,5 +79,4 @@
         margin-bottom: 16px;
         width: 100%;
     }
-    
 </style>

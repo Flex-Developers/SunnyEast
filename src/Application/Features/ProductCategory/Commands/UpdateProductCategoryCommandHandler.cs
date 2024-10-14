@@ -2,13 +2,14 @@ using Application.Common.Exceptions;
 using Application.Common.Interfaces.Contexts;
 using Application.Common.Interfaces.Services;
 using Application.Contract.ProductCategory.Commands;
+using AutoMapper;
 using Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.ProductCategory.Commands;
 
-public class UpdateProductCategoryCommandHandler(IApplicationDbContext context, ISlugService slugService)
+public class UpdateProductCategoryCommandHandler(IApplicationDbContext context, ISlugService slugService, IMapper mapper)
     : IRequestHandler<UpdateProductCategoryCommand, string>
 {
     public async Task<string> Handle(UpdateProductCategoryCommand request, CancellationToken cancellationToken)
@@ -20,10 +21,9 @@ public class UpdateProductCategoryCommandHandler(IApplicationDbContext context, 
             throw new NotFoundException($"Категория не найдена {request.Slug}");
         
         old.Name = request.Name.Trim();
-        old.ImageUrl = request.ImageUrl;
-        old.DiscountPercentage = request.DiscountPercentage;
-        old.ApplyDiscountToAllProducts = request.ApplyDiscountToAllProducts;
         old.Slug = slugService.GenerateSlug(request.Name);
+        
+        mapper.Map(request, old);
 
         await ApplyDiscount(request, old, cancellationToken);
 
@@ -38,7 +38,9 @@ public class UpdateProductCategoryCommandHandler(IApplicationDbContext context, 
             return;
 
         // Create an initial query to get products by category name
-        IQueryable<Product> productsQuery = context.Products.Where(p => p.ProductCategory!.Name == request.Name);
+        IQueryable<Product> productsQuery = context.Products
+            .Include(p => p.ProductCategory)
+            .Where(p => p.ProductCategory!.Name == request.Name);
 
         // If we do not want to apply discount to all products, add a condition to filter
         if (request.ApplyDiscountToAllProducts is false)
