@@ -3,19 +3,27 @@
 
 @inject ICategoryService CategoryService
 
-<MudDialog>
+<MudDialog Class="category-dialog">
     <TitleContent>
-        <MudText Typo="Typo.h6">
-            <MudIcon Icon="@Icons.Material.Filled.Create" Class="mr-3 mb-n1"/>
+        <MudText Typo="Typo.h6" Class="dialog-title">
+            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2 mb-n1"/>
             Добавить категорию
         </MudText>
     </TitleContent>
+
     <DialogContent>
-        <MudTextField Label="Имя" @bind-Value="_command.Name"/>
+        
+        <MudTextField @bind-Value="_command.Name" Label="Название" Required="true" Class="dialog-text-field"/>
+
+        <MudTextField @bind-Value="_command.ImageUrl" Label="Ссылка на изображение" AutoGrow="true" FullWidth="true" Clearable="true" Class="dialog-text-field"/>
+
+        <MudNumericField T="byte?" Label="Скидка (%)" @bind-Value="_command.DiscountPercentage" Min="0" Max="100" Immediate="true" FullWidth="true" Clearable="true"/>
+
     </DialogContent>
+
     <DialogActions>
-        <MudButton OnClick="@(Cancel)">Отмена</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@(async () => await CreateAsync())">Создать</MudButton>
+        <MudButton OnClick="@(Cancel)" Color="Color.Secondary" Variant="Variant.Outlined">Отмена</MudButton>
+        <MudButton Color="Color.Primary" OnClick="@(async () => await CreateAsync())">Добавить</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -27,7 +35,7 @@
 
     private void Cancel()
     {
-        MudDialog.Cancel();
+        MudDialog.Close(DialogResult.Cancel());
     }
 
     private async Task CreateAsync()
@@ -39,8 +47,29 @@
             {
                 MudDialog.Close();
                 OnSuccess?.Invoke();
+                Snackbar.Add($"\"{_command.Name}\" создан!", Severity.Success);
             }
         }
     }
 
 }
+
+<style>
+    .category-dialog {
+        width: 95%; 
+        max-width: 600px; 
+    }
+
+    .dialog-title {
+        display: flex;
+        align-items: center;
+        font-weight: 600;
+        margin-bottom: 16px;
+    }
+
+    .dialog-text-field {
+        margin-bottom: 16px;
+        width: 100%;
+    }
+    
+</style>

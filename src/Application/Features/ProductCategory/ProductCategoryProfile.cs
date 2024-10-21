@@ -9,6 +9,7 @@ public class ProductCategoryProfile : Profile
     public ProductCategoryProfile()
     {
         CreateMap<CreateProductCategoryCommand, Domain.Entities.ProductCategory>();
+        CreateMap<UpdateProductCategoryCommand, Domain.Entities.ProductCategory>();
         CreateMap<Domain.Entities.ProductCategory, ProductCategoryResponse>();
         CreateMap<ProductCategoryResponse, Domain.Entities.ProductCategory>();
     }

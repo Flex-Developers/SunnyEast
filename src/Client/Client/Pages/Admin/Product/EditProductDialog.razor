@@ -4,7 +4,7 @@
 @inject ICategoryService CategoryService
 @inject IProductService ProductService
 <MudForm Model="UpdateCommand" @ref="_form">
-    <MudDialog Style="width:40%">
+    <MudDialog Class="edit-dialog">
         <TitleContent>
             <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Create" Class="mr-3 mb-n1"/>Изменить продукт</MudText>
         </TitleContent>
@@ -17,7 +17,22 @@
                 }
             </MudSelect>
             <MudTextField Required="true" Label="Название" @bind-Value="UpdateCommand.Name" InputType="InputType.Text" FullWidth="true" Clearable="true" AutoGrow="true"/>
-            <MudTextField Required="true" Label="Цена" @bind-Value="UpdateCommand.Price" Format="F1" Clearable="true" FullWidth="true"/>
+            <MudGrid>
+                <MudItem xs="4">
+                    <MudNumericField T="decimal?" Value="UpdateCommand.Price" Min="0" Required="true" Label="Цена" Format="F2" Clearable="true" Immediate="true" FullWidth="true"
+                                     ValueChanged="@(price => { UpdateCommand.Price = price; UpdateDiscountPrice(UpdateCommand.DiscountPercentage); })"/>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudNumericField T="byte?" Label="Скидка (%)" Min="0" Max="100" Immediate="true" FullWidth="true" Clearable="true"
+                                     Value="UpdateCommand.DiscountPercentage" ValueChanged="@(percentage => UpdateDiscountPrice(percentage))"/>
+                </MudItem>
+                @if (UpdateCommand.DiscountPercentage is >= 0)
+                {
+                    <MudItem xs="4">
+                        <MudTextField Label="Цена со скидкой" @bind-Value="UpdateCommand.DiscountPrice" ReadOnly="true" FullWidth="true"/>
+                    </MudItem>
+                }
+            </MudGrid>
             <MudTextField Label="Описание" @bind-Value="UpdateCommand.Description" InputType="InputType.Text" Clearable="true" FullWidth="true" AutoGrow="true"/>
 
             <MudButton Color="Color.Success" OnClick="ShowImageTable" StartIcon="@Icons.Material.Filled.Add">Изменить изображения</MudButton>
@@ -64,8 +79,8 @@
     {
         _images = UpdateCommand.Images!.ToList();
         
-        for (int i = _images.Count; i < 10; i++) // Добавление пустых строк, чтобы было предварительно 10 полей
-            _images.Add("");
+        // Добавление пустых строк, чтобы было предварительно 10 полей
+        _images.AddRange(Enumerable.Repeat(string.Empty, 10 - _images.Count));
 
         UpdateCommand.Images = _images.ToArray(); // Чтобы при изменении, добавленные пустые строки не исчезли
     }
@@ -144,5 +159,26 @@
             Snackbar.Add("Пожалуйста, заполните все обязательные поля правильно!", Severity.Warning);
         }
     }
+    
+    private void UpdateDiscountPrice(byte? percentage)
+    {
+        UpdateCommand.DiscountPercentage = percentage;
+        
+        if (UpdateCommand.Price.HasValue && UpdateCommand.DiscountPercentage.HasValue)
+        {
+            var discount = UpdateCommand.Price * (UpdateCommand.DiscountPercentage / 100m);
+            UpdateCommand.DiscountPrice = Math.Round((decimal)(UpdateCommand.Price - discount), 2);
+        }
+        else
+        {
+            UpdateCommand.DiscountPrice = null;
+        }
+    }
 
 }
+<style>
+    .edit-dialog {
+        width: 95%; 
+        max-width: 600px; 
+    }
+</style>

@@ -3,48 +3,66 @@
 @using Client.Components.Dialogs
 @using Client.Infrastructure.Services.Category
 @using Application.Contract.ProductCategory.Commands
-@using Microsoft.AspNetCore.Authorization
-
-@attribute [Authorize]
-
 @inject IDialogService DialogService
 @inject ICategoryService CategoryService
 
+<div style="position: relative; display: flex; align-items: center; margin-bottom: 20px;">
+    <h3 style="display: inline-block; margin-right: 1px">Категория товаров</h3>
+    <MudButton StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled" Color="Color.Success" OnClick="@(async () => await AddAsync())"
+               Style="position: absolute; right: 0; bottom: 5px;">
+        Добавить
+    </MudButton>
+</div>
 
-<MudTable Items="@_categories" Hover="true" SortLabel="Sort By">
-    <ToolBarContent>
-        <MudSpacer/>
-        <MudButton StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled" Color="Color.Success" OnClick="@(async () => await AddAsync())">Добавить</MudButton>
-    </ToolBarContent>
-    <HeaderContent>
-        <MudTh>
-            <MudTableSortLabel SortBy="new Func<ProductCategoryResponse, object>(x => x.Name)">Имя</MudTableSortLabel>
-        </MudTh>
-        <MudTh>
-            <MudText>Изменить</MudText>
-        </MudTh>
-        <MudTh>
-            <MudText>Удалить</MudText>
-        </MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd>@context.Name</MudTd>
-        <MudTd DataLabel="Изменить">
-            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(async () => await EditAsync(new UpdateProductCategoryCommand { Name = context.Name, Slug = context.Slug, BaseCategorySlug = context.BaseCategorySlug }))">Изменить</MudButton>
-        </MudTd>
-        <MudTd DataLabel="Удалить">
-            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="@(async () => await DeleteAsync(context.Slug, context.Name))">Удалить</MudButton>
-        </MudTd>
-    </RowTemplate>
-    <PagerContent>
-        <MudTablePager PageSizeOptions="new[] { 10, 25, 50, 100 }"/>
-    </PagerContent>
-</MudTable>
+<MudGrid Spacing="1" Justify="Justify.FlexStart" Style="margin-top: 3px; margin-bottom: 50px">
+    @if (_categories != null && _categories.Any())
+    {
+        foreach (var category in _categories)
+        {
+            <MudItem xs="12" sm="6" md="4" lg="2">
+                <MudCard Style="max-width: 100%; height: 300px; width: 100%; display: flex; flex-direction: column; justify-content: space-between;" Class="product-card">
+                    <!-- Изображение категории -->
+                    @if (!string.IsNullOrEmpty(category.ImageUrl))
+                    {
+                        <div class="category-image" style="position: relative; height: 350px;">
+                            <MudCardMedia Image="@category.ImageUrl" Alt="Image not available" Style="height: 100%; width: 100%; object-fit: cover;"></MudCardMedia>
+                            <div class="category-title">
+                                @(category.Name.Length > 40 ? category.Name.Substring(0, 40) + "..." : category.Name)
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Название категории, если нет изображения -->
+                        <div class="category-title" style="height: 100%; display: flex; align-items: center; justify-content: center;">
+                            @(category.Name.Length > 40 ? category.Name.Substring(0, 40) + "..." : category.Name)
+                        </div>
+                    }
+
+                    <MudCardContent Style="padding: 5px 0 7px 8px; flex-grow: 1; display: flex; align-items: flex-end; justify-content: flex-end;">
+                        <!-- Контейнер с кнопками, выровненный по правому краю -->
+                        <div style="display: flex; justify-content: flex-end; width: 100%; margin-bottom: 0; margin-right: 0">
+                            <MudButton Color="Color.Default" OnClick="@(async () => await EditAsync(category))"
+                                       Variant="Variant.Text" Size="Size.Medium" Style="min-width: 50px; margin-right: 5px">
+                                <MudIcon Icon="@Icons.Material.Filled.Edit"/>
+                            </MudButton>
+
+                            <MudButton Color="Color.Error" OnClick="@(async () => await DeleteAsync(category.Slug, category.Name))"
+                                       Variant="Variant.Text" Size="Size.Medium" Style="min-width: 50px">
+                                <MudIcon Icon="@Icons.Material.Filled.Delete"/>
+                            </MudButton>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
+    }
+</MudGrid>
 
 @code {
     private List<ProductCategoryResponse>? _categories;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() //TODO: Complete Navigation to product
     {
         _categories = await CategoryService.Get();
         StateHasChanged();
@@ -53,11 +71,20 @@
     private async Task AddAsync()
     {
         await DialogService.ShowAsync<CreateCategoryDialog>("", new DialogParameters { { "OnSuccess", new Action(async () => await OnInitializedAsync()) } });
-        await OnInitializedAsync();
     }
 
-    private async Task EditAsync(UpdateProductCategoryCommand updateCommand)
+    private async Task EditAsync(ProductCategoryResponse category)
     {
+        UpdateProductCategoryCommand updateCommand = new()
+        {
+            Name = category.Name,
+            Slug = category.Slug,
+            BaseCategorySlug = category.BaseCategorySlug,
+            ImageUrl = category.ImageUrl,
+            DiscountPercentage = category.DiscountPercentage,
+            ApplyDiscountToAllProducts = category.ApplyDiscountToAllProducts
+        };
+
         await DialogService.ShowAsync<EditCategoryDialog>("",
             new DialogParameters
             {
@@ -69,27 +96,74 @@
     private async Task DeleteAsync(string slug, string name)
     {
         var delDialog = await DialogService.ShowAsync<DeleteConfirmation>("",
-            new DialogParameters { { "ContentText", $"Вы хотите удалить {name}?" } },
+            new DialogParameters { { "Name", name } },
             new DialogOptions { ClassBackground = "dialog-background" });
 
-        var delDialogResult = await delDialog.Result;
-
-        if (delDialogResult.Canceled)
-            return;
-
-        // Проверка на null перед использованием результата
-        if (delDialogResult.Data is bool)
+        if ((await delDialog.Result).Canceled is false)
         {
             await CategoryService.Delete(slug);
+            await OnInitializedAsync();
         }
-
-        await OnInitializedAsync();
     }
 
-
 }
+
 <style>
     .dialog-background {
         backdrop-filter: blur(10px);
+    }
+
+    .product-card {
+        position: relative;
+        transition: transform 0.3s ease, background-color 0.3s ease;
+        cursor: pointer;
+        background-color: transparent;
+    }
+
+    .product-card:hover {
+        transform: scale(1.05);
+        background-color: rgba(0, 0, 0, 0.4); /* Затемнение карточки */
+    }
+
+    .category-image {
+        position: relative;
+        height: 100%;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .category-image .mud-card-media {
+        transition: filter 0.3s ease;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .product-card:hover .category-image .mud-card-media {
+        filter: brightness(0.7); /* Затемнение изображения */
+    }
+
+    .category-title {
+        position: absolute;
+        color: white;
+        font-size: 25px;
+        font-weight: 510;
+        text-align: center;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7); /* Тень для текста */
+        z-index: 1;
+        pointer-events: none; /* Исключает текст из взаимодействия при наведении */
+    }
+
+    /* Для карточки без изображения */
+    .product-card .category-title {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 </style>

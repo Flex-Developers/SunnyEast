@@ -7,5 +7,5 @@ public class CartResponse
     public required string Slug { get; set; }
     public required string ShopSlug { get; set; }
     public OrderStatus OrderStatus { get; set; }
-    public int Sum { get; set; } = 0;
+    public decimal Sum { get; set; } = 0;
 }

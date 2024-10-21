@@ -17,8 +17,9 @@ public class GetCartQueryHandler(IApplicationDbContext context, IMapper mapper)
 
         if (cart == null)
             throw new NotFoundException($"The cart with slug: {request.Slug} not found.");
-
+        
         var response = mapper.Map<CartResponse>(cart);
+        response.Sum = cart.Orders!.Select(p => p.Product!.Price).Sum(); // Maybe will change to Order.SummaryPrice in future
 
         return response;
     }
