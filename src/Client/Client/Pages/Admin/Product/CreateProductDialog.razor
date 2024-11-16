@@ -4,7 +4,7 @@
 @inject ICategoryService CategoryService
 @inject IProductService ProductService
 <MudForm Model="_command" @ref="_form">
-    <MudDialog Style="width:40%">
+    <MudDialog Class="product-dialog" >
         <TitleContent>
             <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Create" Class="mr-3 mb-n1"/>Добавить продукт</MudText>
         </TitleContent>
@@ -16,33 +16,52 @@
                     <MudSelectItem Value="@category">@category</MudSelectItem>
                 }
             </MudSelect>
+
             <MudTextField Required="true" Label="Название" @bind-Value="_command.Name" InputType="InputType.Text" FullWidth="true" Clearable="true" AutoGrow="true"/>
-            <MudTextField Required="true" Label="Цена" @bind-Value="_command.Price" Format="F1" Clearable="true" FullWidth="true"/>
+
+            <MudGrid>
+                <MudItem xs="4">
+                    <MudNumericField T="decimal?" Min="0" Required="true" Label="Цена" Format="F2" Clearable="true" Immediate="true" FullWidth="true"
+                                     ValueChanged="@(price => { _command.Price = price; UpdateDiscountPrice(_command.DiscountPercentage); })"/>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudNumericField T="byte?" Label="Скидка (%)" ValueChanged="@(percentage => UpdateDiscountPrice(percentage))"
+                                     Min="0" Max="100" Immediate="true" FullWidth="true" Clearable="true"/>
+                </MudItem>
+                @if (_command.DiscountPercentage is >= 0)
+                {
+                    <MudItem xs="4">
+                        <MudTextField Label="Цена со скидкой" @bind-Value="_command.DiscountPrice" ReadOnly="true" FullWidth="true"/>
+                    </MudItem>
+                }
+            </MudGrid>
+
             <MudTextField Label="Описание" @bind-Value="_command.Description" InputType="InputType.Text" Clearable="true" FullWidth="true" AutoGrow="true"/>
 
             <MudButton Color="Color.Success" OnClick="ShowImageTable" StartIcon="@Icons.Material.Filled.Add">Добавить изображения</MudButton>
 
             @if (_showTable)
             {
-            <MudGrid>
-                @foreach (var image in _images.Select((value, index) => new { value, index }))
-                {
-                <MudTextField HelperText="@((image.index + 1).ToString())" @bind-Value="_images[image.index]" Label="Url изображения"
-                              InputType="InputType.Url" InputMode="InputMode.url" Clearable="true" FullWidth="true" AutoGrow="true"
-                              Error="@_images[image.index].Contains(" ")" ErrorText="Ссылка не может содержать пробелы!" Immediate="true"/>
-                }
-            </MudGrid>
+                <MudGrid>
+                    @foreach (var image in _images.Select((value, index) => new { value, index }))
+                    {
+                        <MudTextField HelperText="@((image.index + 1).ToString())" @bind-Value="_images[image.index]" Label="Url изображения"
+                                      InputType="InputType.Url" InputMode="InputMode.url" Clearable="true" FullWidth="true" AutoGrow="true"
+                                      Error="@_images[image.index].Contains(" ")" ErrorText="Ссылка не может содержать пробелы!" Immediate="true"/>
+                    }
+                </MudGrid>
 
-            <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px;">
-                <MudButton OnClick="SaveImagesChanges" Color="Color.Primary" Variant="Variant.Filled" Disabled="@_images.Any(url => url.Contains(" "))">
-                    Сохранить изменения
-                </MudButton>
-                <MudButton OnClick="CancelImagesChanges" Color="Color.Error" Variant="Variant.Outlined">
-                    Отменить изменения
-                </MudButton>
-            </div>
+                <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px;">
+                    <MudButton OnClick="SaveImagesChanges" Color="Color.Primary" Variant="Variant.Filled" Disabled="@_images.Any(url => url.Contains(" "))">
+                        Сохранить изменения
+                    </MudButton>
+                    <MudButton OnClick="CancelImagesChanges" Color="Color.Error" Variant="Variant.Outlined">
+                        Отменить изменения
+                    </MudButton>
+                </div>
             }
         </DialogContent>
+
         <DialogActions>
             <MudButton OnClick="Cancel">Отмена</MudButton>
             <MudButton Disabled="@_showTable" Color="Color.Primary" Variant="Variant.Filled" OnClick="CreateAsync">Создать</MudButton>
@@ -55,7 +74,7 @@
     [Parameter] public string CategoryName { get; set; } = string.Empty;
     [Parameter] public Action OnSuccessfullyCreate { get; set; } = null!;
     [Parameter] public List<string> Categories { get; set; } = null!;
-    private List<string> _images = new() { "", "", "", "", "", "", "", "", "", "" }; // 10
+    private List<string> _images = Enumerable.Repeat(string.Empty, 10).ToList();
     private MudForm _form = null!;
     private bool _showTable;
 
@@ -110,13 +129,13 @@
 
     private void CancelImagesChanges()
     {
-        _images = (_command.Images?.ToList() ?? new List<string>(Enumerable.Repeat("", 10))!)!;
+        _images = ((_command.Images?.ToList() ?? Enumerable.Repeat(string.Empty, 10).ToList()!)!);
         _showTable = false;
     }
 
     private void Cancel()
     {
-        MudDialog.Cancel();
+        MudDialog.Close(DialogResult.Cancel());
     }
 
     private async Task CreateAsync()
@@ -142,4 +161,25 @@
         }
     }
 
+    private void UpdateDiscountPrice(byte? percentage)
+    {
+        _command.DiscountPercentage = percentage;
+        
+        if (_command.Price.HasValue && _command.DiscountPercentage.HasValue)
+        {
+            var discount = _command.Price * (_command.DiscountPercentage / 100m);
+            _command.DiscountPrice = Math.Round((decimal)(_command.Price - discount), 2);
+        }
+        else
+        {
+            _command.DiscountPrice = null;
+        }
+    }
 }
+
+<style>
+    .product-dialog {
+        width: 95%; 
+        max-width: 600px; 
+    }
+</style>
