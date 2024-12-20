@@ -6,14 +6,14 @@ public class DarkTheme : MudTheme
 {
     public DarkTheme()
     {
-        Palette = new Palette()
+        PaletteDark = new PaletteDark
         {
             Primary = CustomColors.Dark.Primary,
             Secondary = CustomColors.Dark.Secondary,
             Success = CustomColors.Dark.Primary,
             Black = "#27272f",
             Background = CustomColors.Dark.Background,
-            BackgroundGrey = "#27272f",
+            BackgroundGray = "#27272f",
             Surface = CustomColors.Dark.Surface,
             DrawerBackground = CustomColors.Dark.DrawerBackground,
             DrawerText = "rgba(255,255,255, 0.50)",

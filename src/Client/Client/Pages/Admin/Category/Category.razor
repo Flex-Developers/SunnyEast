@@ -97,7 +97,7 @@
     {
         var delDialog = await DialogService.ShowAsync<DeleteConfirmation>("",
             new DialogParameters { { "Name", name } },
-            new DialogOptions { ClassBackground = "dialog-background" });
+            new DialogOptions { BackgroundClass = "dialog-background" });
 
         if ((await delDialog.Result).Canceled is false)
         {
