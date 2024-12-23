@@ -78,7 +78,7 @@
     protected override void OnInitialized()
     {
         _images = UpdateCommand.Images!.ToList();
-        
+
         // Добавление пустых строк, чтобы было предварительно 10 полей
         _images.AddRange(Enumerable.Repeat(string.Empty, 10 - _images.Count));
 

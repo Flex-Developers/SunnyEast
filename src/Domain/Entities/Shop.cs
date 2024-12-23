@@ -7,7 +7,7 @@ public sealed class Shop : BaseEntity
     public string? AddressGoogle { get; set; }
     public string? AddressYandex { get; set; }
     
-    public string? ImageUrl { get; set; }
+    public string[]? Images { get; set; }
 
     public List<ShopOrder>? ShopOrders { get; set; }
 }
