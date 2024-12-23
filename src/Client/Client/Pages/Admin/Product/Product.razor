@@ -9,22 +9,30 @@
 @inject IProductService ProductService
 @inject ICategoryService CategoryService
 @inject IDialogService DialogService
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 
 <MudPaper Elevation="25">
     <MudToolBar>
-        <MudSelect T="string" Label="Категория" Style="margin-right: 15px; padding-bottom: 3%" AnchorOrigin="Origin.BottomCenter" ValueChanged="@LoadProductsAsync">
+        <MudSelect T="string" Label="Категория" Style="margin-right: 15px; padding-bottom: 3%"
+                   Value="@SelectedCategory" ValueChanged="@(async (string value) => await OnCategoryChanged(value))">
             @foreach (var category in _categories)
             {
                 <MudSelectItem Value="@(category.Name)">@category.Name</MudSelectItem>
             }
         </MudSelect>
 
-        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="CreateAsync" Style="vertical-align: middle;">Создать➕</MudButton>
+
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="CreateAsync"
+                   Style="vertical-align: middle;">
+            Создать➕
+        </MudButton>
 
         <MudSpacer/>
 
-        <MudAutocomplete T="ProductResponse" SearchFunc="SearchAsync" ToStringFunc="@(result => result.Name)" ResetValueOnEmptyText="true"
-                         Immediate="true" Clearable="true" Label="Поиск" DebounceInterval="300" AdornmentIcon="@Icons.Material.Filled.Search"
+        <MudAutocomplete T="ProductResponse" SearchFunc="SearchAsync" ToStringFunc="@(result => result.Name)"
+                         ResetValueOnEmptyText="true"
+                         Immediate="true" Clearable="true" Label="Поиск" DebounceInterval="300"
+                         AdornmentIcon="@Icons.Material.Filled.Search"
                          Style="width: calc(100% - 15px); margin-bottom: 15px; margin-right: 15px;"/>
 
         @if (IsSearching)
@@ -40,28 +48,53 @@
     @foreach (var product in _products)
     {
         <MudItem xs="12" sm="6" md="4" lg="2">
-            <MudCard Style="max-width: 100%; height: 350px; display: flex; flex-direction: column; justify-content: space-between;" Class="product-card">
-                <MudCarousel Style="height: 250px" ItemsSource="@product.Images" Context="imgContext" ShowArrows="true" ShowBullets="false" AutoCycle="false" TData="string">
-                    <ItemTemplate>
-                        <MudCardMedia Image="@imgContext"></MudCardMedia>
-                    </ItemTemplate>
-                </MudCarousel>
+            <MudCard
+                Style="max-width: 100%; height: 400px; display: flex; flex-direction: column; justify-content: space-between;"
+                Class="product-card">
+                <div class="image-container">
+                    <MudCarousel Style="height: 250px" ItemsSource="@product.Images" Context="imgContext"
+                                 ShowArrows="true"
+                                 ShowBullets="false" AutoCycle="false" TData="string">
+                        <ItemTemplate>
+                            <MudCardMedia Image="@imgContext"></MudCardMedia>
+                        </ItemTemplate>
+                    </MudCarousel>
+                </div>
 
-                <MudCardContent Style="padding: 5px 0 7px 8px;flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
-                    <!-- Название продукта с минимальными отступами -->
-                    <MudText Typo="Typo.h6" Align="Align.Left" Style="margin: 0; white-space: normal; word-wrap: break-word; line-height: 1.2; flex: 1;">
-                        @product.Name
+                <MudCardContent
+                    Style="padding: 5px 0 7px 8px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                    <MudText Typo="Typo.h6" Align="Align.Left"
+                             Style="margin: 0; white-space: normal; word-wrap: break-word; line-height: 1.2; flex: 1;">
+                        @(product.Name.Length > 40 ? product.Name.Substring(0, 40) + "..." : product.Name)
                     </MudText>
-                    
-                    <div style="display: flex; flex-direction: column; margin-top: 15px; margin-bottom: -5px">
-                        <MudText Typo="Typo.body2" Align="Align.Left" Style="margin: 0;">
-                            Цена: @product.Price
-                        </MudText>
+
+                    <div
+                        style="display: flex; flex-direction: row; align-items: center; margin-top: 15px; margin-bottom: -5px">
+                        <MudText Typo="Typo.body2" Align="Align.Left" Style="margin: 0;">Цена:</MudText>
+
+                        @if (product.DiscountPrice.HasValue)
+                        {
+                            <MudText Typo="Typo.body2" Align="Align.Left" Style="margin-left: 5px; color: red;">
+                                @($"{product.DiscountPrice}")
+                            </MudText>
+
+                            <MudText Typo="Typo.body1" Align="Align.Right"
+                                     Style="margin-left: auto; margin-right: 15px; text-decoration: line-through; font-size: larger;">
+                                @($"{product.Price}")
+                            </MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Align="Align.Left" Style="margin-left: 5px;">
+                                @($"{product.Price}")
+                            </MudText>
+                        }
                     </div>
-                    
-                    <!-- Контейнер с ссылкой и кнопками, размещенный внизу -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: -7px">
-                        <MudLink Typo="Typo.caption" Style="padding-left: 0" OnClick="() => OpenDescription(product.Name, product.Description)">
+
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: -7px">
+                        <MudLink Typo="Typo.caption" Style="padding-left: 0"
+                                 OnClick="() => OpenDescriptionAsync(product.Name, product.Description)">
                             Читать описание...
                         </MudLink>
 
@@ -77,7 +110,6 @@
                             </MudButton>
                         </div>
                     </div>
-
                 </MudCardContent>
             </MudCard>
         </MudItem>
@@ -89,14 +121,24 @@
     private List<ProductResponse> _products = new();
     private List<ProductCategoryResponse> _categories = new();
     private readonly GetProductsQuery _query = new();
-    private string _selectedCategory = "";
     private bool IsSearching { get; set; }
+
+    [Parameter]
+    public string SelectedCategory { get; set; } = string.Empty;
 
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadProductsAsync(_selectedCategory);
         _categories = (await CategoryService.Get())!;
+        SelectedCategory = await LoadSelectedCategoryAsync();
+        await LoadProductsAsync(SelectedCategory);
+        StateHasChanged();
+    }
+
+    private async Task OnCategoryChanged(string value)
+    {
+        SelectedCategory = value;
+        await LoadProductsAsync(SelectedCategory);
         StateHasChanged();
     }
 
@@ -104,7 +146,7 @@
     {
     }
 
-    private async Task<IEnumerable<ProductResponse>> SearchAsync(string name)
+    private async Task<IEnumerable<ProductResponse>> SearchAsync(string name, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(name))
             return [];
@@ -127,6 +169,8 @@
             Slug = product.Slug,
             Name = product.Name,
             Price = product.Price,
+            DiscountPrice = product.DiscountPrice,
+            DiscountPercentage = product.DiscountPercentage,
             Images = product.Images,
             Description = product.Description,
         };
@@ -134,32 +178,27 @@
         var parameters = new DialogParameters<EditProductDialog>
         {
             { "UpdateCommand", updateCommand },
-            { "CategoryName", _selectedCategory },
+            { "CategoryName", SelectedCategory },
             { "OnSuccessfullyCreate", new Action(async () => await OnInitializedAsync()) },
             { "Categories", _categories.Select(c => c.Name).ToList() }
         };
+
         await DialogService.ShowAsync<EditProductDialog>("Edit", parameters);
     }
 
     private async Task DeleteProductAsync(ProductResponse product)
     {
         var delDialog = await DialogService.ShowAsync<DeleteConfirmation>("",
-            new DialogParameters { { "ContentText", $"Вы хотите удалить {product.Name} ?" } });
+            new DialogParameters { { "Name", product.Name } });
 
-        var delDialogResult = await delDialog.Result;
-
-        if (delDialogResult.Canceled) //TODO: check without this (delete)
-            return;
-        
-        if (delDialogResult.Data is bool)
+        if ((await delDialog.Result).Canceled is false)
         {
             await ProductService.Delete(product.Slug);
+            await OnInitializedAsync();
         }
-
-        await OnInitializedAsync();
     }
 
-    private async Task OpenDescription(string name, string? description)
+    private async Task OpenDescriptionAsync(string name, string? description)
     {
         await DialogService.ShowAsync<ProductDescriptionDialog>("",
             new DialogParameters
@@ -171,35 +210,79 @@
 
     private async Task LoadProductsAsync(string category)
     {
-        _selectedCategory = category;
-        if (!string.IsNullOrEmpty(_selectedCategory))
+        if (!string.IsNullOrEmpty(category))
         {
-            _products = await ProductService.GetByCategoryName(_selectedCategory);
-            StateHasChanged();
+            _products = await ProductService.GetByCategoryName(category);
+            await SaveSelectedCategoryAsync(category);
         }
+    }
+
+    private async Task SaveSelectedCategoryAsync(string category)
+    {
+        await LocalStorage.SetItemAsync("selectedCategory", category);
+    }
+
+    private async Task<string> LoadSelectedCategoryAsync()
+    {
+        string selectedCategory = (await LocalStorage.GetItemAsync<string>("selectedCategory"))!;
+
+        if (_categories.Any(c => c.Name == selectedCategory))
+            return selectedCategory;
+
+        return string.Empty;
     }
 
     private async Task CreateAsync()
     {
         var parameters = new DialogParameters<CreateProductDialog>
         {
-            { "CategoryName", _selectedCategory },
+            { "CategoryName", SelectedCategory },
             { "OnSuccessfullyCreate", new Action(async () => await OnInitializedAsync()) },
             { "Categories", _categories.Select(c => c.Name).ToList() }
         };
+
         await DialogService.ShowAsync<CreateProductDialog>("Create", parameters);
     }
 
 }
 
 <style>
-
     .product-card {
-        transition: transform 0.3s ease;
+        transition: transform 0.3s ease, background-color 0.3s ease;
+        position: relative;
+        overflow: hidden;
     }
 
     .product-card:hover {
-        transform: scale(1.05);
+        /*transform: scale(1.05);*/
+        background-color: rgba(0, 0, 0, 0.1);
     }
-    
+
+    .image-container {
+        position: relative;
+        height: 250px;
+        overflow: hidden;
+    }
+
+    .image-container::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.3);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 1;
+    }
+
+
+    .product-card:hover .image-container::before {
+        opacity: 1;
+    }
+
+    .image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 0;
+    }
 </style>

@@ -12,5 +12,8 @@ public class Product : BaseEntity
     public string? Description { get; set; }
     [Column(TypeName = "decimal(10,2)")]
     public required decimal Price { get; set; }
+    [Column(TypeName = "decimal(10,2)")]
+    public decimal? DiscountPrice { get; set; }
+    public byte? DiscountPercentage { get; set; }
     public string[]? Images { get; set; }
 }
