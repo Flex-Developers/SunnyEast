@@ -1,37 +1,211 @@
 ﻿@page "/Login"
+@using System.Text.RegularExpressions
 @using Application.Contract.User.Commands
 @using Client.Infrastructure.Services.Auth
+@using Severity = MudBlazor.Severity
 
 @inject IAuthService AuthService
-<MudCard>
-    <MudForm Model="@_loginCommand">
-        <MudCardContent>
-            <MudTextField @bind-Value="_loginCommand.UserName"
-                          InputType="InputType.Text"
-                          Immediate="true"
-                          Label="Имя пользователя"/>
-            <MudTextField @bind-Value="_loginCommand.Password"
-                          InputType="InputType.Password"
-                          Immediate="true"
-                          Label="Пароль"/>
-        </MudCardContent>
-        <MudCardActions>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(async () => await Submit())">Войти</MudButton>
-        </MudCardActions>
+
+<div class="d-flex justify-center align-center full-height">
+    <MudForm Model="_loginCommand" @ref="_form">
+        <MudCard Class="rounded pa-4 shadow-md responsive-width">
+            <MudCardHeader Class="text-center">
+                <MudText Typo="Typo.h4" Align="Align.Center" Class="centered-text">Вход в аккаунт</MudText>
+            </MudCardHeader>
+            <MudCardContent Class="d-flex flex-column gap-0">
+
+                <MudTextField @bind-Value="@_loginInput"
+                              Label="Почта или телефон"
+                              Variant="Variant.Outlined"
+                              InputType="InputType.Text"
+                              OnBlur="NormalizeLoginInput"
+                              Error="!_isValidLogin"
+                              Required="true"
+                              ErrorText="@_errorMessage"
+                              FullWidth/>
+
+                <MudTextField @bind-Value="_loginCommand.Password"
+                              Label="Пароль"
+                              Required="true"
+                              Variant="Variant.Outlined"
+                              InputType="@_passwordInput"
+                              Error="@(_isValidPassword == false)"
+                              ErrorText="Пароль должен содержать минимум 8 символов."
+                              Adornment="Adornment.End"
+                              AdornmentIcon="@_passwordInputIcon"
+                              OnAdornmentClick="ShowOrHidePassword"
+                              AdornmentAriaLabel="Show Password"/>
+                
+            </MudCardContent>
+            
+            <MudCheckBox @bind-Value="_rememberMe" Label="Запомнить меня" Color="Color.Primary"></MudCheckBox>
+            
+            <MudCardActions Class="d-flex flex-column align-center gap-2 mt-1">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth
+                           OnClick="@(async () => await Submit())">
+                    Войти
+                </MudButton>
+                <MudLink Style="margin-top: 10px; margin-bottom: -15px" Class="text-secondary"
+                         OnClick="@ForgotPassword">
+                    Забыли пароль?
+                </MudLink>
+            </MudCardActions>
+            <MudDivider Class="my-3"/>
+            <MudCardActions Class="d-flex flex-column align-center">
+                <MudText Typo="Typo.body2">Еще не зарегистрировались?</MudText>
+                <MudLink Style="padding-top: 15px; margin-bottom: -10px" Class="text-primary" OnClick="@Register">
+                    Зарегистрироваться
+                </MudLink>
+            </MudCardActions>
+        </MudCard>
     </MudForm>
-</MudCard>
+</div>
 
 @code {
 
+    private bool _isPasswordVisible;
+    private bool _isValidLogin = true;
+    private bool _isValidPassword = true;
+    private bool _rememberMe;
+    private string _loginInput;
+    private string _errorMessage = "Почта или телефон не могут быть пустыми.";
+    private MudForm _form = null!;
+    private InputType _passwordInput = InputType.Password;
+    private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    private void NormalizeLoginInput()
+    {
+        _isValidLogin = false;
+        _errorMessage = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(_loginInput))
+        {
+            _isValidLogin = false;
+            _errorMessage = "Поле не может быть пустым.";
+            return;
+        }
+
+        if (Regex.IsMatch(_loginInput, @"^[^@\s]+@[^@\s]+\.[^@\s]+$")) // Is email
+        {
+            _loginCommand.Email = _loginInput;
+            _loginCommand.PhoneNumber = string.Empty;
+            _isValidLogin = true;
+        }
+        else if (IsPhoneNumber(_loginInput, out _loginInput))
+        {
+            _loginCommand.PhoneNumber = _loginInput;
+            _loginCommand.Email = string.Empty;
+            _isValidLogin = true;
+        }
+        else
+        {
+            _isValidLogin = false;
+            _errorMessage = "Введите корректный email или номер телефона.";
+        }
+
+        bool IsPhoneNumber(string phoneNumber, out string result)
+        {
+            // Убираем все, кроме цифр
+            string digitsOnly = Regex.Replace(phoneNumber, @"\D", "");
+
+            // Обработка кода страны и длины номера
+            if (digitsOnly.Length == 11 && (digitsOnly.StartsWith("8") || digitsOnly.StartsWith("7")))
+            {
+                // Заменяем 8 на 7
+                if (digitsOnly.StartsWith("8"))
+                    digitsOnly = "7" + digitsOnly.Substring(1);
+            }
+            else if (digitsOnly.Length == 10 && digitsOnly.StartsWith("9"))
+            {
+                // Добавляем код страны 7 для номеров без кода
+                digitsOnly = "7" + digitsOnly;
+            }
+            else
+            {
+                result = phoneNumber;
+                return false;
+            }
+
+            // Форматируем в вид +7-XXX-XXX-XX-XX
+            result = Regex.Replace(digitsOnly, @"^7(\d{3})(\d{3})(\d{2})(\d{2})$", "+7-$1-$2-$3-$4");
+            return true;
+        }
+    }
+
+    private void ShowOrHidePassword()
+    {
+        if (_isPasswordVisible)
+        {
+            _isPasswordVisible = false;
+            _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+            _passwordInput = InputType.Password;
+        }
+        else
+        {
+            _isPasswordVisible = true;
+            _passwordInputIcon = Icons.Material.Filled.Visibility;
+            _passwordInput = InputType.Text;
+        }
+    }
+
     private LoginUserCommand _loginCommand = new()
     {
-        UserName = "",
+        PhoneNumber = "",
+        Email = "",
         Password = ""
     };
 
     private async Task Submit()
     {
-        await AuthService.LoginAsync(_loginCommand);
+        _isValidPassword = !string.IsNullOrWhiteSpace(_loginCommand.Password) && _loginCommand.Password.Length >= 8;
+        await _form.Validate();
+
+        if (_form.IsValid && string.IsNullOrWhiteSpace(_errorMessage) && _isValidPassword)
+        {
+            if (await AuthService.LoginAsync(_loginCommand)) // if success
+                Snackbar.Add("Успешный вход.", Severity.Success);
+            else
+                Snackbar.Add("Ошибка, попробуйте еще раз.", Severity.Error);
+        }
+    }
+
+    private void ForgotPassword()
+    {
+        
+    }
+
+    private void Register()
+    {
+        Navigation.NavigateTo("/register");
     }
 
 }
+
+<style>
+    .full-height {
+        height: 80vh;
+    }
+
+    .shadow-md {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .rounded {
+        border-radius: 8px;
+    }
+
+    .responsive-width {
+        width: 450px;
+    }
+
+    .text-center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+    }
+
+    .centered-text {
+        text-align: center;
+    }
+</style>
