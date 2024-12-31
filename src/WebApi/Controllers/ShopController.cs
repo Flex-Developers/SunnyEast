@@ -10,6 +10,7 @@ namespace WebApi.Controllers;
 public class ShopController : ApiControllerBase
 {
     [HttpPost]
+    [AllowAnonymous]
     public async Task<IActionResult> CreateShop([FromBody] CreateShopCommand command)
     {
         var response = await Mediator.Send(command);

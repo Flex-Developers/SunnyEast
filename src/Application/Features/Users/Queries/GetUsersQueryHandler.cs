@@ -17,7 +17,7 @@ public class GetUsersQueryHandler(IApplicationDbContext context, IMapper mapper)
 
         if (request.Name != null) query = query.Where(s => s.Name.Contains(request.Name));
 
-        if (request.Phone != null) query = query.Where(s => s.Phone != null && s.Phone.Contains(request.Phone));
+        if (request.Phone != null) query = query.Where(s => s.PhoneNumber != null && s.PhoneNumber.Contains(request.Phone));
 
 
         return (await query.ToArrayAsync(cancellationToken))

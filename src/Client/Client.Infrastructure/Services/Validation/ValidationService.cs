@@ -4,13 +4,12 @@ namespace Client.Infrastructure.Services.Validation;
 
 public class ValidationService : IValidationService
 {
-    public void ValidateEmail(string email)
+    public string ValidateEmail(string email)
     {
-        if (string.IsNullOrWhiteSpace(email))
-            throw new ValidationException("Email не должен быть пустым.");
-
-        if (!email.Contains("@") || !email.Contains("."))
-            throw new ValidationException("Email должен содержать символ '@' и домен.");
+        if (!string.IsNullOrWhiteSpace(email) && (!email.Contains("@") || !email.Contains(".")))
+            return "Почта должна содержать символ '@' и домен.";
+        
+        return null;
     }
 
     public void ValidatePassword(string password)
@@ -36,39 +35,19 @@ public class ValidationService : IValidationService
 
     public void ValidatePhoneNumber(string phoneNumber)
     {
-        if (string.IsNullOrWhiteSpace(phoneNumber))
-            throw new ValidationException("Номер телефона не должен быть пустым.");
-
         if (phoneNumber.Length != 10 || !phoneNumber.All(char.IsDigit))
-        {
-            throw new ValidationException("Номер телефона должен содержать ровно 10 цифр.");
-        }
+            throw new ValidationException("Некорректный номер телефона.");
     }
 
-    public void ValidateUsername(string username)
+    public void ValidateNames(string name, string surname)
     {
-        if (string.IsNullOrWhiteSpace(username))
-            throw new ValidationException("Имя пользователя не должно быть пустым.");
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ValidationException("Имя не может быть пустым.");
 
-        if (username.Length < 3 || username.Length > 16)
-            throw new ValidationException("Имя пользователя должно быть от 3 до 16 символов в длину.");
+        if (name.Any(char.IsDigit) || surname.Any(char.IsDigit))
+            throw new ValidationException("Имя или фамилия не должны содержать цифры.");
 
-        if (!username.All(c => char.IsLetterOrDigit(c) || c == '_' || c == '-'))
-            throw new ValidationException("Имя пользователя может содержать только буквы, цифры, символы '_', и '-'.");
-    }
-
-    public void ValidateNames(string name, string surname, string patronymic)
-    {
-        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(surname) ||
-            string.IsNullOrWhiteSpace(patronymic))
-            throw new ValidationException("Имя, фамилия и отчество не должны быть пустыми.");
-
-        if (name.Any(char.IsDigit) || surname.Any(char.IsDigit) || patronymic.Any(char.IsDigit))
-            throw new ValidationException("Имя, фамилия и отчество не должны содержать цифры.");
-
-        if (name.Any(c => !char.IsLetter(c) && c != ' ') || 
-            surname.Any(c => !char.IsLetter(c) && c != ' ') ||
-            patronymic.Any(c => !char.IsLetter(c) && c != ' '))
-            throw new ValidationException("Имя, фамилия и отчество могут содержать только буквы и пробелы.");
+        if (name.Any(c => !char.IsLetter(c) && c != ' ') || surname.Any(c => !char.IsLetter(c) && c != ' '))
+            throw new ValidationException("Имя и фамилия могут содержать только буквы и пробелы.");
     }
 }

@@ -19,36 +19,30 @@ public class RegisterUserCommandHandler(
     public async Task<string> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
         var existingUser = await context.Users.FirstOrDefaultAsync(
-            u => u.PhoneNumber == request.Phone || u.Email == request.Email,
+            u => u.PhoneNumber == request.PhoneNumber || u.Email == request.Email,
             cancellationToken: cancellationToken);
 
         if (existingUser != null) // Check if user already registered
         {
-            if (existingUser.Email == request.Email && existingUser.PhoneNumber == request.Phone)
-                throw new ExistException($"Почта: {request.Email} и номер: {request.Phone} уже зарегистрированы!");
+            if (existingUser.Email == request.Email && existingUser.PhoneNumber == request.PhoneNumber)
+                throw new ExistException($"Почта: {request.Email} и номер: {request.PhoneNumber} уже зарегистрированы!");
 
-            if (existingUser.PhoneNumber == request.Phone)
-                throw new ExistException($"Телефон: {request.Phone} уже зарегистрирован!");
+            if (existingUser.PhoneNumber == request.PhoneNumber)
+                throw new ExistException($"Телефон: {request.PhoneNumber} уже зарегистрирован!");
 
             if (existingUser.Email == request.Email)
                 throw new ExistException($"Почта: {request.Email} уже зарегистрирована!");
-
-            if (await context.Users.AnyAsync(u => u.UserName == request.UserName, cancellationToken))
-                throw new ExistException($"Имя пользователя: {request.UserName} не доступно!");
         }
 
         ApplicationUser user = new()
         {
             Id = Guid.NewGuid(),
-            UserName = request.UserName,
-            NormalizedUserName = request.UserName.ToLower(),
-            Email = request.Email,
-            NormalizedEmail = request.Email.ToLower(),
+            Email = request.Email!,
+            NormalizedEmail = request.Email!.ToLower(),
             EmailConfirmed = false,
-            PhoneNumber = request.Phone,
+            PhoneNumber = request.PhoneNumber,
             Name = request.Name,
             Surname = request.Surname,
-            Patronymic = request.Patronymic,
         };
 
         var result = await userManager.CreateAsync(user, request.Password);
@@ -57,13 +51,12 @@ public class RegisterUserCommandHandler(
         await userManager.UpdateSecurityStampAsync(user);
 
         result = await userManager.AddClaimsAsync(user, [
-            new Claim(ClaimTypes.NameIdentifier, user.UserName),
-            new Claim(ClaimTypes.Name, user.Name)
-        ]);
+            new Claim(ClaimTypes.NameIdentifier, user.Name), // ?
+            new Claim(ClaimTypes.Name, user.Name)]);
 
         result.ThrowBadRequestIfError();
         await context.SaveChangesAsync(cancellationToken);
 
-        return user.UserName;
+        return user.UserName!;
     }
 }
