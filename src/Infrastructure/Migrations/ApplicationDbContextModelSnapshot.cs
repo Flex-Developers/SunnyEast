@@ -17,7 +17,7 @@ namespace Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.4")
+                .HasAnnotation("ProductVersion", "9.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -112,7 +112,7 @@ namespace Infrastructure.Migrations
                     b.Property<decimal?>("DiscountPrice")
                         .HasColumnType("decimal(10,2)");
 
-                    b.Property<string>("Images")
+                    b.PrimitiveCollection<string>("Images")
                         .HasColumnType("longtext");
 
                     b.Property<bool>("IsDeleted")
@@ -195,7 +195,7 @@ namespace Infrastructure.Migrations
                     b.Property<string>("AddressYandex")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("Images")
+                    b.PrimitiveCollection<string>("Images")
                         .HasColumnType("longtext");
 
                     b.Property<bool>("IsDeleted")
@@ -365,7 +365,7 @@ namespace Infrastructure.Migrations
 
                     b.ToTable("AspNetUsers", (string)null);
 
-                    b.HasDiscriminator<string>("Discriminator").HasValue("IdentityUser<Guid>");
+                    b.HasDiscriminator().HasValue("IdentityUser<Guid>");
 
                     b.UseTphMappingStrategy();
                 });
@@ -455,13 +455,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Patronymic")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Phone")
                         .HasColumnType("longtext");
 
                     b.Property<string>("Surname")
