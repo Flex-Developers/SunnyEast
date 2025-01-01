@@ -25,24 +25,25 @@ public class RegisterUserCommandHandler(
         if (existingUser != null) // Check if user already registered
         {
             if (existingUser.Email == request.Email && existingUser.PhoneNumber == request.PhoneNumber)
-                throw new ExistException($"Почта: {request.Email} и номер: {request.PhoneNumber} уже зарегистрированы!");
+                throw new ExistException($"Почта: {request.Email} и номер: {request.PhoneNumber} уже зарегистрированы!\nВыполните вход.");
 
             if (existingUser.PhoneNumber == request.PhoneNumber)
-                throw new ExistException($"Телефон: {request.PhoneNumber} уже зарегистрирован!");
+                throw new ExistException($"Телефон: {request.PhoneNumber} уже зарегистрирован!\nВыполните вход.");
 
             if (existingUser.Email == request.Email)
-                throw new ExistException($"Почта: {request.Email} уже зарегистрирована!");
+                throw new ExistException($"Почта: {request.Email} уже зарегистрирована!\nВыполните вход.");
         }
 
         ApplicationUser user = new()
         {
             Id = Guid.NewGuid(),
-            Email = request.Email!,
+            Email = !string.IsNullOrWhiteSpace(request.Email) ? request.Email : null,
             NormalizedEmail = request.Email!.ToLower(),
             EmailConfirmed = false,
-            PhoneNumber = request.PhoneNumber,
+            PhoneNumber = !string.IsNullOrWhiteSpace(request.PhoneNumber) ? request.PhoneNumber : null,
             Name = request.Name,
             Surname = request.Surname,
+            UserName = "User" + context.Users.Count()
         };
 
         var result = await userManager.CreateAsync(user, request.Password);
@@ -51,7 +52,7 @@ public class RegisterUserCommandHandler(
         await userManager.UpdateSecurityStampAsync(user);
 
         result = await userManager.AddClaimsAsync(user, [
-            new Claim(ClaimTypes.NameIdentifier, user.Name), // ?
+            new Claim(ClaimTypes.NameIdentifier, user.UserName),
             new Claim(ClaimTypes.Name, user.Name)]);
 
         result.ThrowBadRequestIfError();
