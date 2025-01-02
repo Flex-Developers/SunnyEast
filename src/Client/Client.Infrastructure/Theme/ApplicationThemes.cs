@@ -2,10 +2,24 @@
 
 namespace Client.Infrastructure.Theme;
 
-public class DarkTheme : MudTheme
+public static class ApplicationThemes
 {
-    public DarkTheme()
+    public static MudTheme DefaultTheme => new()
     {
+        PaletteLight = new PaletteLight
+        {
+            Primary = CustomColors.Light.Primary,
+            Secondary = CustomColors.Light.Secondary,
+            Background = CustomColors.Light.Background,
+            AppbarBackground = CustomColors.Light.AppbarBackground,
+            AppbarText = CustomColors.Light.AppbarText,
+            DrawerBackground = CustomColors.Light.Background,
+            DrawerText = "rgba(0,0,0, 0.7)",
+            Success = CustomColors.Light.Primary,
+            TableLines = "#e0e0e029",
+            OverlayDark = "hsl(0deg 0% 0% / 75%)"
+        },
+
         PaletteDark = new PaletteDark
         {
             Primary = CustomColors.Dark.Primary,
@@ -30,15 +44,14 @@ public class DarkTheme : MudTheme
             Divider = "#e0e0e036",
             OverlayDark = "hsl(0deg 0% 0% / 75%)",
             TextDisabled = CustomColors.Dark.Disabled
-        };
-
+        },
         LayoutProperties = new LayoutProperties()
         {
             DefaultBorderRadius = "5px",
-        };
+        },
 
-        Typography = CustomTypography.FSHTypography;
-        Shadows = new Shadow();
-        ZIndex = new ZIndex() { Drawer = 1300 };
-    }
+        Typography = CustomTypography.FSHTypography,
+        Shadows = new Shadow(),
+        ZIndex = new ZIndex() { Drawer = 1300 }
+    };
 }

@@ -7,8 +7,16 @@ namespace Client.Layout;
 public partial class MainLayout
 {
     private ClientPreference? _themePreference;
-    private MudTheme _currentTheme = new LightTheme();
+    private readonly MudTheme _currentTheme = ApplicationThemes.DefaultTheme;
     private bool _rightToLeft;
+    private bool _isDarkMode;
+    private MudThemeProvider _mudThemeProvider = null!;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            _isDarkMode = await _mudThemeProvider.GetSystemPreference();
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -28,11 +36,7 @@ public partial class MainLayout
 
     private void SetCurrentTheme(ClientPreference themePreference)
     {
-        _currentTheme = themePreference.IsDarkMode ? new DarkTheme() : new LightTheme();
-        _currentTheme.PaletteDark.Primary = themePreference.PrimaryColor;
-        _currentTheme.PaletteDark.Secondary = themePreference.SecondaryColor;
-        _currentTheme.LayoutProperties.DefaultBorderRadius = $"{themePreference.BorderRadius}px";
-        _currentTheme.LayoutProperties.DefaultBorderRadius = $"{themePreference.BorderRadius}px";
-        _rightToLeft = themePreference.IsRTL;
+        _isDarkMode = themePreference.IsDarkMode;
+        StateHasChanged();
     }
 }
