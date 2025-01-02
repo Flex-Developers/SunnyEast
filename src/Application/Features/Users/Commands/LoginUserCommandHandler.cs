@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Application.Common.Interfaces.Services;
 using Application.Contract.User.Commands;
@@ -12,26 +13,37 @@ namespace Application.Features.Users.Commands;
 public class LoginUserCommandHandler(IJwtTokenService jwtTokenService, UserManager<ApplicationUser> userManager)
     : IRequestHandler<LoginUserCommand, JwtTokenResponse>
 {
-    public async Task<JwtTokenResponse> Handle(LoginUserCommand request,
-        CancellationToken cancellationToken)
+    public async Task<JwtTokenResponse> Handle(LoginUserCommand request, CancellationToken cancellationToken)
     {
-        var user =
-            await userManager.Users.FirstOrDefaultAsync(u => u.UserName == request.UserName, cancellationToken);
-        _ = user ?? throw new UnauthorizedAccessException("Username is not found.");
+        ApplicationUser user;
 
-        var success = await userManager.CheckPasswordAsync(user, request.Password);
-
-        if (!success)
+        if (string.IsNullOrWhiteSpace(request.Email) == false)
         {
-            throw new UnauthorizedAccessException("Incorrect password.");
+            user = (await userManager.Users.FirstOrDefaultAsync(u => u.Email == request.Email,cancellationToken))!;
+            _ = user ?? throw new UnauthorizedAccessException("Почта не найдена.");
         }
+        else if (string.IsNullOrWhiteSpace(request.PhoneNumber) == false)
+        {
+            user = (await userManager.Users.FirstOrDefaultAsync(u => u.PhoneNumber == request.PhoneNumber,
+                cancellationToken))!;
+            _ = user ?? throw new UnauthorizedAccessException("Телефонный номер не найден.");
+        }
+        else
+            throw new ValidationException("Ошибка, проверьте введенные данные!");
 
+        
+        if (await userManager.CheckPasswordAsync(user, request.Password) == false)
+            throw new UnauthorizedAccessException("Неправильный пароль!");
+
+        
         var claims = await userManager.GetClaimsAsync(user);
         var roles = await userManager.GetRolesAsync(user);
+        
         foreach (var role in roles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role));
         }
+        
         return new JwtTokenResponse
         {
             RefreshToken = jwtTokenService.CreateRefreshToken(claims),

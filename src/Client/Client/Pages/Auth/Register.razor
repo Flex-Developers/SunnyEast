@@ -1,83 +1,210 @@
 ﻿@page "/Register"
 @using Application.Contract.User.Commands
 @using Client.Infrastructure.Services.HttpClient
-@using Client.Infrastructure.Services.Validation
-
+@using Severity = MudBlazor.Severity
 @inject IHttpClientService HttpClient
-@inject IValidationService ValidationService
 
-<MudContainer Class="register-container">
-    <MudPaper Class="register-paper" Elevation="3">
-        <MudForm Class="register-form">
-            <MudTextField Label="Имя" Required="true" Variant="Variant.Filled" @bind-Value="_user.Name" InputType="InputType.Text" InputMode="InputMode.text"/>
-            <MudTextField Label="Фамилия" Required="true" Variant="Variant.Filled" @bind-Value="_user.Surname" InputType="InputType.Text" InputMode="InputMode.text"/>
-            <MudTextField Label="Отчество" Variant="Variant.Filled" @bind-Value="_user.Patronymic" InputType="InputType.Text" InputMode="InputMode.text"/>
-            <MudTextField Label="Номер телефона" Required="true" Variant="Variant.Filled" @bind-Value="_user.Phone" InputType="InputType.Telephone" InputMode="InputMode.numeric"/>
-            <MudTextField Label="Электронная почта" Required="true" Variant="Variant.Filled" @bind-Value="_user.Email" InputType="InputType.Email" InputMode="InputMode.email"/>
-            <MudTextField Label="Имя пользователя" Required="true" Variant="Variant.Filled" @bind-Value="_user.UserName" />
-
-            <MudTextField Label="Пароль" Required="true" Variant="Variant.Filled" @bind-Value="_user.Password" InputType="InputType.Password" Immediate="true" />
-            <MudTextField Label="Подтверждение пароля" Required="true" Variant="Variant.Filled" @bind-Value="_confirmPassword" InputType="InputType.Password" Immediate="true"  />
-
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="register-button" @onclick="SubmitRegister">Зарегистрироваться</MudButton>
+<MudContainer Class="register-container ">
+    <MudPaper Class="register-paper rounded pa-4 shadow-md" Elevation="3">
+        <MudForm Model="_user" @ref="_form" Validation="@(_userValidator.ValidateValue)" ValidationDelay="0" Class="register-form d-flex flex-column gap-0">
+            <MudCardHeader Class="text-center justify-center align-center">
+                <MudText Typo="Typo.h4" Align="Align.Center" Class="centered-text">Регистрация</MudText>
+            </MudCardHeader>
             
-            @if (_errorMessage != null)
-            {
-                <div class="error-message">@_errorMessage</div>
-            }
-            else if (_successMessage != null)
-            {
-                <div class="success-message">@_successMessage</div>
-            }
+            <MudTextField @bind-Value="_user.Name" Label="Имя" For="() => _user.Name" Variant="Variant.Outlined" Immediate="true" />
+            <MudTextField @bind-Value="_user.Surname" Label="Фамилия" For="() => _user.Surname" Variant="Variant.Outlined" Immediate="true" />
+            
+            <MudTextField T="string" 
+                          ValueChanged="@(value => PhoneNumberChanged(value))" 
+                          OnBlur="CheckPhoneAndEmail" 
+                          Error="isPhoneAndEmailEmpty" 
+                          ErrorText="@_requiredErrorMessage"  
+                          Immediate="true" 
+                          Label="Номер телефона" 
+                          For="() => _user.PhoneNumber!" 
+                          Variant="Variant.Outlined" 
+                          Mask="@(new PatternMask("000-000-00-00"))" 
+                          Adornment="Adornment.Start" 
+                          AdornmentText="+7" />
+            
+            <MudTextField T="string" 
+                          ValueChanged="@(value => EmailChanged(value))" 
+                          OnBlur="CheckPhoneAndEmail" 
+                          Error="isPhoneAndEmailEmpty" 
+                          ErrorText="@_requiredErrorMessage" 
+                          Immediate="true" 
+                          Label="Электронная почта" 
+                          For="() => _user.Email!" 
+                          Variant="Variant.Outlined" 
+                          Mask="RegexMask.Email()"/>
+
+            <MudTextField @bind-Value="_user.Password"
+                          Label="Пароль"
+                          For="@(() => _user.Password)"
+                          Variant="Variant.Outlined"
+                          InputType="@_passwordInput"
+                          Adornment="Adornment.End"
+                          AdornmentIcon="@_passwordInputIcon"
+                          OnAdornmentClick="ShowOrHidePassword"/>
+            
+            <MudTextField @bind-Value="_user.ConfirmPassword"
+                          Label="Подтвердите пароль"
+                          For="@(() => _user.ConfirmPassword)"
+                          Variant="Variant.Outlined"
+                          InputType="@_passwordInput"
+                          Adornment="Adornment.End"
+                          AdornmentIcon="@_passwordInputIcon"
+                          OnAdornmentClick="ShowOrHidePassword"/>
+            
+            <MudCheckBox @bind-Value="_agreeForPersonalDataProcessing" Label="Согласен с обработкой данных." Style="margin-left: -13px" Color="Color.Primary"></MudCheckBox>
+
+            <MudButton Variant="Variant.Filled" Disabled="!_agreeForPersonalDataProcessing" Color="Color.Primary" Class="register-button" @onclick="SubmitRegister">Зарегистрироваться</MudButton>
+            
+            <MudCardActions Class="d-flex flex-column align-center">
+                <MudText Typo="Typo.body2" Style="padding-top: 20px">Уже регистрировались?</MudText>
+                <MudLink Style="padding-top: 10px; margin-bottom: -10px" Class="text-primary" OnClick="@Login">
+                    Войти
+                </MudLink>
+            </MudCardActions>
         </MudForm>
     </MudPaper>
 </MudContainer>
 
 @code {
 
+    private MudForm _form = null!;
+    private bool _isPasswordVisible;
+    private bool _agreeForPersonalDataProcessing;
+    private InputType _passwordInput = InputType.Password;
+    private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+    private RegisterUserValidator _userValidator = new RegisterUserValidator();
+    private bool isPhoneAndEmailEmpty;
+    private string _requiredErrorMessage = "Номер телефона или почта должны быть заполнены.";
+    
+    protected void CheckPhoneAndEmail()
+    {
+        isPhoneAndEmailEmpty = string.IsNullOrWhiteSpace(_user.PhoneNumber) && string.IsNullOrWhiteSpace(_user.Email);
+        StateHasChanged();
+    }
+
+    private void PhoneNumberChanged(string phone)
+    {
+        _user.PhoneNumber = phone;
+        isPhoneAndEmailEmpty = string.IsNullOrWhiteSpace(_user.PhoneNumber) && string.IsNullOrWhiteSpace(_user.Email);
+    }
+
+    private void EmailChanged(string email)
+    {
+        _user.Email = email;
+        isPhoneAndEmailEmpty = string.IsNullOrWhiteSpace(_user.PhoneNumber) && string.IsNullOrWhiteSpace(_user.Email);
+    }
+    
     RegisterUserCommand _user = new()
     {
         Name = "",
         Surname = "",
-        Patronymic = "",
-        Phone = "",
+        PhoneNumber = "",
         Email = "",
-        UserName = "",
-        Password = ""
+        Password = "",
+        ConfirmPassword = ""
     };
     
-    private string _confirmPassword;
-    private string? _errorMessage;
-    private string? _successMessage;
+    private void ShowOrHidePassword()
+    {
+        if (_isPasswordVisible)
+        {
+            _isPasswordVisible = false;
+            _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+            _passwordInput = InputType.Password;
+        }
+        else
+        {
+            _isPasswordVisible = true;
+            _passwordInputIcon = Icons.Material.Filled.Visibility;
+            _passwordInput = InputType.Text;
+        }
+    }
     
     private async Task SubmitRegister()
     {
         try
         {
-            ValidateUser(_user);
-            
-            if (_user.Password != _confirmPassword) // Проверка на совпадение пароля и его подтверждения
-            {
-                _errorMessage = "Пароль и его подтверждение должны совпадать.";
-                return;
-            }
+            await _form.Validate();
+            _user.PhoneNumber = "+7-" + _user.PhoneNumber;
+            CheckPhoneAndEmail();
 
-            var response = await HttpClient.PostAsJsonAsync("/api/user/register", _user);
-            _errorMessage = response.Success ? null : "Ошибка регистрации, Проверьте введенные данные!";
-            _successMessage = response.Success ? "Успешная регистрация!" : null;
+            if (_form.IsValid && isPhoneAndEmailEmpty == false)
+            {
+                var response = await HttpClient.PostAsJsonAsync("/api/user/register", _user);
+                if (response.Success)
+                {
+                    Snackbar.Add("Успешная регистрация", Severity.Success);
+                    Navigation.NavigateTo("/");
+                }
+                else
+                {
+                    Snackbar.Add("Ошибка регистрации, Проверьте введенные данные, или попробуйте позже.", Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Правильно заполните данные!", Severity.Warning);
+            }
+          
         }
         catch (Exception exception)
         {
-            _errorMessage = exception.Message;
+            Snackbar.Add(exception.Message, Severity.Error);
         }
     }
-    private void ValidateUser(RegisterUserCommand user)
+
+    private void Login()
     {
-        ValidationService.ValidateEmail(user.Email);
-        ValidationService.ValidatePassword(user.Password);
-        ValidationService.ValidatePhoneNumber(user.Phone!);
-        ValidationService.ValidateUsername(user.UserName);
-        ValidationService.ValidateNames(user.Name, user.Surname, user.Patronymic);
+        Navigation.NavigateTo("/login");
+    }
+
+    public class RegisterUserValidator : AbstractValidator<RegisterUserCommand>
+    {
+        public RegisterUserValidator()
+        {
+            RuleFor(x => x.Name)
+                .NotEmpty().WithMessage("Имя обязательно.")
+                .Matches(@"^[a-zA-Zа-яА-Я]+$").WithMessage("Имя может содержать только буквы.");
+            
+            RuleFor(x => x.Surname)
+                .Matches(@"^[a-zA-Zа-яА-Я]+$").WithMessage("Фамилия может содержать только буквы.")
+                .When(x => !string.IsNullOrWhiteSpace(x.Surname));
+
+            RuleFor(x => x.PhoneNumber)
+                .Matches(@"^\d{3}-\d{3}-\d{2}-\d{2}$")
+                .WithMessage("Некорректный формат номера телефона.")
+                .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber));
+
+            RuleFor(x => x.Email)
+                .EmailAddress()
+                .WithMessage("Некорректный формат электронной почты.")
+                .When(x => !string.IsNullOrWhiteSpace(x.Email));
+                
+            RuleFor(x => x.Password)
+                .NotEmpty().WithMessage("Пароль обязателен.")
+                .MinimumLength(8).WithMessage("Пароль должен содержать минимум 8 символов.")
+                .Matches(@"[A-Z]").WithMessage("Пароль должен содержать минимум одну заглавную букву.")
+                .Matches(@"[a-z]").WithMessage("Пароль должен содержать минимум одну строчную букву.")
+                .Matches(@"\d").WithMessage("Пароль должен содержать минимум одну цифру."); // \d — проверка на наличие цифры
+
+            
+            RuleFor(x => x.ConfirmPassword)
+                .NotEmpty().WithMessage("Подтверждение пароля обязательно.")
+                .Equal(x => x.Password).WithMessage("Пароли должны совпадать.");
+        }
+        
+        public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
+        {
+            var result = await ValidateAsync(ValidationContext<RegisterUserCommand>.CreateWithOptions((RegisterUserCommand)model, x => x.IncludeProperties(propertyName)));
+            if (result.IsValid)
+                return Array.Empty<string>();
+            return result.Errors.Select(e => e.ErrorMessage);
+        };
     }
 }
 
@@ -86,7 +213,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100vh;
+        height: 90vh;
     }
 
     .register-paper {
@@ -100,15 +227,10 @@
     }
 
     .register-button {
-        margin-top: 20px;
+        margin-top: 5px;
     }
-
-    .error-message {
-        color: red;
-        margin-top: 10px;
-    }
-    .success-message {
-        color: green;
-        margin-top: 10px;
+    
+    .centered-text {
+        text-align: center;
     }
 </style>

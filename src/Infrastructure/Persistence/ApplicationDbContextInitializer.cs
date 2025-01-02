@@ -21,7 +21,8 @@ public class ApplicationDbContextInitializer(
             await roleManager.CreateAsync(new IdentityRole<Guid>(ApplicationRoles.Salesman));
 
         // Создание администратора, если он не существует
-        var adminUser = await userManager.FindByNameAsync("admin");
+        // var adminUser = await userManager.FindByNameAsync("admin");
+        var adminUser = await userManager.FindByEmailAsync("avazbekolimov722@gmail.com");
         if (adminUser == null)
         {
             adminUser = new ApplicationUser
