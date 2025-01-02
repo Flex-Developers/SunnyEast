@@ -52,21 +52,12 @@ public class ClientPreferenceManager : IClientPreferenceManager
         return false;
     }
 
-    public async Task<MudTheme> GetCurrentThemeAsync()
-    {
-        if (await GetPreference() is ClientPreference preference)
-        {
-            if (preference.IsDarkMode) return new DarkTheme();
-        }
-
-        return new LightTheme();
-    }
-
     public async Task<string> GetPrimaryColorAsync()
     {
         if (await GetPreference() is ClientPreference preference)
         {
             string colorCode = preference.PrimaryColor;
+
             if (Regex.Match(colorCode, "^#(?:[0-9a-fA-F]{3,4}){1,2}$").Success)
             {
                 return colorCode;
