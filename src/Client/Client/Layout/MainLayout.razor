@@ -2,15 +2,12 @@
 
 <MudRTLProvider RightToLeft="@_rightToLeft">
     <MudThemeProvider Theme="_currentTheme" @bind-IsDarkMode="@_isDarkMode" @ref="@_mudThemeProvider"/>
-    <MudPopoverProvider />
+    <MudPopoverProvider/>
     <MudDialogProvider/>
     <MudSnackbarProvider/>
     <AuthorizeView>
         <NotAuthorized>
             <MudLayout>
-                @* <ThemeDrawer @bind-ThemeDrawerOpen="_themeDrawerOpen" ThemePreference="_themePreference" *@
-                @*              ThemePreferenceChanged="ThemePreferenceChanged"/> *@
-                @* <ThemeButton OnClick="@(() => _themeDrawerOpen = true)"/> *@
                 <LayoutPart ThemePreference="_themePreference" ThemePreferenceChanged="ThemePreferenceChanged">
                     @Body
                 </LayoutPart>
