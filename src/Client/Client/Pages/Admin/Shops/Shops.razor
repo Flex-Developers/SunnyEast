@@ -114,8 +114,8 @@
 
     private async Task DeleteShopAsync(Shop shop)
     {
-        var deleteDialog = (await DialogService.ShowAsync<DeleteConfirmation>("",
-            new DialogParameters { { "ContentText", $"""Вы хотите удалить "{shop.Address}" ?""" } }));
+        var deleteDialog = await DialogService.ShowAsync<DeleteConfirmation>("",
+            new DialogParameters { { "Name", shop.Address } });
 
         var dialogResult = await deleteDialog.Result;
 

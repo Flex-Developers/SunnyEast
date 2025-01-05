@@ -3,25 +3,37 @@
 @using Severity = MudBlazor.Severity
 @inject IHttpClientService HttpClient
 <MudForm Model="_command" @ref="_form">
-    <MudDialog Style="width:40%">
+    <MudDialog Class="create-dialog">
         <TitleContent>
             <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3 mb-n1"/>Создать магазин</MudText>
         </TitleContent>
 
         <DialogContent>
 
-            <MudTextField Required="true" Label="Адрес" @bind-Value="_command.Address" InputType="InputType.Text" FullWidth="true" Clearable="true" AutoGrow="true"/>
+            <MudTextField Required="true" 
+                          RequiredError="Поле не может быть пустым!" 
+                          Label="Адрес" @bind-Value="_command.Address" 
+                          InputType="InputType.Text" 
+                          FullWidth="true" 
+                          Clearable="true" 
+                          AutoGrow="true"/>
 
 
-            <MudButton Color="Color.Success" OnClick="ShowImageTable" StartIcon="@Icons.Material.Filled.Add">Добавить изображения</MudButton>
+            <MudButton Color="Color.Success"
+                       Style="margin-left: -10px; margin-top: 10px"
+                       hidden="@_showTable"
+                       OnClick="ShowImageTable"
+                       StartIcon="@Icons.Material.Filled.Add">
+                       Добавить изображения
+            </MudButton>
 
             @if (_showTable)
             {
-                <MudGrid>
+                <MudGrid Style="padding-left: 25px; padding-top: 45px">
                     @foreach (var image in _images.Select((value, index) => new { value, index }))
                     {
                         <MudTextField HelperText="@((image.index + 1).ToString())" @bind-Value="_images[image.index]" Label="Url изображения"
-                                      InputType="InputType.Url" InputMode="InputMode.url" Clearable="true" FullWidth="true" AutoGrow="true"
+                                      InputType="InputType.Url" InputMode="InputMode.url"  Clearable="true" FullWidth="true" AutoGrow="true"
                                       Error="@_images[image.index].Contains(" ")" ErrorText="Ссылка не может содержать пробелы!" Immediate="true"/>
                     }
                 </MudGrid>
@@ -135,5 +147,11 @@
             Snackbar.Add("Пожалуйста, заполните все обязательные поля правильно!", Severity.Warning);
         }
     }
-
 }
+
+<style>
+    .create-dialog {
+        width: 95%; 
+        max-width: 600px; 
+    }
+</style>
