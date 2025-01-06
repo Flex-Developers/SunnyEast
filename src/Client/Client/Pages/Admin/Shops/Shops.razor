@@ -18,7 +18,7 @@
     @foreach (var shop in ShopsList)
     {
         <MudItem xs="12" sm="6" md="4" lg="2">
-            <MudCard Style="max-width: 100%; height: 400px; display: flex; flex-direction: column; justify-content: space-between;" Class="product-card">
+            <MudCard Style="max-width: 100%; height: 400px; display: flex; flex-direction: column; justify-content: space-between;" Class="shop-card">
                 <MudCarousel Style="height: 250px" ItemsSource="@shop.Images" Context="imgContext" ShowArrows="true" ShowBullets="false" AutoCycle="false" TData="string">
                     <ItemTemplate>
                         <MudCardMedia Image="@imgContext"></MudCardMedia>
@@ -136,11 +136,12 @@
 
 <style>
 
-    .product-card {
+    .shop-card {
         transition: transform 0.3s ease;
+        border-radius: 10px; /* Скругленные углы для более приятного вида */
     }
 
-    .product-card:hover {
+    .shop-card:hover {
         transform: scale(1.05);
     }
 
