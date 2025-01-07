@@ -13,7 +13,7 @@
 
 <MudPaper Elevation="25">
     <MudToolBar>
-        <MudSelect T="string" Label="Категория" Style="margin-right: 15px; padding-bottom: 3%"
+        <MudSelect T="string" Label="Категория" Style="margin-right: 15px;"
                    Value="@SelectedCategory" ValueChanged="@(async (string value) => await OnCategoryChanged(value))">
             @foreach (var category in _categories)
             {
@@ -23,7 +23,7 @@
 
 
         <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="CreateAsync"
-                   Style="vertical-align: middle;">
+                   Style="vertical-align: middle; margin-bottom: -10px">
             Создать➕
         </MudButton>
 
@@ -33,7 +33,7 @@
                          ResetValueOnEmptyText="true"
                          Immediate="true" Clearable="true" Label="Поиск" DebounceInterval="300"
                          AdornmentIcon="@Icons.Material.Filled.Search"
-                         Style="width: calc(100% - 15px); margin-bottom: 15px; margin-right: 15px;"/>
+                         Style="width: calc(100% - 1px); margin-right: -200px;"/>
 
         @if (IsSearching)
         {
@@ -44,7 +44,7 @@
 
 </MudPaper>
 
-<MudGrid Spacing="1" Justify="Justify.FlexStart" Style="margin-top: 3px; margin-bottom: 50px">
+<MudGrid Spacing="3" Justify="Justify.FlexStart" Style="margin-top: 3px; margin-bottom: 50px">
     @foreach (var product in _products)
     {
         <MudItem xs="12" sm="6" md="4" lg="2">
@@ -254,7 +254,7 @@
     }
 
     .product-card:hover {
-        /*transform: scale(1.05);*/
+        transform: scale(1.03);
         background-color: rgba(0, 0, 0, 0.1);
     }
 

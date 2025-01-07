@@ -7,22 +7,22 @@
 <MudForm Model="_command" @ref="_form">
     <MudDialog Class="product-dialog" >
         <TitleContent>
-            <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Create" Class="mr-3 mb-n1"/>Добавить продукт</MudText>
+            <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3 mb-n1"/>Добавить продукт</MudText>
         </TitleContent>
 
         <DialogContent>
-            <MudSelect T="string" Required="true" Label="Категория" AnchorOrigin="Origin.BottomCenter" @bind-Value="CategoryName" FullWidth="true">
+            <MudSelect T="string" Required="true" RequiredError="Выберите категорию." Label="Категория" AnchorOrigin="Origin.BottomCenter" @bind-Value="CategoryName" FullWidth="true">
                 @foreach (var category in Categories)
                 {
                     <MudSelectItem Value="@category">@category</MudSelectItem>
                 }
             </MudSelect>
 
-            <MudTextField Required="true" Label="Название" @bind-Value="_command.Name" InputType="InputType.Text" FullWidth="true" Clearable="true" AutoGrow="true"/>
+            <MudTextField Required="true" RequiredError="Название не может быть пустым!" Label="Название" @bind-Value="_command.Name" InputType="InputType.Text" FullWidth="true" Clearable="true" AutoGrow="true"/>
 
             <MudGrid>
                 <MudItem xs="4">
-                    <MudNumericField T="decimal?" Min="0" Required="true" Label="Цена" Format="F2" Clearable="true" Immediate="true" FullWidth="true"
+                    <MudNumericField T="decimal?" Min="0" Required="true" RequiredError="Цена не может быть пустой" Label="Цена" Format="F2" Clearable="true" Immediate="true" FullWidth="true"
                                      ValueChanged="@(price => { _command.Price = price; UpdateDiscountPrice(_command.DiscountPercentage); })"/>
                 </MudItem>
                 <MudItem xs="4">
@@ -39,11 +39,12 @@
 
             <MudTextField Label="Описание" @bind-Value="_command.Description" InputType="InputType.Text" Clearable="true" FullWidth="true" AutoGrow="true"/>
 
-            <MudButton Color="Color.Success" OnClick="ShowImageTable" StartIcon="@Icons.Material.Filled.Add">Добавить изображения</MudButton>
+            <MudButton Color="Color.Success" Style="margin-left: -10px; margin-top: 10px"
+                       hidden="@_showTable" OnClick="ShowImageTable" StartIcon="@Icons.Material.Filled.Add">Добавить изображения</MudButton>
 
             @if (_showTable)
             {
-                <MudGrid>
+                <MudGrid Style="padding-left: 25px; padding-top: 45px">
                     @foreach (var image in _images.Select((value, index) => new { value, index }))
                     {
                         <MudTextField HelperText="@((image.index + 1).ToString())" @bind-Value="_images[image.index]" Label="Url изображения"
