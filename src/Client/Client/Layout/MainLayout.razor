@@ -8,9 +8,6 @@
     <AuthorizeView>
         <NotAuthorized>
             <MudLayout>
-                @* <ThemeDrawer @bind-ThemeDrawerOpen="_themeDrawerOpen" ThemePreference="_themePreference" *@
-                @*              ThemePreferenceChanged="ThemePreferenceChanged"/> *@
-                @* <ThemeButton OnClick="@(() => _themeDrawerOpen = true)"/> *@
                 <LayoutPart ThemePreference="_themePreference" ThemePreferenceChanged="ThemePreferenceChanged">
                     @Body
                 </LayoutPart>

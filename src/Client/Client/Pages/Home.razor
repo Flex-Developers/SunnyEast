@@ -5,7 +5,7 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Style="margin-top: -80px; margin-left: -40px; margin-right: 0">
     <!-- Верхний баннер с слайдером -->
-    <MudCarousel  TData="string" Class="carousel-banner" ItemsSource="@Slides.Select(x => x.ImageUrl)"
+    <MudCarousel TData="string" Class="carousel-banner" ItemsSource="@Slides.Select(x => x.ImageUrl)"
                  EnableSwipeGesture="true"
                  AutoCycle="true"
                  ShowArrows="true"
@@ -19,58 +19,59 @@
     </MudCarousel>
 
 </MudContainer>
-    <!-- Анимированный контент -->
-    <MudContainer Class="animated-content">
-        
-        <MudText Typo="Typo.h3" Align="Align.Center" Style="margin-top: 50px;" Class="fade-in title">Популярные категории</MudText>
-        
-        <!-- Сетка с популярными категориями -->
-        <MudGrid Class="fade-in mt-4 category-grid" Justify="Justify.Center">
-            @foreach (var category in _popularCategories!)
-            {
-                <MudItem xs="12" sm="6" md="3">
-                    <MudCard Elevation="15" Class="category-card" @onclick="() => OnCategoryClick(category.Name)">
-                        <MudCardMedia Image="@category.ImageUrl" Class="category-card-image" />
-                        <MudCardContent Class="category-card-content">
-                            <MudText Class="category-card-text" Typo="Typo.h5">@category.Name</MudText>
-                        </MudCardContent>
-                    </MudCard>
-                </MudItem>
-            }
-        </MudGrid>
+<!-- Анимированный контент -->
+<MudContainer Class="animated-content">
 
-        <MudDivider Class="my-lg-5" DividerType="DividerType.FullWidth"/>
-        
-        <!-- Блок преимуществ -->
-        <MudGrid Class="mt-4">
-            <MudItem xs="12" sm="3">
-                <MudPaper Elevation="15" Class="advantage">
-                    <MudIcon Icon="@Icons.Material.Filled.Store" Color="Color.Primary" Size="Size.Large"/>
-                    <MudText Typo="Typo.h6" Class="mt-2">Доступная цена от производителя</MudText>
-                </MudPaper>
+    <MudText Typo="Typo.h3" Align="Align.Center" Style="margin-top: 50px;" Class="fade-in title">Популярные категории</MudText>
+
+    <!-- Сетка с популярными категориями -->
+    <MudGrid Class="fade-in mt-4 category-grid" Justify="Justify.Center">
+        @foreach (var category in _popularCategories!)
+        {
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="15" Class="category-card" @onclick="() => OnCategoryClick(category.Name)">
+                    <MudCardMedia Image="@category.ImageUrl" Class="category-card-image"/>
+                    <MudCardContent Class="category-card-content">
+                        <MudText Class="category-card-text" Typo="Typo.h5">@category.Name</MudText>
+                    </MudCardContent>
+                </MudCard>
             </MudItem>
-            <MudItem xs="12" sm="3">
-                <MudPaper Elevation="15" Class="advantage">
-                    <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Primary" Size="Size.Large"/>
-                    <MudText Typo="Typo.h6" Class="mt-2">Высокое качество продукции</MudText>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="12" sm="3">
-                <MudPaper Elevation="15" Class="advantage">
-                    <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Primary" Size="Size.Large"/>
-                    <MudText Typo="Typo.h6" Class="mt-2">С нами работают более 2900 клиентов</MudText>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="12" sm="3">
-                <MudPaper Elevation="15" Class="advantage">
-                    <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Color="Color.Primary" Size="Size.Large"/>
-                    <MudText Typo="Typo.h6" Class="mt-2">Доставка по всей России и СНГ</MudText>
-                </MudPaper>
-            </MudItem>
-        </MudGrid>
-    </MudContainer>
+        }
+    </MudGrid>
+
+    <MudDivider Class="my-lg-5" DividerType="DividerType.FullWidth"/>
+
+    <!-- Блок преимуществ -->
+    <MudGrid Class="mt-4">
+        <MudItem xs="12" sm="3">
+            <MudPaper Elevation="15" Class="advantage">
+                <MudIcon Icon="@Icons.Material.Filled.Store" Color="Color.Primary" Size="Size.Large"/>
+                <MudText Typo="Typo.h6" Class="mt-2">Доступная цена от производителя</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="3">
+            <MudPaper Elevation="15" Class="advantage">
+                <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Primary" Size="Size.Large"/>
+                <MudText Typo="Typo.h6" Class="mt-2">Высокое качество продукции</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="3">
+            <MudPaper Elevation="15" Class="advantage">
+                <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Primary" Size="Size.Large"/>
+                <MudText Typo="Typo.h6" Class="mt-2">С нами работают более 2900 клиентов</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="3">
+            <MudPaper Elevation="15" Class="advantage">
+                <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Color="Color.Primary" Size="Size.Large"/>
+                <MudText Typo="Typo.h6" Class="mt-2">Доставка по всей России и СНГ</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
 
 @code {
+
     private List<Slide> Slides = new()
     {
         new Slide { ImageUrl = "https://i.imghippo.com/files/awNY5082yo.jpg", Description = "Сухофрукты" },
@@ -98,7 +99,6 @@
 
     private void OnCategoryClick(string categoryName)
     {
-        
     }
 
 }
@@ -132,6 +132,20 @@
         display: flex;
         justify-content: center;
         flex-wrap: wrap;
+    }
+
+
+    .footer-section-title {
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+
+    .footer-link {
+        text-decoration: none;
+    }
+
+    .footer-link:hover {
+        text-decoration: underline;
     }
 
     .mud-carousel .mud-carousel-arrows {
@@ -189,6 +203,7 @@
         transform: scale(1.05);
         box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
     }
+
     .category-card:hover .category-card-image {
         opacity: 0.8;
     }

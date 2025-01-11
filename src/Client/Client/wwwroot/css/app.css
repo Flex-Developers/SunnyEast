@@ -1,5 +1,9 @@
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    /*Code I added - Start*/
+    height: 100vh;
+    max-height: 100vh;
+    /*Code I added - End*/
 }
 
 h1:focus {
