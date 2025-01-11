@@ -1,0 +1,56 @@
+<MudPaper Elevation="10">
+    <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
+        <MudGrid>
+            <!-- Контактная информация -->
+            <MudItem xs="12" sm="6" md="3" Class="d-flex flex-column flex-grow-1 gap-3">
+                <MudText Typo="Typo.h6" Class="footer-section-title">Контакты</MudText>
+                <MudText Typo="Typo.body1">Телефон: <a href="tel:+79011235500" class="footer-link">+7-901-123-55-00</a>
+                </MudText>
+                <MudText Typo="Typo.body1">Email:
+                    <a href="mailto:info@example.com"
+                       class="footer-link">info@example.com</a></MudText>
+                <MudText Typo="Typo.body1">Адрес: Тверь, Улица Пржевальского<br>Дом 68с1</MudText>
+            </MudItem>
+
+            <!-- Быстрые ссылки -->
+            <MudItem xs="12" sm="6" md="3" Class="d-flex flex-column flex-grow-1 gap-4">
+                <MudText Typo="Typo.h6" Class="footer-section-title">Быстрые ссылки</MudText>
+                <MudList T="string" Dense="true" Style="margin-top: -20px">
+                    <MudListItem><a href="/categories" class="footer-link">Категории</a></MudListItem>
+                    <MudListItem><a href="/products" class="footer-link">Продукты</a></MudListItem>
+                    <MudListItem><a href="/about" class="footer-link">О нас</a></MudListItem>
+                    <MudListItem><a href="/contact" class="footer-link">Контакты</a></MudListItem>
+                </MudList>
+            </MudItem>
+
+            <!-- Социальные сети -->
+            <MudItem xs="12" sm="6" md="3">
+                <MudText Typo="Typo.h6" Class="footer-section-title">Мы в соцсетях</MudText>
+                <MudGrid Spacing="2" Justify="Justify.FlexStart" Style="margin-left: -15px">
+                    <MudIconButton Icon="@Icons.Custom.Brands.Telegram" Color="Color.Primary"
+                                   Link="https://facebook.com"/>
+                    <MudIconButton Icon="@Icons.Custom.Brands.WhatsApp" Color="Color.Primary"
+                                   Link="https://instagram.com"/>
+                    <MudIconButton Icon="@Icons.Material.Filled.Phone" Color="Color.Primary"
+                                   Link="https://twitter.com"/>
+                    <MudIconButton Icon="@Icons.Material.Filled.Sms" Color="Color.Primary"
+                                   Link="https://linkedin.com"/>
+                </MudGrid>
+            </MudItem>
+
+            <!-- Копирайт -->
+            <MudItem xs="12" sm="6" md="3" Class="d-flex flex-column flex-grow-1 gap-3">
+                <MudText Typo="Typo.h6" Class="footer-section-title">Информация</MudText>
+                <MudText Typo="Typo.body2" Style="margin-top: -10px">&copy; 2025 Солнечный восток. Все права
+                    защищены.
+                </MudText>
+                <MudText Typo="Typo.body2">
+                    <a href="/PrivacyPolicy" class="footer-link">Политика
+                        конфиденциальности</a></MudText>
+                <MudText Typo="Typo.body2"><a href="/TermsOfUse" class="footer-link">Условия
+                        использования</a>
+                </MudText>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+</MudPaper>
