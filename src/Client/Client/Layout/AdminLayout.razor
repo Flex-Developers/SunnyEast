@@ -1,63 +1,4 @@
-<MudAppBar Elevation="0">
-    <MudTooltip Text="Toggle Drawer">
-        <MudIconButton Icon="@Icons.Material.Rounded.Notes" Color="Color.Inherit" Edge="Edge.Start"
-                       OnClick="@(_ => DrawerToggle())"/>
-    </MudTooltip>
-    <MudButton Variant="Variant.Text" DisableElevation="true" @onclick="() => Navigation.NavigateTo('/'.ToString())">
-        <MudText Typo="Typo.h5">Солнечный восток</MudText>
-    </MudButton>
-    <MudSpacer/>
-    <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">
-
-        <MudDivider Vertical="true" FlexItem="true" DividerType="DividerType.Middle" Class="mx-4 my-5"/>
-        <DarkModePanel OnIconClicked="ToggleDarkLightMode"/>
-    </MudHidden>
-    <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
-        <DarkModePanel OnIconClicked="ToggleDarkLightMode"/>
-    </MudHidden>
-    <MudMenu AnchorOrigin="Origin.BottomRight" LockScroll="true" TransformOrigin="Origin.TopRight">
-        <ActivatorContent>
-            <MudIconButton Icon="@Icons.Material.Filled.Person" Color="Color.Inherit"/>
-        </ActivatorContent>
-        <ChildContent>
-            <div class="py-2" style="min-width: 220px">
-                <CascadingAuthenticationState>
-                    <AuthorizeView>
-                        <Authorized>
-
-                            <MudMenuItem OnClick="@(Profile)">
-                                <div class="d-flex">
-                                    <MudIcon Class="mx-2" Icon="@Icons.Material.Filled.Person"/>
-                                    <MudText>Аккаунт</MudText>
-                                </div>
-                            </MudMenuItem>
-                            <div class="mt-4 mx-4">
-                                <MudButton Color="Color.Error" FullWidth="true" StartIcon="@Icons.Material.Filled.Logout"
-                                           Variant="Variant.Filled" OnClick="@(Logout)">
-                                    Logout
-                                </MudButton>
-                            </div>
-                        </Authorized>
-                        <NotAuthorized>
-                            <div class="mt-4 mx-4">
-                                <MudButton Color="Color.Default" FullWidth="true" StartIcon="@Icons.Material.Filled.Login"
-                                           Variant="Variant.Filled" OnClick="@(SignIn)">
-                                    Вход
-                                </MudButton>
-                            </div>
-                            <div class="mt-4 mx-4">
-                                <MudButton Color="Color.Default" FullWidth="true" StartIcon="@Icons.Material.Filled.Add"
-                                           Variant="Variant.Filled" OnClick="@(SignUp)">
-                                    Регистрация
-                                </MudButton>
-                            </div>
-                        </NotAuthorized>
-                    </AuthorizeView>
-                </CascadingAuthenticationState>
-            </div>
-        </ChildContent>
-    </MudMenu>
-</MudAppBar>
+<AppBar ThemePreference="@ThemePreference" ThemePreferenceChanged="ThemePreferenceChanged"></AppBar>
 
 <MudDrawer @bind-Open="_drawerOpen" Elevation="25" ClipMode="DrawerClipMode.Never">
     <NavMenu/>
@@ -70,7 +11,7 @@
             <MudFab Icon="@Icons.Material.Filled.KeyboardArrowUp" Color="Color.Primary"/>
         </MudScrollToTop>
     </MudContainer>
-    
+
     <footer class="bottom-row px-4">
         <MudPaper Elevation="10">
             <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
@@ -114,13 +55,17 @@
                     <!-- Копирайт -->
                     <MudItem xs="12" sm="6" md="3" Class="d-flex flex-column flex-grow-1 gap-3">
                         <MudText Typo="Typo.h6" Class="footer-section-title">Информация</MudText>
-                        <MudText Typo="Typo.body2" Style="margin-top: -10px">&copy; 2025 Солнечный восток. Все права защищены.</MudText>
-                        <MudText Typo="Typo.body2"><a href="/PrivacyPolicy" class="footer-link">Политика конфиденциальности</a></MudText>
-                        <MudText Typo="Typo.body2"><a href="/TermsOfUse" class="footer-link">Условия использования</a></MudText>
+                        <MudText Typo="Typo.body2" Style="margin-top: -10px">&copy; 2025 Солнечный восток. Все права
+                            защищены.
+                        </MudText>
+                        <MudText Typo="Typo.body2"><a href="/PrivacyPolicy" class="footer-link">Политика
+                                конфиденциальности</a></MudText>
+                        <MudText Typo="Typo.body2"><a href="/TermsOfUse" class="footer-link">Условия использования</a>
+                        </MudText>
                     </MudItem>
                 </MudGrid>
             </MudContainer>
         </MudPaper>
     </footer>
-    
+
 </MudMainContent>

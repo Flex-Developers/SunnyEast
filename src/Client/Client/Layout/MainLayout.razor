@@ -1,24 +1,28 @@
-﻿@inherits LayoutComponentBase
+﻿@using Application.Contract.Identity
+@inherits LayoutComponentBase
 
 <MudRTLProvider RightToLeft="@_rightToLeft">
     <MudThemeProvider Theme="_currentTheme" @bind-IsDarkMode="@_isDarkMode" @ref="@_mudThemeProvider"/>
-    <MudPopoverProvider />
+    <MudPopoverProvider/>
     <MudDialogProvider/>
     <MudSnackbarProvider/>
-    <AuthorizeView>
-        <NotAuthorized>
-            <MudLayout>
-                <LayoutPart ThemePreference="_themePreference" ThemePreferenceChanged="ThemePreferenceChanged">
-                    @Body
-                </LayoutPart>
-            </MudLayout>
-        </NotAuthorized>
-        <Authorized>
-            <MudLayout>
-                <LayoutPart ThemePreference="_themePreference" ThemePreferenceChanged="ThemePreferenceChanged">
-                    @Body
-                </LayoutPart>
-            </MudLayout>
-        </Authorized>
-    </AuthorizeView>
+    <CascadingAuthenticationState>
+        <AuthorizeView Roles="@($"{ApplicationRoles.Administrator}, {ApplicationRoles.Salesman}")">
+            <NotAuthorized>
+                <MudLayout>
+                    <CustomerLayout ThemePreference="_themePreference" ThemePreferenceChanged="ThemePreferenceChanged">
+                        @Body
+                    </CustomerLayout>
+                </MudLayout>
+            </NotAuthorized>
+            <Authorized>
+                <MudLayout>
+                    <AdminLayout ThemePreference="_themePreference" ThemePreferenceChanged="ThemePreferenceChanged">
+                        @Body
+                    </AdminLayout>
+                </MudLayout>
+            </Authorized>
+        </AuthorizeView>
+    </CascadingAuthenticationState>
+
 </MudRTLProvider>

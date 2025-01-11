@@ -5,7 +5,7 @@ using MudBlazor;
 
 namespace Client.Layout;
 
-public partial class LayoutPart
+public partial class AppBar
 {
     [Parameter] public RenderFragment ChildContent { get; set; } = default!;
     [Parameter] public EventCallback OnDarkModeToggle { get; set; }
