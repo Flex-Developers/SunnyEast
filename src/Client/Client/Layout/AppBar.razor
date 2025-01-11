@@ -1,8 +1,14 @@
 <MudAppBar Elevation="0">
-    <MudTooltip Text="Toggle Drawer">
-        <MudIconButton Icon="@Icons.Material.Rounded.Notes" Color="Color.Inherit" Edge="Edge.Start"
-                       OnClick="@(_ => DrawerToggle())"/>
-    </MudTooltip>
+    <CascadingAuthenticationState>
+        <AuthorizeView>
+            <Authorized>
+                <MudTooltip Text="Toggle Drawer">
+                    <MudIconButton Icon="@Icons.Material.Rounded.Notes" Color="Color.Inherit" Edge="Edge.Start"
+                                   OnClick="@(_ => DrawerToggle())"/>
+                </MudTooltip>
+            </Authorized>
+        </AuthorizeView>
+    </CascadingAuthenticationState>
     <MudButton Variant="Variant.Text" DisableElevation="true" @onclick="() => Navigation.NavigateTo('/'.ToString())">
         <MudText Typo="Typo.h5">Солнечный восток</MudText>
     </MudButton>
@@ -32,7 +38,8 @@
                                 </div>
                             </MudMenuItem>
                             <div class="mt-4 mx-4">
-                                <MudButton Color="Color.Error" FullWidth="true" StartIcon="@Icons.Material.Filled.Logout"
+                                <MudButton Color="Color.Error" FullWidth="true"
+                                           StartIcon="@Icons.Material.Filled.Logout"
                                            Variant="Variant.Filled" OnClick="@(Logout)">
                                     Logout
                                 </MudButton>
@@ -40,7 +47,8 @@
                         </Authorized>
                         <NotAuthorized>
                             <div class="mt-4 mx-4">
-                                <MudButton Color="Color.Default" FullWidth="true" StartIcon="@Icons.Material.Filled.Login"
+                                <MudButton Color="Color.Default" FullWidth="true"
+                                           StartIcon="@Icons.Material.Filled.Login"
                                            Variant="Variant.Filled" OnClick="@(SignIn)">
                                     Вход
                                 </MudButton>
