@@ -2,7 +2,6 @@ using System.Security.Claims;
 using Application.Common;
 using Application.Common.Exceptions;
 using Application.Common.Interfaces.Contexts;
-using Application.Common.Interfaces.Services;
 using Application.Contract.User.Commands;
 using Domain.Entities;
 using MediatR;
@@ -18,6 +17,9 @@ public class RegisterUserCommandHandler(
 {
     public async Task<string> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
+        if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
+            request.PhoneNumber = "+7-" + request.PhoneNumber;
+        
         var existingUser = await context.Users.FirstOrDefaultAsync(
             u => u.PhoneNumber == request.PhoneNumber || u.Email == request.Email,
             cancellationToken: cancellationToken);
