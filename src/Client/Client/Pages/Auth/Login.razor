@@ -27,6 +27,7 @@
                 <MudTextField @bind-Value="_loginCommand.Password"
                               Label="Пароль"
                               Required="true"
+                              RequiredError="Пароль обязателен."
                               Variant="Variant.Outlined"
                               InputType="@_passwordInput"
                               Error="@(_isValidPassword == false)"
