@@ -10,16 +10,23 @@ public class CustomAuthStateProvider(ILocalStorageService localStorageService) :
 {
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        var token = await localStorageService.GetItemAsync<JwtTokenResponse>("authToken");
-        if (token != null)
+        try
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var claims = tokenHandler.ReadJwtToken(token.AccessToken).Claims;
-            var identity = new ClaimsIdentity(claims);
-            var principal = new ClaimsPrincipal(identity);
-            var authState = new AuthenticationState(principal);
-            NotifyAuthenticationStateChanged(Task.FromResult(authState));
-            return authState;
+            var token = await localStorageService.GetItemAsync<JwtTokenResponse>("authToken");
+            if (token != null)
+            {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var claims = tokenHandler.ReadJwtToken(token.AccessToken).Claims;
+                var identity = new ClaimsIdentity(claims);
+                var principal = new ClaimsPrincipal(identity);
+                var authState = new AuthenticationState(principal);
+                NotifyAuthenticationStateChanged(Task.FromResult(authState));
+                return authState;
+            }
+        }
+        catch (Exception)
+        {
+            // ignored
         }
 
         return new AuthenticationState(new ClaimsPrincipal());

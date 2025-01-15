@@ -6,7 +6,9 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Infrastructure.Persistence;
 
-public class ApplicationDbContextInitializer(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole<Guid>> roleManager)
+public class ApplicationDbContextInitializer(
+    UserManager<ApplicationUser> userManager,
+    RoleManager<IdentityRole<Guid>> roleManager)
 {
     public async Task SeedAsync()
     {
@@ -17,7 +19,7 @@ public class ApplicationDbContextInitializer(UserManager<ApplicationUser> userMa
         // Создание роли продавца, если не существует
         if (!await roleManager.RoleExistsAsync(ApplicationRoles.Salesman))
             await roleManager.CreateAsync(new IdentityRole<Guid>(ApplicationRoles.Salesman));
-        
+
         var existingUser = await userManager.FindByEmailAsync("admin@gmail.com");
         if (existingUser != null && !await userManager.IsInRoleAsync(existingUser, ApplicationRoles.Administrator))
         {
@@ -40,7 +42,7 @@ public class ApplicationDbContextInitializer(UserManager<ApplicationUser> userMa
 
             // Добавление claim для email
             var addClaimResult = await userManager.AddClaimAsync(adminUser,
-                new Claim(ClaimTypes.Email, adminUser.Email));
+                new Claim(ClaimTypes.NameIdentifier, adminUser.Name));
             addClaimResult.ThrowInvalidOperationIfError();
 
             // Назначение роли администратора
