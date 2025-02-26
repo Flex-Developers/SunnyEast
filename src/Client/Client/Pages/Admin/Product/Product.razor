@@ -11,6 +11,7 @@
 @inject IDialogService DialogService
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 
+
 <MudPaper Elevation="25">
     <MudToolBar>
         <MudSelect T="string" Label="Категория" Style="margin-right: 15px;"
@@ -106,9 +107,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-        //TODO: Fix MudSelect width
         _categories = (await CategoryService.Get())!;
-        SelectedCategory = await LoadSelectedCategoryAsync();
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        SelectedCategory = query["category"] ?? await LoadSelectedCategoryAsync();
         await LoadProductsAsync(SelectedCategory);
         StateHasChanged();
     }

@@ -6,6 +6,7 @@
 @inject IDialogService DialogService
 @inject ICategoryService CategoryService
 
+
 <div style="position: relative; display: flex; align-items: center; margin-bottom: 20px;">
     <h3 style="display: inline-block; margin-right: 1px">Категория товаров</h3>
     <MudButton StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled" Color="Color.Success" OnClick="@(async () => await AddAsync())"
@@ -20,7 +21,7 @@
         foreach (var category in _categories)
         {
             <MudItem xs="12" sm="6" md="4" lg="2">
-                <MudCard Style="max-width: 100%; border-radius: 10px; height: 300px; width: 100%; display: flex; flex-direction: column; justify-content: space-between;" Class="product-card">
+                <MudCard @onclick="() => NavigateToProducts(category.Name)" Class="product-card">
                     <!-- Изображение категории -->
                     @if (!string.IsNullOrEmpty(category.ImageUrl))
                     {
@@ -62,10 +63,15 @@
 @code {
     private List<ProductCategoryResponse>? _categories;
 
-    protected override async Task OnInitializedAsync() //TODO: Complete Navigation to product
+    protected override async Task OnInitializedAsync() 
     {
         _categories = await CategoryService.Get();
         StateHasChanged();
+    }
+    
+    private void NavigateToProducts(string categorySlug)
+    {
+        Navigation.NavigateTo($"/admin/products?category={categorySlug}");
     }
 
     private async Task AddAsync()
@@ -119,11 +125,17 @@
         cursor: pointer;
         background-color: transparent;
         border-radius: 10px;
+        max-width: 100%;
+        height: 300px;
+        width: 100%; 
+        display: flex; 
+        flex-direction: column;
+        justify-content: space-between;
     }
 
     .product-card:hover {
         transform: scale(1.05);
-        background-color: rgba(0, 0, 0, 0.4); /* Затемнение карточки */
+        background-color: rgba(0, 0, 0, 0.4); 
     }
 
     .category-image {
@@ -144,7 +156,7 @@
     }
 
     .product-card:hover .category-image .mud-card-media {
-        filter: brightness(0.7); /* Затемнение изображения */
+        filter: brightness(0.7); 
     }
 
     .category-title {
