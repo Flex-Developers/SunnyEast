@@ -1,0 +1,255 @@
+﻿@page "/Products"
+@using Application.Contract.Product.Queries
+@using Application.Contract.Product.Responses
+@using Application.Contract.ProductCategory.Responses
+@using Client.Components.Dialogs
+@using Client.Infrastructure.Services.Category
+@using Client.Infrastructure.Services.Product
+@inject IProductService ProductService
+@inject ICategoryService CategoryService
+@inject IDialogService DialogService
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+
+
+<MudPaper Elevation="25">
+    <MudToolBar>
+        <MudSelect T="string" Label="Категория" Style="margin-right: 15px;"
+                   Value="@SelectedCategory" ValueChanged="@(async (string value) => await OnCategoryChanged(value))">
+            @foreach (var category in _categories)
+            {
+                <MudSelectItem Value="@(category.Name)">@category.Name</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudSpacer/>
+
+        <MudAutocomplete T="ProductResponse" SearchFunc="SearchAsync" ToStringFunc="@(result => result.Name)" ResetValueOnEmptyText="true"
+                         Immediate="true" Clearable="true" Label="Поиск" DebounceInterval="300" AdornmentIcon="@Icons.Material.Filled.Search" Class="autocomplete"/>
+
+        @if (IsSearching)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Medium" Class="ml-2"/>
+        }
+
+    </MudToolBar>
+</MudPaper>
+
+<MudGrid Spacing="3" Justify="Justify.FlexStart" Style="margin-top: 3px; margin-bottom: 50px">
+    @foreach (var product in _products)
+    {
+        <MudItem xs="12" sm="6" md="4" lg="2">
+            <MudCard Class="product-card">
+
+                <MudCarousel Style="height: 250px; border-radius: 10px;" ItemsSource="@product.Images" Context="imgContext" EnableSwipeGesture="true"
+                             BulletsPosition="Position.Bottom" ShowBullets="false" AutoCycle="true" TData="string" BulletsColor="Color.Dark"
+                             ShowArrows="@(@product.Images != null && product.Images.Length > 0 && product.Images[0].StartsWith("http"))">
+
+                    <ItemTemplate>
+                        <MudCardMedia Image="@imgContext"></MudCardMedia>
+                    </ItemTemplate>
+
+                </MudCarousel>
+
+                <MudCardContent Class="card-content">
+
+                    <MudText Typo="Typo.h6" Align="Align.Left" Class="product-name">
+                        @(product.Name.Length > 40 ? product.Name.Substring(0, 40) + "..." : product.Name)
+                    </MudText>
+
+                    <div class="discount-container">
+
+                        <MudText Typo="Typo.body2" Align="Align.Left" Style="margin: 0;">Цена:</MudText>
+
+                        @if (product.DiscountPrice.HasValue)
+                        {
+                            <MudText Typo="Typo.body2" Align="Align.Left" Class="discounted-price"> @($"{product.DiscountPrice}") </MudText>
+
+                            <MudText Typo="Typo.body1" Align="Align.Right" Class="price"> @($"{product.Price}") </MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Align="Align.Left" Style="margin-left: 5px;"> @($"{product.Price}") </MudText>
+                        }
+                    </div>
+
+                    <div class="description-container">
+                        <MudLink Typo="Typo.caption" Style="padding-left: 0" OnClick="() => OpenDescriptionAsync(product)"> Читать описание... </MudLink>
+                    </div>
+
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    }
+</MudGrid>
+
+
+@code {
+    private List<ProductResponse> _products = new();
+    private List<ProductCategoryResponse> _categories = new();
+    private readonly GetProductsQuery _query = new();
+    private bool IsSearching { get; set; }
+
+    [Parameter]
+    public string SelectedCategory { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _categories = (await CategoryService.Get())!;
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        SelectedCategory = query["category"] ?? await LoadSelectedCategoryAsync();
+        await LoadProductsAsync(SelectedCategory);
+        StateHasChanged();
+    }
+
+    private async Task OnCategoryChanged(string value)
+    {
+        SelectedCategory = value;
+        await LoadProductsAsync(SelectedCategory);
+        StateHasChanged();
+    }
+
+    private async Task OnProductSelected(ProductResponse selectedProduct)
+    {
+        
+    }
+
+    private async Task<IEnumerable<ProductResponse>> SearchAsync(string name, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return [];
+
+        IsSearching = true;
+        _query.Name = name;
+
+        var result = await ProductService.Get(_query);
+
+        IsSearching = false;
+        StateHasChanged();
+
+        return result;
+    }
+
+    private async Task OpenDescriptionAsync(ProductResponse product)
+    {
+        await DialogService.ShowAsync<ProductDescriptionDialog>("",
+            new DialogParameters
+            {
+                { "ContentText", product.Description },
+                { "ProductName", product.Name }
+            });
+    }
+
+    private async Task LoadProductsAsync(string category)
+    {
+        if (!string.IsNullOrEmpty(category))
+        {
+            _products = await ProductService.GetByCategoryName(category);
+            await SaveSelectedCategoryAsync(category);
+        }
+    }
+
+    private async Task SaveSelectedCategoryAsync(string category)
+    {
+        await LocalStorage.SetItemAsync("selectedCategory", category);
+    }
+
+    private async Task<string> LoadSelectedCategoryAsync()
+    {
+        string selectedCategory = (await LocalStorage.GetItemAsync<string>("selectedCategory"))!;
+
+        if (_categories.Any(c => c.Name == selectedCategory))
+            return selectedCategory;
+
+        return string.Empty;
+    }
+    
+}
+
+<style>
+    .button-create {
+        vertical-align: middle;
+        margin-bottom: -10px
+    }
+
+    .autocomplete {
+        width: calc(100% - 1px);
+        margin-right: -200px;
+    }
+
+    .product-card {
+        transition: transform 0.3s ease;
+        position: relative;
+        border-radius: 10px;
+        cursor: pointer;
+        max-width: 100%;
+        height: 400px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .card-content {
+        padding: 5px 0 7px 8px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .product-name {
+        margin: 0;
+        white-space: normal;
+        word-wrap: break-word;
+        line-height: 1.2;
+        flex: 1;
+    }
+
+    .discount-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        margin-top: 15px;
+        margin-bottom: -5px
+    }
+
+    .discounted-price {
+        margin-left: 5px;
+        color: red;
+    }
+
+    .price {
+        margin-left: auto;
+        margin-right: 15px;
+        text-decoration: line-through;
+        font-size: larger;
+    }
+
+    .product-card:hover {
+        transform: scale(1.04);
+    }
+
+    .image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .description-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: -7px
+    }
+
+    .buttons-container {
+        display: flex;
+        gap: 1px;
+        margin-bottom: 5px
+    }
+
+    .button {
+        min-width: 25px
+    }
+
+</style>

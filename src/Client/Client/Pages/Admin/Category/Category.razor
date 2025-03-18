@@ -26,7 +26,7 @@
                     @if (!string.IsNullOrEmpty(category.ImageUrl))
                     {
                         <div class="category-image" style="position: relative; height: 350px;">
-                            <MudCardMedia Image="@category.ImageUrl" Alt="Image not available" Style="height: 100%; width: 100%; object-fit: cover;"></MudCardMedia>
+                            <MudCardMedia Image="@category.ImageUrl" Alt="Изображение не доступно" Style="height: 100%; width: 100%; object-fit: cover;"></MudCardMedia>
                             <div class="category-title">
                                 @(category.Name.Length > 40 ? category.Name.Substring(0, 40) + "..." : category.Name)
                             </div>
