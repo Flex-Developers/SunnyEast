@@ -1,20 +1,10 @@
-<AppBar ThemePreference="@ThemePreference" ThemePreferenceChanged="ThemePreferenceChanged"></AppBar>
-
-<MudDrawer @bind-Open="_drawerOpen" Elevation="25" ClipMode="DrawerClipMode.Never">
-    <NavMenu/>
-</MudDrawer>
-
 <MudMainContent>
-
     <MudStack>
-
         <MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
             @ChildContent
             <MudScrollToTop TopOffset="400" Style="z-index:2000;">
                 <MudFab Icon="@Icons.Material.Filled.KeyboardArrowUp" Color="Color.Primary"/>
             </MudScrollToTop>
         </MudContainer>
-
-        <AppFooter></AppFooter>
     </MudStack>
 </MudMainContent>

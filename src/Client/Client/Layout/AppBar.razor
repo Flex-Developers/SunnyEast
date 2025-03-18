@@ -1,14 +1,8 @@
 <MudAppBar Elevation="0">
-    <CascadingAuthenticationState>
-        <AuthorizeView>
-            <Authorized>
-                <MudTooltip Text="Toggle Drawer">
-                    <MudIconButton Icon="@Icons.Material.Rounded.Notes" Color="Color.Inherit" Edge="Edge.Start"
-                                   OnClick="@(_ => DrawerToggle())"/>
-                </MudTooltip>
-            </Authorized>
-        </AuthorizeView>
-    </CascadingAuthenticationState>
+    <MudTooltip Text="Меню">
+        <MudIconButton Icon="@Icons.Material.Rounded.Notes" Color="Color.Inherit" Edge="Edge.Start"
+                       OnClick="@(_ => DrawerToggle())"/>
+    </MudTooltip>
     <MudButton Variant="Variant.Text" DisableElevation="true" @onclick="() => Navigation.NavigateTo('/'.ToString())">
         <MudText Typo="Typo.h5">Солнечный восток</MudText>
     </MudButton>

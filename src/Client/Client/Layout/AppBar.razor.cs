@@ -8,39 +8,23 @@ namespace Client.Layout;
 public partial class AppBar
 {
     [Parameter] public RenderFragment ChildContent { get; set; } = default!;
-    [Parameter] public EventCallback OnDarkModeToggle { get; set; }
-    [Parameter] public EventCallback<bool> OnRightToLeftToggle { get; set; }
-    [EditorRequired] [Parameter] public ClientPreference ThemePreference { get; set; } = default!;
-    [EditorRequired] [Parameter] public EventCallback<ClientPreference> ThemePreferenceChanged { get; set; }
+    [Parameter] public EventCallback<bool> IsDarkModeChanged { get; set; }
+    [Parameter] public bool IsDarkMode { get; set; }
 
-    private bool _drawerOpen;
-    private bool _rightToLeft;
-
-    protected override async Task OnInitializedAsync()
+    public async Task ToggleDarkLightMode()
     {
-        if (await ClientPreferences.GetPreference() is ClientPreference preference)
-        {
-            _rightToLeft = preference.IsRTL;
-            _drawerOpen = preference.IsDrawerOpen;
-        }
+        var newState = await ClientPreferences.ToggleDarkModeAsync();
+        await IsDarkModeChanged.InvokeAsync(newState);
     }
 
-    private async Task RightToLeftToggle()
-    {
-        bool isRtl = await ClientPreferences.ToggleLayoutDirectionAsync();
-        _rightToLeft = isRtl;
+    [Parameter] public bool DrawerOpen { get; set; }
 
-        await OnRightToLeftToggle.InvokeAsync(isRtl);
-    }
-
-    public async Task ToggleDarkMode()
-    {
-        await OnDarkModeToggle.InvokeAsync();
-    }
+    [Parameter] public EventCallback<bool> DrawerOpenChanged { get; set; }
 
     private async Task DrawerToggle()
     {
-        _drawerOpen = await ClientPreferences.ToggleDrawerAsync();
+        var newState = await ClientPreferences.ToggleDrawerAsync();
+        await DrawerOpenChanged.InvokeAsync(newState);
     }
 
     private void Logout()
@@ -52,15 +36,6 @@ public partial class AppBar
     private void Profile()
     {
         Navigation.NavigateTo("/account");
-    }
-
-    private async Task ToggleDarkLightMode(bool isDarkMode)
-    {
-        if (ThemePreference is not null)
-        {
-            ThemePreference.IsDarkMode = isDarkMode;
-            await ThemePreferenceChanged.InvokeAsync(ThemePreference);
-        }
     }
 
     private void SignUp()

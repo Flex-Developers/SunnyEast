@@ -1,5 +1,6 @@
 using Client.Infrastructure.Preferences;
 using Client.Infrastructure.Theme;
+using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
 namespace Client.Layout;
@@ -8,14 +9,15 @@ public partial class MainLayout
 {
     private ClientPreference? _themePreference;
     private readonly MudTheme _currentTheme = ApplicationThemes.DefaultTheme;
-    private bool _rightToLeft;
     private bool _isDarkMode;
     private MudThemeProvider _mudThemeProvider = null!;
 
+    [Parameter] public EventCallback OnDarkModeToggle { get; set; }
+    private bool _drawerOpen;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-            _isDarkMode = await _mudThemeProvider.GetSystemPreference();
+        if (firstRender) _isDarkMode = await _mudThemeProvider.GetSystemPreference();
     }
 
     protected override async Task OnInitializedAsync()
@@ -28,15 +30,10 @@ public partial class MainLayout
         SetCurrentTheme(_themePreference);
     }
 
-    private async Task ThemePreferenceChanged(ClientPreference themePreference)
-    {
-        SetCurrentTheme(themePreference);
-        await ClientPreferences.SetPreference(themePreference);
-    }
-
     private void SetCurrentTheme(ClientPreference themePreference)
     {
         _isDarkMode = themePreference.IsDarkMode;
+        _drawerOpen = themePreference.IsDrawerOpen;
         StateHasChanged();
     }
 }

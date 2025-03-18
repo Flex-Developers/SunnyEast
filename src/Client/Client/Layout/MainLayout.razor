@@ -1,28 +1,46 @@
 ﻿@using Application.Contract.Identity
 @inherits LayoutComponentBase
 
-<MudRTLProvider RightToLeft="@_rightToLeft">
-    <MudThemeProvider Theme="_currentTheme" @bind-IsDarkMode="@_isDarkMode" @ref="@_mudThemeProvider"/>
-    <MudPopoverProvider/>
-    <MudDialogProvider/>
-    <MudSnackbarProvider/>
-    <CascadingAuthenticationState>
-        <AuthorizeView Roles="@($"{ApplicationRoles.Administrator}, {ApplicationRoles.Salesman}")">
-            <NotAuthorized>
-                <MudLayout>
-                    <CustomerLayout ThemePreference="_themePreference" ThemePreferenceChanged="ThemePreferenceChanged">
-                        @Body
-                    </CustomerLayout>
-                </MudLayout>
-            </NotAuthorized>
-            <Authorized>
-                <MudLayout>
-                    <AdminLayout ThemePreference="_themePreference" ThemePreferenceChanged="ThemePreferenceChanged">
-                        @Body
-                    </AdminLayout>
-                </MudLayout>
-            </Authorized>
-        </AuthorizeView>
-    </CascadingAuthenticationState>
+<MudThemeProvider Theme="_currentTheme" @bind-IsDarkMode="@_isDarkMode" @ref="@_mudThemeProvider"/>
+<MudPopoverProvider/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
 
-</MudRTLProvider>
+<CascadingAuthenticationState>
+    <AuthorizeView Roles="@($"{ApplicationRoles.Administrator}, {ApplicationRoles.Salesman}")">
+        <NotAuthorized>
+            <MudLayout Class="d-flex flex-column min-vh-100">
+                <AppBar @bind-IsDarkMode="_isDarkMode" @bind-DrawerOpen="_drawerOpen"/>
+                <MudDrawer @bind-Open="_drawerOpen"
+                          Elevation="25"
+                          ClipMode="DrawerClipMode.Always"
+                          Style="top: 64px; z-index: 1;">
+                    <NavMenu/>
+                </MudDrawer>
+                <CustomerLayout>
+                    <div class="flex-grow-1">
+                        @Body
+                    </div>
+                </CustomerLayout>
+                <AppFooter Class="mt-auto"/>
+            </MudLayout>
+        </NotAuthorized>
+        <Authorized>
+            <MudLayout Class="d-flex flex-column min-vh-100">
+                <AppBar @bind-IsDarkMode="@_isDarkMode" @bind-DrawerOpen="@_drawerOpen"/>
+                <MudDrawer @bind-Open="_drawerOpen"
+                          Elevation="25"
+                          ClipMode="DrawerClipMode.Always"
+                          Style="top: 64px; z-index: 1;">
+                    <NavMenu/>
+                </MudDrawer>
+                <AdminLayout>
+                    <div class="flex-grow-1">
+                        @Body
+                    </div>
+                </AdminLayout>
+                <AppFooter Class="mt-auto"/>
+            </MudLayout>
+        </Authorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
