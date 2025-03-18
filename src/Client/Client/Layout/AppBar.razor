@@ -6,6 +6,14 @@
     <MudButton Variant="Variant.Text" DisableElevation="true" @onclick="() => Navigation.NavigateTo('/'.ToString())">
         <MudText Typo="Typo.h5">Солнечный восток</MudText>
     </MudButton>
+    <!-- Кнопки слева, исчезают при нехватке места -->
+    <MudHidden Breakpoint="Breakpoint.SmAndDown">
+        <MudButton Variant="Variant.Text" OnClick='() => Navigation.NavigateTo("/category")'>Категория</MudButton>
+        <MudButton Variant="Variant.Text" OnClick='() => Navigation.NavigateTo("/products")'>Продукты</MudButton>
+        <MudButton Variant="Variant.Text" OnClick='() => Navigation.NavigateTo("/about")'>О нас</MudButton>
+        <MudButton Variant="Variant.Text" OnClick='() => Navigation.NavigateTo("/contact")'>Контакты</MudButton>
+    </MudHidden>
+
     <MudSpacer/>
     <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">
 
