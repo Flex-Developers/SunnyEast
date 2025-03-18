@@ -130,7 +130,6 @@
         try
         {
             await _form.Validate();
-            _user.PhoneNumber = "+7-" + _user.PhoneNumber;
             CheckPhoneAndEmail();
 
             if (_form.IsValid && isPhoneAndEmailEmpty == false)

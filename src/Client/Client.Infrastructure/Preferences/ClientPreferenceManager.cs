@@ -1,8 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using Blazored.LocalStorage;
-using Client.Infrastructure.Preferences;
 using Client.Infrastructure.Theme;
-using MudBlazor;
 
 namespace Client.Infrastructure.Preferences;
 
@@ -40,18 +38,6 @@ public class ClientPreferenceManager : IClientPreferenceManager
         return false;
     }
 
-    public async Task<bool> ToggleLayoutDirectionAsync()
-    {
-        if (await GetPreference() is ClientPreference preference)
-        {
-            preference.IsRTL = !preference.IsRTL;
-            await SetPreference(preference);
-            return preference.IsRTL;
-        }
-
-        return false;
-    }
-
     public async Task<string> GetPrimaryColorAsync()
     {
         if (await GetPreference() is ClientPreference preference)
@@ -71,16 +57,6 @@ public class ClientPreferenceManager : IClientPreferenceManager
         }
 
         return CustomColors.Light.Primary;
-    }
-
-    public async Task<bool> IsRTL()
-    {
-        if (await GetPreference() is ClientPreference preference)
-        {
-            return preference.IsRTL;
-        }
-
-        return false;
     }
 
     public async Task<bool> IsDrawerOpen()

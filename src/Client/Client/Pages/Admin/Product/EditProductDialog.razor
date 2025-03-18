@@ -11,17 +11,17 @@
         </TitleContent>
 
         <DialogContent>
-            <MudSelect T="string" Required="true" Label="Категория" AnchorOrigin="Origin.BottomCenter" @bind-Value="CategoryName" FullWidth="true">
+            <MudSelect T="string" Required="true" RequiredError="Выберите категорию." Label="Категория" AnchorOrigin="Origin.BottomCenter" @bind-Value="CategoryName" FullWidth="true">
                 @foreach (var category in Categories)
                 {
                     <MudSelectItem Value="@category">@category</MudSelectItem>
                 }
             </MudSelect>
-            <MudTextField Required="true" Label="Название" @bind-Value="UpdateCommand.Name" InputType="InputType.Text" FullWidth="true" Clearable="true" AutoGrow="true"/>
+            <MudTextField Required="true" RequiredError="Название не может быть пустым!" Label="Название" @bind-Value="UpdateCommand.Name" InputType="InputType.Text" FullWidth="true" Clearable="true" AutoGrow="true"/>
             <MudGrid>
                 <MudItem xs="4">
                     <MudNumericField T="decimal?" Value="UpdateCommand.Price" Min="0" Required="true" Label="Цена" Format="F2" Clearable="true" Immediate="true" FullWidth="true"
-                                     ValueChanged="@(price => { UpdateCommand.Price = price; UpdateDiscountPrice(UpdateCommand.DiscountPercentage); })"/>
+                                     RequiredError="Цена не может быть пустой" ValueChanged="@(price => { UpdateCommand.Price = price; UpdateDiscountPrice(UpdateCommand.DiscountPercentage); })"/>
                 </MudItem>
                 <MudItem xs="4">
                     <MudNumericField T="byte?" Label="Скидка (%)" Min="0" Max="100" Immediate="true" FullWidth="true" Clearable="true"
@@ -36,11 +36,12 @@
             </MudGrid>
             <MudTextField Label="Описание" @bind-Value="UpdateCommand.Description" InputType="InputType.Text" Clearable="true" FullWidth="true" AutoGrow="true"/>
 
-            <MudButton Color="Color.Success" OnClick="ShowImageTable" StartIcon="@Icons.Material.Filled.Add">Изменить изображения</MudButton>
+            <MudButton Color="Color.Success"  Style="margin-left: -10px; margin-top: 10px"
+                       hidden="@_showTable" OnClick="ShowImageTable" StartIcon="@Icons.Material.Filled.Create">Редактировать изображения</MudButton>
 
             @if (_showTable)
             {
-                <MudGrid>
+                <MudGrid Style="padding-left: 25px; padding-top: 45px">
                     @foreach (var image in _images.Select((value, index) => new { value, index }))
                     {
                         <MudTextField HelperText="@((image.index + 1).ToString())" @bind-Value="_images[image.index]" Label="Url изображения"

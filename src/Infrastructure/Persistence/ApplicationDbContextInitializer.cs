@@ -20,45 +20,56 @@ public class ApplicationDbContextInitializer(
         if (!await roleManager.RoleExistsAsync(ApplicationRoles.Salesman))
             await roleManager.CreateAsync(new IdentityRole<Guid>(ApplicationRoles.Salesman));
 
+        var existingUser = await userManager.FindByEmailAsync("admin@gmail.com");
+        if (existingUser != null && !await userManager.IsInRoleAsync(existingUser, ApplicationRoles.Administrator))
+        {
+            await userManager.AddToRoleAsync(existingUser, ApplicationRoles.Administrator);
+        }
+
         // Создание администратора, если он не существует
-        // var adminUser = await userManager.FindByNameAsync("admin");
-        var adminUser = await userManager.FindByEmailAsync("avazbekolimov722@gmail.com");
+        var adminUser = await userManager.FindByEmailAsync("admin@gmail.com");
         if (adminUser == null)
         {
             adminUser = new ApplicationUser
             {
-                UserName = "admin",
-                Name = ""
+                Email = "admin@gmail.com",
+                UserName = "admin@gmail.com", // UserName теперь можно сделать таким же, как email
+                Name = "Administrator",
             };
 
             var result = await userManager.CreateAsync(adminUser, "Admin@123"); // Пароль для администратора
             result.ThrowInvalidOperationIfError();
 
+            // Добавление claim для email
             var addClaimResult = await userManager.AddClaimAsync(adminUser,
-                new Claim(ClaimTypes.NameIdentifier, adminUser.UserName));
+                new Claim(ClaimTypes.NameIdentifier, adminUser.Name));
             addClaimResult.ThrowInvalidOperationIfError();
 
+            // Назначение роли администратора
             var addToRoleResult = await userManager.AddToRoleAsync(adminUser, ApplicationRoles.Administrator);
             addToRoleResult.ThrowInvalidOperationIfError();
         }
 
         // Создание продавца, если он не существует
-        var salesmanUser = await userManager.FindByNameAsync("salesman");
+        var salesmanUser = await userManager.FindByEmailAsync("salesman@gmail.com");
         if (salesmanUser is null)
         {
             salesmanUser = new ApplicationUser
             {
-                UserName = "salesman",
-                Name = ""
+                Email = "salesman@gmail.com",
+                UserName = "salesman@gmail.com", // UserName теперь можно сделать таким же, как email
+                Name = "Salesman"
             };
 
-            var result = await userManager.CreateAsync(salesmanUser, "salesMan@123"); // Пароль для продавца
+            var result = await userManager.CreateAsync(salesmanUser, "SalesMan@123"); // Пароль для продавца
             result.ThrowInvalidOperationIfError();
 
+            // Добавление claim для email
             var addClaimResult = await userManager.AddClaimAsync(salesmanUser,
-                new Claim(ClaimTypes.NameIdentifier, salesmanUser.UserName));
+                new Claim(ClaimTypes.Email, salesmanUser.Email));
             addClaimResult.ThrowInvalidOperationIfError();
 
+            // Назначение роли продавца
             await userManager.AddToRoleAsync(salesmanUser, ApplicationRoles.Salesman);
         }
     }

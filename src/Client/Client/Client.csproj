@@ -20,6 +20,7 @@
     <ItemGroup>
         <_ContentIncludedByDefault Remove="Components\Notifications\NotificationConnection.razor"/>
         <_ContentIncludedByDefault Remove="Components\Notifications\NotificationConnectionStatus.razor"/>
+        <_ContentIncludedByDefault Remove="wwwroot\sample-data\weather.json" />
     </ItemGroup>
 
     <ItemGroup>
