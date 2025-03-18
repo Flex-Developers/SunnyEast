@@ -5,7 +5,7 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Style="margin-top: -80px; margin-left: -40px; margin-right: 0">
     <!-- Верхний баннер с слайдером -->
-    <MudCarousel TData="string" Class="carousel-banner" ItemsSource="@Slides.Select(x => x.ImageUrl)"
+    <MudCarousel TData="string" Class="carousel-banner" ItemsSource="@Slides"
                  EnableSwipeGesture="true"
                  AutoCycle="true"
                  ShowArrows="true"
@@ -72,14 +72,15 @@
 
 @code {
 
-    private List<Slide> Slides = new()
+    private List<string> Slides = new()
     {
-        new Slide { ImageUrl = "https://i.imghippo.com/files/awNY5082yo.jpg", Description = "Сухофрукты" },
-        new Slide { ImageUrl = "https://i.imghippo.com/files/qwbMQ1728561861.jpg", Description = "Посуда" },
-        new Slide { ImageUrl = "https://i.imghippo.com/files/pg4462zg.jpg", Description = "Казаны" },
-        new Slide { ImageUrl = "https://i.imghippo.com/files/XkR9909TY.jpg", Description = "Напитки" },
-        new Slide { ImageUrl = "https://i.imghippo.com/files/Gve8681zWA.jpg", Description = "Сладости" },
-        new Slide { ImageUrl = "https://i.imghippo.com/files/Ku6852FA.jpg", Description = "Чай" },
+        "/Media/HomeSlides/1.jpg",
+        "/Media/HomeSlides/2.jpg",
+        "/Media/HomeSlides/3.jpg",
+        "/Media/HomeSlides/4.jpg",
+        "/Media/HomeSlides/5.jpg",
+        "/Media/HomeSlides/6.jpg",
+        "/Media/HomeSlides/7.jpg"
     };
 
     private List<ProductCategoryResponse>? _popularCategories = new();
@@ -89,12 +90,6 @@
         _popularCategories = new();
         _popularCategories = ((await CategoryService.Get())!).Take(6).ToList();
         StateHasChanged();
-    }
-
-    public class Slide
-    {
-        public string ImageUrl { get; set; }
-        public string Description { get; set; }
     }
     
     private void NavigateToProducts(string categorySlug)
