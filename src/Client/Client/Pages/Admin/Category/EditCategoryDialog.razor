@@ -27,20 +27,47 @@
                      Color="Color.Secondary"
                      Style="margin-left: -15px; padding-left: -15px; width: 100%; justify-content: flex-start;">
         </MudCheckBox>
+
+        <MudText Typo="Typo.h6" Style="padding-left: 20%; padding-top: 2%; padding-bottom: 2%">Варианты объема продукта:</MudText>
+
+        <MudChipSet SelectionMode="SelectionMode.MultiSelection" @bind-SelectedValues="SelectedVolumes" Ripple="true" CheckMark="true">
+            @foreach (var volume in ProductVolumes)
+            {
+                <MudChip Text="@volume" Variant="Variant.Text" Color="Color.Info">@volume</MudChip>
+            }
+        </MudChipSet>
+
     </DialogContent>
 
     <DialogActions>
-        <MudButton OnClick="@(Cancel)" Color="Color.Secondary" Variant="Variant.Outlined">Отмена</MudButton>
+        <MudButton OnClick="@(Cancel)" Color="Color.Error" Variant="Variant.Outlined">Отмена</MudButton>
         <MudButton Color="Color.Primary" OnClick="@(async () => await UpdateAsync())">Сохранить</MudButton>
     </DialogActions>
 </MudDialog>
-
 
 @code {
 
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public required UpdateProductCategoryCommand Command { get; set; }
     [Parameter] public Action OnSuccess { get; set; } = null!;
+
+    private IReadOnlyCollection<string> SelectedVolumes { get; set; } = new HashSet<string>();
+
+    private string[] ProductVolumes =
+    {
+        "100 Г", "300 Г", "500 Г", "1 Кг", "2 Кг", "3 Кг", "5 Кг", "100 мл", "300 мл",
+        "500 мл", "1 Л", "2 Л", "3 Л", "5 Л", "1 шт", "2 шт", "3 шт", "5 шт",
+    };
+
+    
+    protected override void OnParametersSet()
+    {
+        if (Command.ProductVolumes != null && Command.ProductVolumes.Any())
+        {
+            // Преобразуем в HashSet для работы с MudChipSet
+            SelectedVolumes = new HashSet<string>(Command.ProductVolumes);
+        }
+    }
 
     private void Cancel()
     {
@@ -51,12 +78,13 @@
     {
         if (!string.IsNullOrWhiteSpace(Command.Name))
         {
+            Command.ProductVolumes = SelectedVolumes.ToArray();
             var success = await CategoryService.Put(Command);
             if (success)
             {
                 MudDialog.Close();
                 OnSuccess?.Invoke();
-                Snackbar.Add($"\"{Command.Name}\" Изменён!", Severity.Success);
+                Snackbar.Add($"\"{Command.Name}\" изменён!", Severity.Success);
             }
         }
     }

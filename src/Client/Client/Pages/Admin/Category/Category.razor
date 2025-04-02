@@ -88,7 +88,8 @@
             BaseCategorySlug = category.BaseCategorySlug,
             ImageUrl = category.ImageUrl,
             DiscountPercentage = category.DiscountPercentage,
-            ApplyDiscountToAllProducts = category.ApplyDiscountToAllProducts
+            ApplyDiscountToAllProducts = category.ApplyDiscountToAllProducts,
+            ProductVolumes = category.ProductVolumes
         };
 
         await DialogService.ShowAsync<EditCategoryDialog>("",
@@ -105,7 +106,7 @@
             new DialogParameters { { "Name", name } },
             new DialogOptions { BackgroundClass = "dialog-background" });
 
-        if ((await delDialog.Result).Canceled is false)
+        if ((await delDialog.Result)!.Canceled is false)
         {
             await CategoryService.Delete(slug);
             await OnInitializedAsync();
