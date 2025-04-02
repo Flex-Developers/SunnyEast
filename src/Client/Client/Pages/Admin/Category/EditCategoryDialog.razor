@@ -28,7 +28,7 @@
                      Style="margin-left: -15px; padding-left: -15px; width: 100%; justify-content: flex-start;">
         </MudCheckBox>
 
-        <MudText Typo="Typo.h6" Style="padding-left: 20%; padding-top: 2%; padding-bottom: 2%">Варианты объема продукта:</MudText>
+        <MudText Typo="Typo.h6" Style="text-align: center; padding-top: 2%; padding-bottom: 2%">Варианты объема продукта:</MudText>
 
         <MudChipSet SelectionMode="SelectionMode.MultiSelection" @bind-SelectedValues="SelectedVolumes" Ripple="true" CheckMark="true">
             @foreach (var volume in ProductVolumes)
@@ -78,6 +78,12 @@
     {
         if (!string.IsNullOrWhiteSpace(Command.Name))
         {
+            if (SelectedVolumes.Count > 5)
+            {
+                Snackbar.Add("Можно выбрать максимум 5 вариантов.", Severity.Warning);
+                return;
+            }
+
             Command.ProductVolumes = SelectedVolumes.ToArray();
             var success = await CategoryService.Put(Command);
             if (success)

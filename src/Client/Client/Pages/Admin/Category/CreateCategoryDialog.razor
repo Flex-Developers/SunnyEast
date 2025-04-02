@@ -19,7 +19,7 @@
 
         <MudNumericField T="byte?" Label="Скидка (%)" @bind-Value="_command.DiscountPercentage" Min="0" Max="100" Immediate="true" FullWidth="true" Clearable="true"/>
         
-        <MudText Typo="Typo.h6" Style="padding-left: 20%; padding-top: 2%; padding-bottom: 2%">Варианты объема продукта:</MudText>
+        <MudText Typo="Typo.h6" Style="text-align: center; padding-top: 2%; padding-bottom: 2%">Варианты объема продукта:</MudText>
         
         <MudChipSet SelectionMode="SelectionMode.MultiSelection" @bind-SelectedValues="SelectedVolumes" Ripple="true" CheckMark="true">
             @foreach (var volume in ProductVolumes)
@@ -58,6 +58,12 @@
     {
         if (!string.IsNullOrWhiteSpace(_command.Name))
         {
+            if (SelectedVolumes.Count > 5)
+            {
+                Snackbar.Add("Можно выбрать максимум 5 вариантов.", Severity.Warning);
+                return;
+            }
+            
             _command.ProductVolumes = SelectedVolumes.ToArray();
             var success = await CategoryService.Post(_command);
             if (success)
