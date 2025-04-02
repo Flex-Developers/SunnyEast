@@ -10,7 +10,6 @@
 @inject IDialogService DialogService
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 
-
 <MudPaper Elevation="25">
     <MudToolBar>
         <MudSelect T="string" Label="Категория" Style="margin-right: 15px;"
@@ -47,17 +46,26 @@
                     <ItemTemplate>
                         <MudCardMedia Image="@imgContext"></MudCardMedia>
                     </ItemTemplate>
-
                 </MudCarousel>
 
                 <MudCardContent Class="card-content">
-
                     <MudText Typo="Typo.subtitle1" Align="Align.Left" Class="product-name">
                         @(product.Name.Length > 50 ? product.Name.Substring(0, 50) + "..." : product.Name)
                     </MudText>
 
-                    <div class="discount-container">
+                    <MudChipSet T="string" SelectionMode="SelectionMode.SingleSelection"
+                                @bind-SelectedChip="product.SelectedVolume" Ripple="true" CheckMark="true">
+                        @if (_categoryResponse?.ProductVolumes != null)
+                        {
+                            @foreach (var volume in _categoryResponse.ProductVolumes)
+                            {
+                                <MudChip Text="@volume" Variant="Variant.Filled" Color="Color.Primary">@volume</MudChip>
+                            }
+                        }
+                    </MudChipSet>
 
+
+                    <div class="discount-container">
                         <MudText Typo="Typo.body2" Align="Align.Left" Style="margin: 0;">Цена:</MudText>
 
                         @if (product.DiscountPrice.HasValue)
@@ -82,12 +90,13 @@
     }
 </MudGrid>
 
-
 @code {
     private List<ProductResponse> _products = new();
     private List<ProductCategoryResponse> _categories = new();
     private readonly GetProductsQuery _query = new();
     private bool IsSearching { get; set; }
+    private ProductCategoryResponse? _categoryResponse;
+    private Dictionary<int, string> SelectedProductVolumes = new();
 
     [Parameter]
     public string SelectedCategory { get; set; } = string.Empty;
@@ -95,9 +104,11 @@
     protected override async Task OnInitializedAsync()
     {
         _categories = (await CategoryService.Get())!;
+        _categories.AddRange(new ProductCategoryResponse() {Name = "Все продукты",Slug = "AllProducts"});
         var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
         var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
         SelectedCategory = query["category"] ?? await LoadSelectedCategoryAsync();
+        _categoryResponse = _categories.FirstOrDefault(c => c.Name == SelectedCategory);
         await LoadProductsAsync(SelectedCategory);
         StateHasChanged();
     }
@@ -108,7 +119,7 @@
         await LoadProductsAsync(SelectedCategory);
         StateHasChanged();
     }
-
+    
     private async Task OnProductSelected(ProductResponse selectedProduct)
     {
         
@@ -144,6 +155,9 @@
     {
         if (!string.IsNullOrEmpty(category))
         {
+            // TODO: implement GetAllProducts also Handler
+            // if (category == "Все продукты")
+            //     _products = await ProductService.Get()
             _products = await ProductService.GetByCategoryName(category);
             await SaveSelectedCategoryAsync(category);
         }
@@ -163,14 +177,10 @@
 
         return string.Empty;
     }
-    
 }
 
+
 <style>
-    .button-create {
-        vertical-align: middle;
-        margin-bottom: -10px
-    }
 
     .autocomplete {
         width: calc(100% - 1px);

@@ -10,4 +10,6 @@ public record ProductResponse
     public byte? DiscountPercentage { get; set; }
     public string[]? Images { get; set; }
     public string? Description { get; set; }
+    public string? SelectedVolume { get; set; } // maybe temporary
+
 }
