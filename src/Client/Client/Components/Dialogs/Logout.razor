@@ -26,7 +26,7 @@
     async Task Submit()
     {
         await AuthService.LogoutAsync();
-        Snackbar.Add("Logged out", Severity.Info);
+        Navigation.NavigateTo("/");
         MudDialog.Close(DialogResult.Ok(true));
     }
 

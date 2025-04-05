@@ -36,11 +36,11 @@
                               AdornmentIcon="@_passwordInputIcon"
                               OnAdornmentClick="ShowOrHidePassword"
                               AdornmentAriaLabel="Show Password"/>
-                
+
             </MudCardContent>
-            
+
             <MudCheckBox @bind-Value="_rememberMe" Label="Запомнить меня" Color="Color.Primary"></MudCheckBox>
-            
+
             <MudCardActions Class="d-flex flex-column align-center gap-2 mt-1">
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth
                            OnClick="@(async () => await Submit())">
@@ -163,16 +163,21 @@
 
         if (_form.IsValid && string.IsNullOrWhiteSpace(_errorMessage) && _isValidPassword)
         {
-            if (await AuthService.LoginAsync(_loginCommand)) // if success
+            if (await AuthService.LoginAsync(_loginCommand))
+            {
+                // if success
                 Snackbar.Add("Успешный вход.", Severity.Success);
+                StateHasChanged();
+            }
             else
+            {
                 Snackbar.Add("Ошибка, попробуйте еще раз.", Severity.Error);
+            }
         }
     }
 
     private void ForgotPassword()
     {
-        
     }
 
     private void Register()
