@@ -1,4 +1,3 @@
-using Client.Infrastructure.Preferences;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using MudBlazor;
@@ -7,7 +6,7 @@ namespace Client.Layout;
 
 public partial class AppBar
 {
-    [Parameter] public RenderFragment ChildContent { get; set; } = default!;
+    [Parameter] public RenderFragment ChildContent { get; set; } = null!;
     [Parameter] public EventCallback<bool> IsDarkModeChanged { get; set; }
     [Parameter] public bool IsDarkMode { get; set; }
 
@@ -30,21 +29,10 @@ public partial class AppBar
     private void Logout()
     {
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
-        DialogService.Show<Components.Dialogs.Logout>("Logout", options);
+        DialogService.Show<Components.Dialogs.Logout>("Выход", options);
     }
 
-    private void Profile()
-    {
-        Navigation.NavigateTo("/account");
-    }
-
-    private void SignUp()
-    {
-        Navigation.NavigateToLogin("/register");
-    }
-
-    private void SignIn()
-    {
-        Navigation.NavigateToLogin("/login");
-    }
+    private void Profile() => Navigation.NavigateTo("/account");
+    private void SignUp() => Navigation.NavigateToLogin("/register");
+    private void SignIn() => Navigation.NavigateToLogin("/login");
 }

@@ -1,25 +1,30 @@
+@using Application.Contract.Identity
 <MudAppBar Elevation="0">
-    <MudTooltip Text="Меню">
-        <MudIconButton Icon="@Icons.Material.Rounded.Notes" Color="Color.Inherit" Edge="Edge.Start"
-                       OnClick="@(_ => DrawerToggle())"/>
-    </MudTooltip>
+    <AuthorizeView Roles="@ApplicationRoles.Administrator">
+        <MudTooltip Text="Меню">
+            <MudIconButton Icon="@Icons.Material.Rounded.Notes" Color="Color.Inherit" Edge="Edge.Start"
+                           OnClick="@(_ => DrawerToggle())"/>
+        </MudTooltip>
+    </AuthorizeView>
+
     <MudButton Variant="Variant.Text" DisableElevation="true" @onclick="() => Navigation.NavigateTo('/'.ToString())">
         <MudText Typo="Typo.h5">Солнечный восток</MudText>
     </MudButton>
-    <!-- Кнопки слева, исчезают при нехватке места -->
+
     <MudHidden Breakpoint="Breakpoint.SmAndDown">
-        <MudButton Variant="Variant.Text" OnClick='() => Navigation.NavigateTo("/category")'>Категория</MudButton>
-        <MudButton Variant="Variant.Text" OnClick='() => Navigation.NavigateTo("/products")'>Продукты</MudButton>
-        <MudButton Variant="Variant.Text" OnClick='() => Navigation.NavigateTo("/about")'>О нас</MudButton>
-        <MudButton Variant="Variant.Text" OnClick='() => Navigation.NavigateTo("/contact")'>Контакты</MudButton>
+        <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/category"))">Категория</MudButton>
+        <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/products"))">Продукты</MudButton>
+        <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/about"))">О нас</MudButton>
+        <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/contact"))">Контакты</MudButton>
     </MudHidden>
 
     <MudSpacer/>
-    <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">
 
+    <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">
         <MudDivider Vertical="true" FlexItem="true" DividerType="DividerType.Middle" Class="mx-4 my-5"/>
         <DarkModePanel OnIconClicked="ToggleDarkLightMode"/>
     </MudHidden>
+
     <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
         <DarkModePanel OnIconClicked="ToggleDarkLightMode"/>
     </MudHidden>
