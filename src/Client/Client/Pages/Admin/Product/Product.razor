@@ -45,7 +45,7 @@
                 
                 <MudCarousel Style="height: 250px; border-radius: 10px;" ItemsSource="@product.Images" Context="imgContext" EnableSwipeGesture="true" 
                              BulletsPosition="Position.Bottom" ShowBullets="false" AutoCycle="true" TData="string" BulletsColor="Color.Dark"
-                             ShowArrows="@(@product.Images != null && product.Images.Length > 0 && product.Images[0].StartsWith("http"))">
+                             ShowArrows="@(@product.Images != null && product.Images.Length > 1 && product.Images[0].StartsWith("http"))">
                     
                     <ItemTemplate>
                         <MudCardMedia Image="@imgContext"></MudCardMedia>
