@@ -2,16 +2,30 @@
 using Application.Common;
 using Application.Contract.Identity;
 using Domain.Entities;
+using Infrastructure.Persistence.Contexts;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence;
 
 public class ApplicationDbContextInitializer(
     UserManager<ApplicationUser> userManager,
-    RoleManager<IdentityRole<Guid>> roleManager)
+    RoleManager<IdentityRole<Guid>> roleManager, ApplicationDbContext context)
 {
     public async Task SeedAsync()
     {
+        if (!await context.ProductCategories.AnyAsync(c => c.Slug == "AllProducts"))
+        {
+            context.ProductCategories.Add(new ProductCategory
+            {
+                Id = Guid.NewGuid(),
+                Name = "Все продукты",
+                Slug = "AllProducts"
+            });
+
+            await context.SaveChangesAsync();
+        }
+        
         // Создание роли администратора, если не существует
         if (!await roleManager.RoleExistsAsync(ApplicationRoles.Administrator))
             await roleManager.CreateAsync(new IdentityRole<Guid>(ApplicationRoles.Administrator));
