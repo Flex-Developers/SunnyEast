@@ -12,18 +12,32 @@ public class GetProductsQueryHandler(IApplicationDbContext context, IMapper mapp
 {
     public async Task<List<ProductResponse>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
     {
-        var query = context.Products.Where(s => true);
-        if (request.Slug != null) 
+        var query = context.Products.AsQueryable();
+
+        if (request.Slug != null)
             query = query.Where(s => s.Slug == request.Slug);
 
-        if (request.Name != null) 
+        if (request.Name != null)
             query = query.Where(s => s.Name.Contains(request.Name));
-
 
         if (request.ProductCategorySlug != null)
             query = query.Where(s => s.ProductCategorySlug == request.ProductCategorySlug);
+        
+        var result = (await query.ToArrayAsync(cancellationToken))
+            .Select(mapper.Map<ProductResponse>)
+            .ToList();
+        
+        var categories = await context.ProductCategories
+            .ToDictionaryAsync(c => c.Slug, cancellationToken);
+        
+        foreach (var product in result)
+        {
+            if (categories.TryGetValue(product.ProductCategorySlug, out var category))
+            {
+                product.ProductVolumes = category.ProductVolumes;
+            }
+        }
 
-        return (await query.ToArrayAsync(cancellationToken))
-            .Select(mapper.Map<ProductResponse>).ToList();
+        return result;
     }
 }
