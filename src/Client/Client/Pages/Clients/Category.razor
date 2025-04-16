@@ -28,7 +28,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _categories = await CategoryService.Get();
+        _categories = (await CategoryService.Get())!.Where(c => c.Name != "Все продукты").ToList();
         StateHasChanged();
     }
 
@@ -41,7 +41,7 @@
 
 <style>
     .category-grid {
-        max-width: 100%; /* Ограничиваем ширину, чтобы карточки не прижимались к краю */
+        max-width: 100%;
         margin: 0 auto; 
     }
 

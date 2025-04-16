@@ -65,7 +65,7 @@
 
     protected override async Task OnInitializedAsync() 
     {
-        _categories = await CategoryService.Get();
+        _categories = (await CategoryService.Get())!.Where(c => c.Name != "Все продукты").ToList();
         StateHasChanged();
     }
     

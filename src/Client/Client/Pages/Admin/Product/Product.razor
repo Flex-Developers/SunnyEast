@@ -180,12 +180,17 @@
             Description = product.Description,
         };
 
+        string categoryName = SelectedCategory;
+        
+        if (categoryName == "Все продукты")
+            categoryName = _categories.FirstOrDefault(c => c.Slug == product.ProductCategorySlug)!.Name;
+        
         var parameters = new DialogParameters<EditProductDialog>
         {
             { "UpdateCommand", updateCommand },
-            { "CategoryName", SelectedCategory },
+            { "CategoryName", categoryName},
             { "OnSuccessfullyCreate", new Action(async () => await OnInitializedAsync()) },
-            { "Categories", _categories.Select(c => c.Name).ToList() }
+            { "Categories", _categories.Where(c => c.Name != "Все продукты").Select(c => c.Name).ToList() }
         };
 
         await DialogService.ShowAsync<EditProductDialog>("Edit", parameters);
@@ -217,7 +222,10 @@
     {
         if (!string.IsNullOrEmpty(category))
         {
-            _products = await ProductService.GetByCategoryName(category);
+            if (category == "Все продукты")
+                _products = await ProductService.Get(new GetProductsQuery());
+            else
+                _products = await ProductService.GetByCategoryName(category);
             await SaveSelectedCategoryAsync(category);
         }
     }
@@ -243,7 +251,7 @@
         {
             { "CategoryName", SelectedCategory },
             { "OnSuccessfullyCreate", new Action(async () => await OnInitializedAsync()) },
-            { "Categories", _categories.Select(c => c.Name).ToList() }
+            { "Categories", _categories.Where(c => c.Name != "Все продукты").Select(c => c.Name).ToList()}
         };
 
         await DialogService.ShowAsync<CreateProductDialog>("Create", parameters);

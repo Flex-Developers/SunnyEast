@@ -88,6 +88,12 @@
         Description = "",
     };
 
+    protected override void OnInitialized()
+    {
+        if (CategoryName == "Все продукты")
+            CategoryName = string.Empty;
+    }
+
     private void ShowImageTable()
     {
         _showTable = true;
