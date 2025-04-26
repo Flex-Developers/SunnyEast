@@ -5,7 +5,9 @@
 @using Client.Components.Dialogs
 @using Client.Infrastructure.Services.Category
 @using Client.Infrastructure.Services.Product
+@using Severity = MudBlazor.Severity
 @inject IProductService ProductService
+@inject NavigationManager Navigation
 @inject ICategoryService CategoryService
 @inject IDialogService DialogService
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
@@ -22,8 +24,10 @@
 
         <MudSpacer/>
 
-        <MudAutocomplete T="ProductResponse" SearchFunc="SearchAsync" ToStringFunc="@(result => result.Name)" ResetValueOnEmptyText="true"
-                         Immediate="true" Clearable="true" Label="Поиск" DebounceInterval="300" AdornmentIcon="@Icons.Material.Filled.Search" Class="autocomplete"/>
+        <MudAutocomplete T="ProductResponse" SearchFunc="SearchAsync" ToStringFunc="@(result => result.Name)"
+                         ResetValueOnEmptyText="true"
+                         Immediate="true" Clearable="true" Label="Поиск" DebounceInterval="300"
+                         AdornmentIcon="@Icons.Material.Filled.Search" Class="autocomplete"/>
 
         @if (IsSearching)
         {
@@ -39,8 +43,10 @@
         <MudItem xs="12" sm="6" md="4" lg="3">
             <MudCard Class="product-card">
 
-                <MudCarousel Style="height: 250px; border-radius: 10px;" ItemsSource="@product.Images" Context="imgContext" EnableSwipeGesture="true"
-                             BulletsPosition="Position.Bottom" ShowBullets="false" AutoCycle="true" TData="string" BulletsColor="Color.Dark"
+                <MudCarousel Style="height: 290px; border-radius: 10px;" ItemsSource="@product.Images"
+                             Context="imgContext" EnableSwipeGesture="true"
+                             BulletsPosition="Position.Bottom" ShowBullets="false" AutoCycle="true" TData="string"
+                             BulletsColor="Color.Dark"
                              ShowArrows="@(product.Images != null && product.Images.Length > 1 && product.Images[0].StartsWith("http"))">
 
                     <ItemTemplate>
@@ -50,39 +56,57 @@
 
                 <MudCardContent Class="card-content">
                     <MudText Typo="Typo.body1" Align="Align.Left" Class="product-name">
-                        @(product.Name.Length > 70 ? product.Name.Substring(0, 70) + "..." : product.Name)
+                        @(product.Name.Length > 100 ? product.Name.Substring(0, 100) + "..." : product.Name)
                     </MudText>
 
-                    <div>
-                        <MudChipSet T="string" SelectionMode="SelectionMode.SingleSelection" @bind-SelectedChip="product.SelectedVolume" Ripple="true" CheckMark="true">
-                            @if (_categoryResponse?.ProductVolumes != null)
+                    <MudChipSet T="string?" SelectionMode="SelectionMode.SingleSelection" @bind-SelectedChip="product.SelectedVolume"
+                                SelectedValue="product.SelectedVolume" Ripple="true" Style="margin-bottom: 20%; margin-left: -5px">
+                        @if (product.ProductVolumes != null)
+                        {
+                            @foreach (var volume in product.ProductVolumes)
                             {
-                                @foreach (var volume in _categoryResponse.ProductVolumes)
-                                {
-                                    <MudChip Text="@volume" Variant="Variant.Text" Color="Color.Primary">@volume</MudChip>
-                                }
+                                <MudChip Text="@volume" Value="@volume" Variant="Variant.Text" Color="Color.Primary">@volume</MudChip>
                             }
-                        </MudChipSet>
-                    </div>
+                        }
+                    </MudChipSet>
 
 
                     <div class="discount-container">
-                        <MudText Typo="Typo.body1" Align="Align.Left" Style="margin: 0;">Цена:</MudText>
+                        <MudText Typo="Typo.body1" Align="Align.Left" Style="margin: 0;">Цена:  </MudText>
 
                         @if (product.DiscountPrice.HasValue)
                         {
-                            <MudText Typo="Typo.h6" Align="Align.Left" Class="discounted-price"> @($"{product.DiscountPrice}") </MudText>
+                            <MudText Typo="Typo.h6" Align="Align.Left"
+                                     Class="discounted-price"> @($"{product.DiscountPrice}") </MudText>
 
-                            <MudText Typo="Typo.body2" Align="Align.Right" Class="price"> @($"{product.Price}") </MudText>
+                            <MudText Typo="Typo.body2" Align="Align.Right"
+                                     Class="price"> @($"{product.Price}") </MudText>
                         }
                         else
                         {
-                            <MudText Typo="Typo.body2" Align="Align.Left" Style="margin-left: 5px;"> @($"{product.Price}") </MudText>
+                            <MudText Typo="Typo.body1" Align="Align.Left" Style="margin-left: 5px;"> @($"{product.Price}") </MudText>
                         }
                     </div>
 
+                    <div class="buttons-container">
+                        <div class="counter-controls">
+                            <MudIconButton Icon="@Icons.Material.Filled.Remove" Color="Color.Primary" OnClick="@(() => DecreaseQuantity(product))" Class="button"/>
+                            <MudText Typo="Typo.body1" Class="quantity-text">@product.Quantity</MudText>
+                            <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="@(() => IncreaseQuantity(product))" Class="button"/>
+                        </div>
+
+                        <MudButton Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Small" OnClick="@(() => AddToCart(product))" Class="button">
+                            <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Class="cart-icon" />
+                            <span style="margin-left: 6px;">В корзину</span>
+                        </MudButton>
+
+
+                    </div>
+
+
+
                     <div class="description-container">
-                        <MudLink Typo="Typo.body2" Style="padding-left: 0" OnClick="() => OpenDescriptionAsync(product)"> Читать описание... </MudLink>
+                        <MudLink Typo="Typo.body2" Style="padding-left: 0; padding-bottom: 5px" OnClick="() => OpenDescriptionAsync(product)"> Читать описание...</MudLink>
                     </div>
 
                 </MudCardContent>
@@ -95,24 +119,38 @@
     private List<ProductResponse> _products = new();
     private List<ProductCategoryResponse> _categories = new();
     private readonly GetProductsQuery _query = new();
-    private bool IsSearching { get; set; }
-    private ProductCategoryResponse? _categoryResponse;
-    private Dictionary<int, string> SelectedProductVolumes = new();
 
-    [Parameter]
-    public string SelectedCategory { get; set; } = string.Empty;
+    private bool IsSearching { get; set; }
+
+    [Parameter] public string SelectedCategory { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
         _categories = (await CategoryService.Get())!;
-        _categories.AddRange(new ProductCategoryResponse() { Name = "Все продукты", Slug = "AllProducts" });
         var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
         var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
         SelectedCategory = query["category"] ?? await LoadSelectedCategoryAsync();
-        _categoryResponse = _categories.FirstOrDefault(c => c.Name == SelectedCategory);
         await LoadProductsAsync(SelectedCategory);
         StateHasChanged();
     }
+    
+    private void IncreaseQuantity(ProductResponse product)
+    {
+        if (product.Quantity < 99) // максимум 99
+            product.Quantity++;
+    }
+
+    private void DecreaseQuantity(ProductResponse product)
+    {
+        if (product.Quantity > 0)
+            product.Quantity--;
+    }
+
+    private void AddToCart(ProductResponse product)
+    {
+        Snackbar.Add($"Добавлено в корзину: {product.Name}, Кол-во: {product.Quantity}", Severity.Info);
+    }
+
 
     private async Task OnCategoryChanged(string value)
     {
@@ -120,10 +158,9 @@
         await LoadProductsAsync(SelectedCategory);
         StateHasChanged();
     }
-    
+
     private async Task OnProductSelected(ProductResponse selectedProduct)
     {
-        
     }
 
     private async Task<IEnumerable<ProductResponse>> SearchAsync(string name, CancellationToken cancellationToken)
@@ -156,7 +193,6 @@
     {
         if (!string.IsNullOrEmpty(category))
         {
-            
             if (category == "Все продукты")
                 _products = await ProductService.Get(new GetProductsQuery());
             else
@@ -179,6 +215,7 @@
 
         return string.Empty;
     }
+
 }
 
 
@@ -195,19 +232,19 @@
         border-radius: 10px;
         cursor: pointer;
         max-width: 100%;
-        height: 530px;
+        height: 600px;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
     }
 
     .card-content {
-        padding: 5px 0 7px 8px;
+        padding: 0 0 0 8px;
         flex-grow: 1;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        gap: 30px;
+        gap: 0px;
     }
 
     .product-name {
@@ -222,8 +259,8 @@
         display: flex;
         flex-direction: row;
         align-items: center;
-        margin-top: 15px;
-        margin-bottom: 5px
+        margin-top: -50px;
+        margin-bottom: 90px
     }
 
     .discounted-price {
@@ -256,12 +293,35 @@
 
     .buttons-container {
         display: flex;
-        gap: 1px;
-        margin-bottom: 5px
+        justify-content: space-between;
+        align-items: center;
+        margin: -60px 10px 30px;
     }
 
-    .button {
-        min-width: 25px
+    .counter-controls {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        margin-left: -20px;
     }
+
+    .quantity-text {
+        min-width: 20px;
+        text-align: center;
+    }
+
+
+    .button {
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        border-radius: 25px;
+    }
+
+    .cart-icon {
+        font-size: 20px;
+    }
+
+
 
 </style>
