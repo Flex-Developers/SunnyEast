@@ -26,6 +26,7 @@ public class GetProductsByCategoryNameQueryHandler(IApplicationDbContext context
             foreach (var product in result)
             {
                 product.ProductVolumes = category.ProductVolumes;
+                product.SelectedVolume = product.ProductVolumes![0];
             }
         }
 

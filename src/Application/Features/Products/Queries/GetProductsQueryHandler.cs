@@ -35,6 +35,7 @@ public class GetProductsQueryHandler(IApplicationDbContext context, IMapper mapp
             if (categories.TryGetValue(product.ProductCategorySlug, out var category))
             {
                 product.ProductVolumes = category.ProductVolumes;
+                product.SelectedVolume = product.ProductVolumes![0];
             }
         }
 
