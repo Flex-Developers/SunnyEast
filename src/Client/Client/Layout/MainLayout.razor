@@ -11,12 +11,6 @@
         <NotAuthorized>
             <MudLayout Class="d-flex flex-column min-vh-100">
                 <AppBar @bind-IsDarkMode="_isDarkMode" @bind-DrawerOpen="_drawerOpen"/>
-                <MudDrawer @bind-Open="_drawerOpen"
-                          Elevation="25"
-                          ClipMode="DrawerClipMode.Always"
-                          Style="top: 64px; z-index: 1;">
-                    <NavMenu/>
-                </MudDrawer>
                 <CustomerLayout>
                     <div class="flex-grow-1">
                         @Body
@@ -29,9 +23,9 @@
             <MudLayout Class="d-flex flex-column min-vh-100">
                 <AppBar @bind-IsDarkMode="@_isDarkMode" @bind-DrawerOpen="@_drawerOpen"/>
                 <MudDrawer @bind-Open="_drawerOpen"
-                          Elevation="25"
-                          ClipMode="DrawerClipMode.Always"
-                          Style="top: 64px; z-index: 1;">
+                           Elevation="25"
+                           ClipMode="DrawerClipMode.Always"
+                           Style="top: 64px; z-index: 1;">
                     <NavMenu/>
                 </MudDrawer>
                 <AdminLayout>
