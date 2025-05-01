@@ -8,4 +8,5 @@ public class UpdateProductCategoryCommand : IRequest<string>
     public byte? DiscountPercentage { get; set; }
     public bool ApplyDiscountToAllProducts { get; set; }
     public string? ImageUrl { get; set; }
+    public string[]? ProductVolumes { get; set; }
 }

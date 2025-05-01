@@ -45,7 +45,7 @@
                 
                 <MudCarousel Style="height: 250px; border-radius: 10px;" ItemsSource="@product.Images" Context="imgContext" EnableSwipeGesture="true" 
                              BulletsPosition="Position.Bottom" ShowBullets="false" AutoCycle="true" TData="string" BulletsColor="Color.Dark"
-                             ShowArrows="@(@product.Images != null && product.Images.Length > 0 && product.Images[0].StartsWith("http"))">
+                             ShowArrows="@(@product.Images != null && product.Images.Length > 1 && product.Images[0].StartsWith("http"))">
                     
                     <ItemTemplate>
                         <MudCardMedia Image="@imgContext"></MudCardMedia>
@@ -55,8 +55,8 @@
 
                 <MudCardContent Class="card-content">
                     
-                    <MudText Typo="Typo.h6" Align="Align.Left" Class="product-name">
-                        @(product.Name.Length > 40 ? product.Name.Substring(0, 40) + "..." : product.Name)
+                    <MudText Typo="Typo.subtitle1" Align="Align.Left" Class="product-name">
+                        @(product.Name.Length > 70 ? product.Name.Substring(0, 70) + "..." : product.Name)
                     </MudText>
 
                     <div class="discount-container">
@@ -79,6 +79,10 @@
                         <MudLink Typo="Typo.caption" Style="padding-left: 0" OnClick="() => OpenDescriptionAsync(product)"> Читать описание... </MudLink>
 
                         <div class="buttons-container">
+                            <MudButton Color="Color.Primary" Variant="Variant.Text" Size="Size.Small" Class="button" OnClick="@(async () => await DuplicateProduct(product))">
+                                <MudIcon Icon="@Icons.Material.Filled.ContentCopy"/>
+                            </MudButton>
+                            
                             <MudButton Color="Color.Default" Variant="Variant.Text" Size="Size.Small" Class="button" OnClick="@(async () => await EditProductAsync(product))">
                                 <MudIcon Icon="@Icons.Material.Filled.Edit"/>
                             </MudButton>
@@ -143,6 +147,26 @@
         return result;
     }
 
+    private async Task DuplicateProduct(ProductResponse currentProduct)
+    {
+        string baseName = currentProduct.Name.Split('(')[0].Trim();
+        int copyNumber = _products.Count(p => p.Name.StartsWith(baseName)) + 1;
+    
+        await ProductService.Post(new CreateProductCommand
+        {
+            Name = $"{baseName}({copyNumber})",
+            Description = currentProduct.Description,
+            DiscountPercentage = currentProduct.DiscountPercentage,
+            DiscountPrice = currentProduct.DiscountPrice,
+            Images = currentProduct.Images!,
+            Price = currentProduct.Price,
+            ProductCategorySlug = (await CategoryService.GetByName(SelectedCategory))!.Slug
+        });
+
+        await OnInitializedAsync();
+    }
+
+
     private async Task EditProductAsync(ProductResponse product)
     {
         var updateCommand = new UpdateProductCommand
@@ -156,12 +180,17 @@
             Description = product.Description,
         };
 
+        string categoryName = SelectedCategory;
+        
+        if (categoryName == "Все продукты")
+            categoryName = _categories.FirstOrDefault(c => c.Slug == product.ProductCategorySlug)!.Name;
+        
         var parameters = new DialogParameters<EditProductDialog>
         {
             { "UpdateCommand", updateCommand },
-            { "CategoryName", SelectedCategory },
+            { "CategoryName", categoryName},
             { "OnSuccessfullyCreate", new Action(async () => await OnInitializedAsync()) },
-            { "Categories", _categories.Select(c => c.Name).ToList() }
+            { "Categories", _categories.Where(c => c.Name != "Все продукты").Select(c => c.Name).ToList() }
         };
 
         await DialogService.ShowAsync<EditProductDialog>("Edit", parameters);
@@ -193,7 +222,10 @@
     {
         if (!string.IsNullOrEmpty(category))
         {
-            _products = await ProductService.GetByCategoryName(category);
+            if (category == "Все продукты")
+                _products = await ProductService.Get(new GetProductsQuery());
+            else
+                _products = await ProductService.GetByCategoryName(category);
             await SaveSelectedCategoryAsync(category);
         }
     }
@@ -219,7 +251,7 @@
         {
             { "CategoryName", SelectedCategory },
             { "OnSuccessfullyCreate", new Action(async () => await OnInitializedAsync()) },
-            { "Categories", _categories.Select(c => c.Name).ToList() }
+            { "Categories", _categories.Where(c => c.Name != "Все продукты").Select(c => c.Name).ToList()}
         };
 
         await DialogService.ShowAsync<CreateProductDialog>("Create", parameters);
@@ -243,7 +275,7 @@
         border-radius: 10px;
         cursor: pointer;
         max-width: 100%; 
-        height: 400px; 
+        height: 500px; 
         display: flex; 
         flex-direction: column; 
         justify-content: space-between;
@@ -269,8 +301,7 @@
         display: flex; 
         flex-direction: row; 
         align-items: center;
-        margin-top: 15px; 
-        margin-bottom: -5px
+        margin-top: 10px;
     }
     
     .discounted-price {

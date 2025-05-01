@@ -8,4 +8,5 @@ public class ProductCategoryResponse
     public bool ApplyDiscountToAllProducts { get; set; }
     public string? BaseCategorySlug { get; set; }
     public string? ImageUrl { get; set; }
+    public string[]? ProductVolumes { get; set; }
 }

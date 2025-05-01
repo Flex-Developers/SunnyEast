@@ -12,8 +12,24 @@ public class GetProductsByCategoryNameQueryHandler(IApplicationDbContext context
 {
     public async Task<List<ProductResponse>> Handle(GetProductsByCategoryNameQuery request, CancellationToken cancellationToken)
     {
-        var products = await context.Products.Where(p => p.ProductCategory!.Name == request.CategoryName)
+        var products = await context.Products
+            .Where(p => p.ProductCategory!.Name == request.CategoryName)
             .ToListAsync(cancellationToken);
-        return mapper.Map<List<ProductResponse>>(products);
+        
+        var result = products.Select(mapper.Map<ProductResponse>).ToList();
+        
+        var category = await context.ProductCategories
+            .FirstOrDefaultAsync(c => c.Name == request.CategoryName, cancellationToken);
+
+        if (category is not null)
+        {
+            foreach (var product in result)
+            {
+                product.ProductVolumes = category.ProductVolumes;
+                product.SelectedVolume = product.ProductVolumes![0];
+            }
+        }
+
+        return result;
     }
 }
