@@ -5,7 +5,7 @@ namespace Domain.Entities;
 /// <summary>
 /// one order on card
 /// </summary>
-public sealed class Order : BaseEntity
+public sealed class Order : BaseEntity // Order is a CartItem
 {
     public Guid CartId { get; set; }
     public Cart? Cart { get; set; }

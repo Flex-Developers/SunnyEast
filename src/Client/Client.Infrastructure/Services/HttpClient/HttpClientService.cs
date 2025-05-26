@@ -112,10 +112,10 @@ public class HttpClientService(
             //todo create handlers for another status codes 409 500 and others;
             return response;
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            snackbar.Add("Проблема соеденения с сервером. Попробуйте попытку позже.", Severity.Error);
-            Console.WriteLine(e);
+            snackbar.Add("Проблема соединения с сервером. Попробуйте попытку позже.", Severity.Error);
+            Console.WriteLine(ex);
         }
 
         return null;

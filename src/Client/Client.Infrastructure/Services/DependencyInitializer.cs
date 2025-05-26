@@ -1,4 +1,5 @@
 ﻿using Client.Infrastructure.Services.Auth;
+using Client.Infrastructure.Services.Cart;
 using Client.Infrastructure.Services.Category;
 using Client.Infrastructure.Services.HttpClient;
 using Client.Infrastructure.Services.Product;
@@ -16,7 +17,8 @@ public static class DependencyInitializer
             .AddScoped<IAuthService, AuthService>()
             .AddScoped<IProductService, ProductService>()
             .AddScoped<IHttpClientService, HttpClientService>()
-            .AddScoped<IValidationService, ValidationService>();
+            .AddScoped<IValidationService, ValidationService>()
+            .AddScoped<ICartService, CartService>();
 
     }
 }

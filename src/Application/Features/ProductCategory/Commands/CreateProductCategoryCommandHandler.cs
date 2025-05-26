@@ -20,7 +20,7 @@ public class CreateProductCategoryCommandHandler(
         productCategory.Slug = slugService.GenerateSlug(request.Name);
         
         if (context.ProductCategories.Any(s => s.Slug == productCategory.Slug))
-            throw new ExistException($"Такая категория уже существует {productCategory.Slug}");
+            throw new ExistException($"Такая категория уже существует {productCategory.Name}");
         
         productCategory.Name = productCategory.Name.Trim();
         
