@@ -23,4 +23,8 @@
         <PackageReference Include="Slugify.Core" Version="4.0.1"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Data\" />
+    </ItemGroup>
+
 </Project>

@@ -10,25 +10,15 @@ namespace Application.Features.Products.Queries;
 public class GetProductsByCategoryNameQueryHandler(IApplicationDbContext context, IMapper mapper)
     : IRequestHandler<GetProductsByCategoryNameQuery, List<ProductResponse>>
 {
-    public async Task<List<ProductResponse>> Handle(GetProductsByCategoryNameQuery request, CancellationToken cancellationToken)
+    public async Task<List<ProductResponse>> Handle(GetProductsByCategoryNameQuery request,
+        CancellationToken cancellationToken)
     {
         var products = await context.Products
+            .Include(f => f.ProductPrice)
             .Where(p => p.ProductCategory!.Name == request.CategoryName)
             .ToListAsync(cancellationToken);
-        
-        var result = products.Select(mapper.Map<ProductResponse>).ToList();
-        
-        var category = await context.ProductCategories
-            .FirstOrDefaultAsync(c => c.Name == request.CategoryName, cancellationToken);
 
-        if (category is not null)
-        {
-            foreach (var product in result)
-            {
-                product.ProductVolumes = category.ProductVolumes;
-                product.SelectedVolume = product.ProductVolumes![0];
-            }
-        }
+        var result = products.Select(mapper.Map<ProductResponse>).ToList();
 
         return result;
     }

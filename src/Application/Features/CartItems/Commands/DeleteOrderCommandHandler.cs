@@ -4,18 +4,18 @@ using Application.Contract.Order.Commands;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace Application.Features.Order.Commands;
+namespace Application.Features.CartItems.Commands;
 
 public class DeleteOrderCommandHandler(IApplicationDbContext context) : IRequestHandler<DeleteOrderCommand, Unit>
 {
     public async Task<Unit> Handle(DeleteOrderCommand request, CancellationToken cancellationToken)
     {
-        var order = await context.Orders.FirstOrDefaultAsync(s => s.Slug == request.Slug, cancellationToken);
+        var order = await context.CartItems.FirstOrDefaultAsync(s => s.Slug == request.Slug, cancellationToken);
 
         if (order == null)
-            throw new NotFoundException($"Order with slug {request.Slug} is not found");
+            throw new NotFoundException($"Элемент корзины с id {request.Slug} не найден");
 
-        context.Orders.Remove(order);
+        context.CartItems.Remove(order);
         await context.SaveChangesAsync(cancellationToken);
         return Unit.Value;
     }

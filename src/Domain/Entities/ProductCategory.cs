@@ -13,6 +13,4 @@ public class ProductCategory : BaseEntity
     public Guid? BaseProductCategoryId { get; set; }
     
     public ProductCategory? BaseProductCategory { get; set; }
-    
-    public string[]? ProductVolumes { get; set; }
 }

@@ -6,7 +6,7 @@ using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace Application.Features.Order.Commands;
+namespace Application.Features.CartItems.Commands;
 
 public class CreateOrderCommandHandler(
     IApplicationDbContext context,
@@ -18,7 +18,7 @@ public class CreateOrderCommandHandler(
     public async Task<string> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
     {
         var userName = currentUserService.GetUserName() ?? throw new ForbiddenException();
-        var order = mapper.Map<Domain.Entities.Order>(request);
+        var order = mapper.Map<Domain.Entities.CartItem>(request);
 
         order.Slug = slugService.GenerateSlug(
             $"{request.ShopOrderSlug}-{userName}-{request.CartSlug}");
@@ -41,7 +41,7 @@ public class CreateOrderCommandHandler(
         order.CartSlug = cart.Slug;
         order.CartId = cart.Id;
 
-        await context.Orders.AddAsync(order, cancellationToken); // Error
+        await context.CartItems.AddAsync(order, cancellationToken); // Error
         await context.SaveChangesAsync(cancellationToken);
         return order.Slug;
     }
