@@ -21,7 +21,7 @@ public class UpdateProductCommandHandler(IApplicationDbContext context, ISlugSer
         product.Name = request.Name ?? product.Name;
         product.ProductCategorySlug = request.ProductCategorySlug ?? product.ProductCategorySlug;
         product.Description = request.Description ?? product.Description;
-        // todo release productPrice updating
+        // todo release productPrice updating2
 
         var category = await context.ProductCategories
             .FirstOrDefaultAsync(s => s.Slug == request.ProductCategorySlug, cancellationToken);

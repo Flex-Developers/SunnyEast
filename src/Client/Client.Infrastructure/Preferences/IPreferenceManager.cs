@@ -1,5 +1,4 @@
-﻿using Client.Infrastructure.Preferences;
-using Client.Infrastructure.Common;
+﻿using Client.Infrastructure.Common;
 
 namespace Client.Infrastructure.Preferences;
 

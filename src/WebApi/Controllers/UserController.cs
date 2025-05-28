@@ -1,4 +1,3 @@
-using Application.Common.Interfaces.Services;
 using Application.Contract.Identity;
 using Application.Contract.User.Commands;
 using Application.Contract.User.Queries;

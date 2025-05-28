@@ -63,16 +63,16 @@
 
                         <MudText Typo="Typo.body2" Align="Align.Left" Style="margin: 0;">Цена:</MudText>
 
-                        @if (product.DiscountPrice.HasValue)
-                        {
-                            <MudText Typo="Typo.body2" Align="Align.Left" Class="discounted-price"> @($"{product.DiscountPrice}") </MudText>
-
-                            <MudText Typo="Typo.body1" Align="Align.Right" Class="price"> @($"{product.Price}") </MudText>
-                        }
-                        else
-                        {
-                            <MudText Typo="Typo.body2" Align="Align.Left" Style="margin-left: 5px;"> @($"{product.Price}") </MudText>
-                        }
+                        @* @if (product.DiscountPrice.HasValue) *@
+                        @* { *@
+                        @*     <MudText Typo="Typo.body2" Align="Align.Left" Class="discounted-price"> @($"{product.DiscountPrice}") </MudText> *@
+                        @* *@
+                        @*     <MudText Typo="Typo.body1" Align="Align.Right" Class="price"> @($"{product.Price}") </MudText> *@
+                        @* } *@
+                        @* else *@
+                        @* { *@
+                        @*     <MudText Typo="Typo.body2" Align="Align.Left" Style="margin-left: 5px;"> @($"{product.Price}") </MudText> *@
+                        @* } *@
                     </div>
 
                     <div class="description-container">
@@ -156,10 +156,10 @@
         {
             Name = $"{baseName}({copyNumber})",
             Description = currentProduct.Description,
-            DiscountPercentage = currentProduct.DiscountPercentage,
-            DiscountPrice = currentProduct.DiscountPrice,
+            // DiscountPercentage = currentProduct.DiscountPercentage,
+            // DiscountPrice = currentProduct.DiscountPrice,
             Images = currentProduct.Images!,
-            Price = currentProduct.Price,
+            // Price = currentProduct.Price,
             ProductCategorySlug = (await CategoryService.GetByName(SelectedCategory))!.Slug
         });
 
@@ -173,9 +173,9 @@
         {
             Slug = product.Slug,
             Name = product.Name,
-            Price = product.Price,
-            DiscountPrice = product.DiscountPrice,
-            DiscountPercentage = product.DiscountPercentage,
+            // Price = product.Price,
+            // DiscountPrice = product.DiscountPrice,
+            // DiscountPercentage = product.DiscountPercentage,
             Images = product.Images,
             Description = product.Description,
         };

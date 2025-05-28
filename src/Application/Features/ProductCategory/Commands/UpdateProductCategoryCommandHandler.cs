@@ -3,7 +3,6 @@ using Application.Common.Interfaces.Contexts;
 using Application.Common.Interfaces.Services;
 using Application.Contract.ProductCategory.Commands;
 using AutoMapper;
-using Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 

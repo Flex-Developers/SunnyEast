@@ -2,7 +2,6 @@
 using Application.Contract.Shops.Queries;
 using Application.Contract.Shops.Responses;
 using AutoMapper;
-using Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
