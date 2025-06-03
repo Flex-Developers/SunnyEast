@@ -57,7 +57,6 @@ public class GetProductsTests : ProductTestsBase
             Name = name,
             ProductCategoryId = SampleLevel.Id,
             ProductCategorySlug = SampleLevel.Slug,
-            Price = 21312
         };
         await AddAsync(product);
     }

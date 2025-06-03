@@ -37,7 +37,6 @@ public class DeleteProductCommandTests : ProductTestsBase
             Name = "name",
             ProductCategoryId = SampleLevel.Id,
             ProductCategorySlug = SampleLevel.Slug,
-            Price = 312
         };
         await AddAsync(product);
         return product.Slug;

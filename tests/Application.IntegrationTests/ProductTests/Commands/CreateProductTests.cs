@@ -14,7 +14,6 @@ public class CreateProductTests : ProductTestsBase
         {
             Name = "this is a name",
             ProductCategorySlug = SampleLevel.Slug,
-            Price = 0
         };
         var response = await HttpClient.PostAsJsonAsync("/api/Product", command);
         response.EnsureSuccessStatusCode();
@@ -27,7 +26,6 @@ public class CreateProductTests : ProductTestsBase
         {
             Name = "this is a name12",
             ProductCategorySlug = SampleLevel.Slug,
-            Price = 0
         };
 
         await HttpClient.PostAsJsonAsync("/api/Product", command);
@@ -47,7 +45,6 @@ public class CreateProductTests : ProductTestsBase
             ProductCategoryId = SampleLevel.Id,
             ProductCategorySlug = SampleLevel.Slug,
             Slug = "name",
-            Price = 123
         };
         await AddAsync(product);
 
@@ -55,7 +52,6 @@ public class CreateProductTests : ProductTestsBase
         {
             Name = product.Name,
             ProductCategorySlug = SampleLevel.Slug,
-            Price = 1000
         };
         var response = await HttpClient.PostAsJsonAsync("/api/Product", command);
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Conflict));
