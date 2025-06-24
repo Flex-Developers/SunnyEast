@@ -6,17 +6,15 @@
 
 <MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
 
-    <!-- 1️⃣  Заголовок --------------------------------------------------->
+    <!-- 1️  Заголовок --------------------------------------------------->
     <MudText Typo="Typo.h3" Align="Align.Center" Class="mb-4">Корзина</MudText>
 
-    <!-- 2️⃣  Таблица товаров ------------------------------------------->
+    <!-- 2️  Таблица товаров ------------------------------------------->
     <MudPaper Class="p-4">
 
         @if (_items.Count == 0)
         {
-            <MudEmpty Width="100%" Height="240px"
-                      Text="Корзина пуста"
-                      Icon="@Icons.Material.Filled.Inventory2" />
+            <MudText Align="Align.Center" Typo="Typo.h6">Корзина пуста</MudText>
         }
         else
         {
@@ -90,28 +88,31 @@
         }
     </MudPaper>
 
-    <!-- 3️⃣  Сводка заказа --------------------------------------------->
-    <MudPaper Class="p-4 mt-4 mx-auto" Style="max-width: 700px;">
-        <MudText Typo="Typo.h5" Class="mb-3">Сводка заказа</MudText>
+    @if (_items.Count != 0)
+    {
+        <!-- 3️  Сводка заказа --------------------------------------------->
+        <MudPaper Class="p-4 mt-4 mx-auto" Style="max-width: 700px;">
+            <MudText Typo="Typo.h5" Class="mb-3">Сводка заказа</MudText>
 
-        <div class="d-flex justify-space-between mb-2 cart-summary">
-            <span>Товаров:</span>
-            <span>@_items.Sum(i => i.Quantity)</span>
-        </div>
+            <div class="d-flex justify-space-between mb-2 cart-summary">
+                <span>Товаров:</span>
+                <span>@_items.Sum(i => i.Quantity)</span>
+            </div>
 
-        <div class="d-flex justify-space-between mb-2 cart-summary">
-            <span>Сумма:</span>
-            <span>@_total ₽</span>
-        </div>
+            <div class="d-flex justify-space-between mb-2 cart-summary">
+                <span>Сумма:</span>
+                <span>@_total ₽</span>
+            </div>
 
-        <MudDivider Class="my-3" />
+            <MudDivider Class="my-3"/>
 
-        <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                   FullWidth="true" Size="Size.Large"
-                   Disabled="@(_items.Count == 0)">
-            Перейти к оформлению
-        </MudButton>
-    </MudPaper>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                       FullWidth="true" Size="Size.Large"
+                       Disabled="@(_items.Count == 0)">
+                Перейти к оформлению
+            </MudButton>
+        </MudPaper>
+    }
 
 </MudContainer>
 
