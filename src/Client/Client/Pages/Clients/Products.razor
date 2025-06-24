@@ -11,6 +11,7 @@
 @inject ICategoryService CategoryService
 @inject IDialogService DialogService
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject Client.Infrastructure.Services.Cart.ICartService CartService
 
 <MudPaper Elevation="25">
     <MudToolBar>
@@ -60,7 +61,7 @@
                     </MudText>
 
                     <MudChipSet T="string?" SelectionMode="SelectionMode.SingleSelection" @bind-SelectedChip="product.SelectedVolume"
-                                SelectedValue="product.SelectedVolume" Ripple="true" Style="margin-bottom: 20%; margin-left: -5px">
+                                 @bind-SelectedValue="product.SelectedVolume" Ripple="true" Style="margin-bottom: 20%; margin-left: -5px">
                         @if (product.ProductVolumes != null)
                         {
                             @foreach (var volume in product.ProductVolumes)
@@ -95,12 +96,18 @@
                             <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="@(() => IncreaseQuantity(product))" Class="button"/>
                         </div>
 
-                        <MudButton Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Small" OnClick="@(() => AddToCart(product))" Class="button">
-                            <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Class="cart-icon" />
-                            <span style="margin-left: 6px;">В корзину</span>
+                        <MudButton Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Small" Disabled="@IsInCart(product)" OnClick="@(async () => await AddToCart(product))" Class="button">
+                            @if (IsInCart(product))
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Check" Class="cart-icon" />
+                                <span style="margin-left: 6px;">В корзине</span>
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Class="cart-icon" />
+                                <span style="margin-left: 6px;">В корзину</span>
+                            }
                         </MudButton>
-
-
                     </div>
 
 
@@ -119,6 +126,8 @@
     private List<ProductResponse> _products = new();
     private List<ProductCategoryResponse> _categories = new();
     private readonly GetProductsQuery _query = new();
+    
+    private HashSet<string> _cartKeys = new();
 
     private bool IsSearching { get; set; }
 
@@ -131,6 +140,7 @@
         var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
         SelectedCategory = query["category"] ?? await LoadSelectedCategoryAsync();
         await LoadProductsAsync(SelectedCategory);
+        await LoadCartStateAsync();
         StateHasChanged();
     }
     
@@ -146,10 +156,24 @@
             product.Quantity--;
     }
 
-    private void AddToCart(ProductResponse product)
+    private async Task AddToCart(ProductResponse product)
     {
-        // TODO Implement cart logic
-        Snackbar.Add($"Добавлено в корзину: {product.Name}, Кол-во: {product.Quantity}", Severity.Info);
+        if (product.Quantity <= 0)
+            return;
+
+        var order = new Client.Infrastructure.Services.Cart.Models.CartItemDto
+        {
+            ProductSlug = product.Slug,
+            ProductName = product.Name,
+            SelectedVolume = product.SelectedVolume,
+            Quantity = product.Quantity,
+            Price = product.Price,
+            DiscountPrice = product.DiscountPrice
+        };
+
+        await CartService.CreateOrderAsync(order);
+        _cartKeys.Add($"{order.ProductSlug}|{order.SelectedVolume}");
+        Snackbar.Add($"Добавлено в корзину: {product.Name}, Кол-во: {product.Quantity} Объем: {product.SelectedVolume}", Severity.Success);
     }
 
 
@@ -216,9 +240,18 @@
 
         return string.Empty;
     }
+    
+    private async Task LoadCartStateAsync()
+    {
+        var cart = await CartService.GetCartAsync();
+        if (cart?.Orders is not null)
+            _cartKeys = cart.Orders.Select(o => $"{o.ProductSlug}|{o.SelectedVolume}").ToHashSet();
+    }
+
+    private bool IsInCart(ProductResponse product)
+        => _cartKeys.Contains($"{product.Slug}|{product.SelectedVolume}");
 
 }
-
 
 <style>
 
@@ -322,7 +355,5 @@
     .cart-icon {
         font-size: 20px;
     }
-
-
-
+    
 </style>

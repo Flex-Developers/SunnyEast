@@ -1,4 +1,5 @@
 @using Application.Contract.Identity
+@inject Infrastructure.Services.Cart.ICartService CartService
 <MudAppBar Elevation="0">
     <AuthorizeView Roles="@ApplicationRoles.Administrator">
         <MudTooltip Text="Меню">
@@ -19,6 +20,11 @@
     </MudHidden>
 
     <MudSpacer/>
+    
+    <MudBadge BadgeContent="@_cartCount" Invisible="@(_cartCount == 0)" Class="mx-2 cart-badge" Overlap="false">
+        <MudIconButton Icon="@Icons.Material.Filled.ShoppingCart" Color="Color.Inherit" OnClick="@(() => Navigation.NavigateTo("/cart"))" />
+    </MudBadge>
+
 
     <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">
         <MudDivider Vertical="true" FlexItem="true" DividerType="DividerType.Middle" Class="mx-4 my-5"/>
@@ -71,3 +77,9 @@
         </ChildContent>
     </MudMenu>
 </MudAppBar>
+
+<style>
+    .cart-badge .mud-badge-content {
+        transform: translateY(-2px); /* убираем «полукруг» */
+    }
+</style>

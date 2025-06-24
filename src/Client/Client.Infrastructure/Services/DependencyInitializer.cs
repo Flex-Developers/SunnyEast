@@ -1,6 +1,7 @@
 ﻿using Client.Infrastructure.Services.Auth;
 using Client.Infrastructure.Services.Category;
 using Client.Infrastructure.Services.HttpClient;
+using Client.Infrastructure.Services.Cart;
 using Client.Infrastructure.Services.Product;
 using Client.Infrastructure.Services.Validation;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,7 @@ public static class DependencyInitializer
             .AddScoped<ICategoryService, CategoryService>()
             .AddScoped<IAuthService, AuthService>()
             .AddScoped<IProductService, ProductService>()
+            .AddScoped<ICartService, CartService>()
             .AddScoped<IHttpClientService, HttpClientService>()
             .AddScoped<IValidationService, ValidationService>();
 

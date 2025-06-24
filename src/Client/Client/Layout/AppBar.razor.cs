@@ -4,7 +4,7 @@ using MudBlazor;
 
 namespace Client.Layout;
 
-public partial class AppBar
+public partial class AppBar : IDisposable
 {
     [Parameter] public RenderFragment ChildContent { get; set; } = null!;
     [Parameter] public EventCallback<bool> IsDarkModeChanged { get; set; }
@@ -25,6 +25,21 @@ public partial class AppBar
         var newState = await ClientPreferences.ToggleDrawerAsync();
         await DrawerOpenChanged.InvokeAsync(newState);
     }
+    
+    private int _cartCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _cartCount = await CartService.GetOrdersCountAsync();
+        CartService.OnChange += CartChanged;
+    }
+
+    private async void CartChanged()
+    {
+        _cartCount = await CartService.GetOrdersCountAsync();
+        StateHasChanged();
+    }
+
 
     private void Logout()
     {
@@ -35,4 +50,9 @@ public partial class AppBar
     private void Profile() => Navigation.NavigateTo("/account");
     private void SignUp() => Navigation.NavigateToLogin("/register");
     private void SignIn() => Navigation.NavigateToLogin("/login");
+    
+    public void Dispose()
+    {
+        CartService.OnChange -= CartChanged;
+    }
 }
