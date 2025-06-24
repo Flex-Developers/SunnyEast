@@ -5,59 +5,114 @@
 @implements IDisposable
 
 <MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
-    <MudGrid>
-        <MudItem xs="12" md="8">
-            <MudPaper Class="p-4">
-                @if (_items.Count == 0)
-                {
-                    <MudEmpty Width="100%" Height="240px" Text="Корзина пуста" Icon="@Icons.Material.Filled.Inventory2" />
-                }
-                else
-                {
-                    <MudTable Items="_items" Dense="true" Hover="true" Elevation="0">
-                        <HeaderContent>
-                            <MudTh></MudTh>
-                            <MudTh>Продукт</MudTh>
-                            <MudTh>Объем</MudTh>
-                            <MudTh Class="text-center">Кол-во</MudTh>
-                            <MudTh Class="text-right">Цена</MudTh>
-                            <MudTh></MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd><MudAvatar Size="Size.Medium"/></MudTd>
-                            <MudTd>@context.ProductName</MudTd>
-                            <MudTd>@context.SelectedVolume</MudTd>
-                            <MudTd Class="text-center">
-                                <MudNumericField T="int" Immediate="true" HideSpinButtons="true" Min="1" Max="99" Style="width:70px"
-                                                 Value="context.Quantity" ValueChanged="@( (int v) => OnQuantityChanged(context, v) )" />
-                            </MudTd>
-                            <MudTd Class="text-right">@((context.DiscountPrice ?? context.Price) * context.Quantity).ToString("C")</MudTd>
-                            <MudTd>
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => RemoveItem(context)" />
-                            </MudTd>
-                        </RowTemplate>
-                    </MudTable>
-                }
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" md="4">
-            <MudPaper Class="p-4 sticky-top" Style="top:88px">
-                <MudText Typo="Typo.h6" Class="mb-2">Сводка заказа</MudText>
-                <div class="d-flex justify-space-between mb-1">
-                    <span>Товаров:</span>
-                    <span>@_items.Sum(i => i.Quantity)</span>
-                </div>
-                <div class="d-flex justify-space-between mb-1">
-                    <span>Сумма:</span>
-                    <span>@_total.ToString("C")</span>
-                </div>
-                <MudDivider Class="my-2" />
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Disabled="@(_items.Count==0)">
-                    Перейти к оформлению
-                </MudButton>
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
+
+    <!-- 1️⃣  Заголовок --------------------------------------------------->
+    <MudText Typo="Typo.h3" Align="Align.Center" Class="mb-4">Корзина</MudText>
+
+    <!-- 2️⃣  Таблица товаров ------------------------------------------->
+    <MudPaper Class="p-4">
+
+        @if (_items.Count == 0)
+        {
+            <MudEmpty Width="100%" Height="240px"
+                      Text="Корзина пуста"
+                      Icon="@Icons.Material.Filled.Inventory2" />
+        }
+        else
+        {
+            <MudTable Items="_items"
+                      Hover="true"
+                      Elevation="0"
+                      Class="cart-table"
+                      Breakpoint="Breakpoint.Sm">
+
+                <HeaderContent>
+                    <MudTh></MudTh>
+                    <MudTh>Продукт</MudTh>
+                    <MudTh>Объём</MudTh>
+                    <MudTh Class="text-center">Кол-во</MudTh>
+                    <MudTh Class="text-right">Цена</MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd>
+                        <MudImage Src="@context.ImageUrl"
+                                  Alt="@context.ProductName"
+                                  Width="90" Height="90"
+                                  Class="rounded object-cover" />
+                    </MudTd>
+
+                    <MudTd DataLabel="Продукт">
+                        <MudText Typo="Typo.subtitle1" Class="name-ellipsis">
+                            @context.ProductName
+                        </MudText>
+                    </MudTd>
+
+                    <MudTd DataLabel="Объём">
+                        <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">
+                            @context.SelectedVolume
+                        </MudChip>
+                    </MudTd>
+
+                    <MudTd DataLabel="Кол-во" Class="text-center">
+                        <MudText Typo="Typo.h6">@context.Quantity</MudText>
+                    </MudTd>
+
+                    <MudTd DataLabel="Цена" Class="text-right">
+                        <MudText Typo="Typo.subtitle1">
+                            @((context.DiscountPrice ?? context.Price) * context.Quantity) ₽
+                        </MudText>
+                    </MudTd>
+
+                    <MudTd DataLabel="">
+                        <!-- десктоп/планшет -->
+                        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                           Color="Color.Error"
+                                           OnClick="@(() => RemoveItem(context))" />
+                        </MudHidden>
+
+                        <!-- мобильный -->
+                        <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
+                            <MudButton Color="Color.Error"
+                                       Variant="Variant.Outlined"
+                                       FullWidth="true"
+                                       Class="delete-mobile"
+                                       StartIcon="@Icons.Material.Filled.Delete"
+                                       OnClick="@(() => RemoveItem(context))">
+                                Удалить
+                            </MudButton>
+                        </MudHidden>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </MudPaper>
+
+    <!-- 3️⃣  Сводка заказа --------------------------------------------->
+    <MudPaper Class="p-4 mt-4 mx-auto" Style="max-width: 700px;">
+        <MudText Typo="Typo.h5" Class="mb-3">Сводка заказа</MudText>
+
+        <div class="d-flex justify-space-between mb-2 cart-summary">
+            <span>Товаров:</span>
+            <span>@_items.Sum(i => i.Quantity)</span>
+        </div>
+
+        <div class="d-flex justify-space-between mb-2 cart-summary">
+            <span>Сумма:</span>
+            <span>@_total ₽</span>
+        </div>
+
+        <MudDivider Class="my-3" />
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   FullWidth="true" Size="Size.Large"
+                   Disabled="@(_items.Count == 0)">
+            Перейти к оформлению
+        </MudButton>
+    </MudPaper>
+
 </MudContainer>
 
 @code {
@@ -77,14 +132,8 @@
         CalculateTotal();
     }
 
-    private void CalculateTotal() => _total = _items.Sum(i => i.Quantity * (i.DiscountPrice ?? i.Price));
-
-    private async Task OnQuantityChanged(CartItemDto item, int newQuantity)
-    {
-        item.Quantity = newQuantity;
-        await CartService.UpdateOrderAsync(item);
-        CalculateTotal();
-    }
+    private void CalculateTotal() =>
+        _total = _items.Sum(i => i.Quantity * (i.DiscountPrice ?? i.Price));
 
     private async Task RemoveItem(CartItemDto item)
     {
@@ -101,3 +150,32 @@
 
     public void Dispose() => CartService.OnChange -= CartChanged;
 }
+
+<style>
+.cart-table th,
+.cart-table td           { font-size: 1.12rem; padding: 15px 12px; }
+.cart-summary span       { font-size: 1.12rem; }
+.object-cover            { object-fit: cover; }
+.name-ellipsis {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@@media (max-width: 600px) {
+
+    .cart-table td            { padding: 10px 0; font-size: 1rem; }
+    .cart-summary span        { font-size: 1rem; }
+
+    .cart-table td[data-label='Кол-во'],
+    .cart-table td[data-label='Цена'] {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .delete-mobile            { margin-top: 6px; }
+}
+</style>

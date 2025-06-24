@@ -146,7 +146,7 @@
     
     private void IncreaseQuantity(ProductResponse product)
     {
-        if (product.Quantity < 99) // максимум 99
+        if (product.Quantity < 99) 
             product.Quantity++;
     }
 
@@ -168,7 +168,8 @@
             SelectedVolume = product.SelectedVolume,
             Quantity = product.Quantity,
             Price = product.Price,
-            DiscountPrice = product.DiscountPrice
+            DiscountPrice = product.DiscountPrice,
+            ImageUrl = product.Images!.FirstOrDefault()
         };
 
         await CartService.CreateOrderAsync(order);
