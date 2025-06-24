@@ -21,19 +21,27 @@
 
     <MudSpacer/>
     
-    <MudBadge BadgeContent="@_cartCount" Invisible="@(_cartCount == 0)" Class="mx-2 cart-badge" Overlap="false">
-        <MudIconButton Icon="@Icons.Material.Filled.ShoppingCart" Color="Color.Inherit" OnClick="@(() => Navigation.NavigateTo("/cart"))" />
-    </MudBadge>
+    <MudSpacer />
 
+    <div class="right-icons" style="display: flex; align-items: center; gap: 12px; margin-right: 8px;">
+        <div class="cart-wrapper">
+            <MudIconButton Icon="@Icons.Material.Filled.ShoppingCart" Color="Color.Inherit" OnClick="@(() => Navigation.NavigateTo("/cart"))" />
+            @if (_cartCount > 0)
+            {
+                <span class="cart-counter">@_cartCount</span>
+            }
+        </div>
 
-    <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">
-        <MudDivider Vertical="true" FlexItem="true" DividerType="DividerType.Middle" Class="mx-4 my-5"/>
-        <DarkModePanel OnIconClicked="ToggleDarkLightMode"/>
-    </MudHidden>
+        <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">
+            <DarkModePanel OnIconClicked="ToggleDarkLightMode" />
+        </MudHidden>
 
-    <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
-        <DarkModePanel OnIconClicked="ToggleDarkLightMode"/>
-    </MudHidden>
+        <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
+            <DarkModePanel OnIconClicked="ToggleDarkLightMode" />
+        </MudHidden>
+    </div>
+
+    
     <MudMenu AnchorOrigin="Origin.BottomRight" LockScroll="true" TransformOrigin="Origin.TopRight">
         <ActivatorContent>
             <MudIconButton Icon="@Icons.Material.Filled.Person" Color="Color.Inherit"/>
@@ -79,7 +87,28 @@
 </MudAppBar>
 
 <style>
-    .cart-badge .mud-badge-content {
-        transform: translateY(-2px); /* убираем «полукруг» */
+    .cart-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        margin-right: -20px;
     }
+
+    .cart-counter {
+        position: absolute;
+        top: 0;          
+        right: -2px;        
+        min-width: 18px;
+        height: 18px;
+        padding: 0 4px;
+        background: darkgreen;     
+        color: white;
+        border-radius: 50%;
+        font-size: 0.70rem;
+        line-height: 18px;
+        text-align: center;
+        pointer-events: none;    
+        box-shadow: none; 
+    }
+
 </style>
