@@ -8,14 +8,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.CartItems.Commands;
 
-public class CreateOrderCommandHandler(
+public class CreateCartItemCommandHandler(
     IApplicationDbContext context,
     ISlugService slugService,
     IMapper mapper,
     ICurrentUserService currentUserService)
-    : IRequestHandler<CreateOrderCommand, string>
+    : IRequestHandler<CreateCartItemCommand, string>
 {
-    public async Task<string> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
+    public async Task<string> Handle(CreateCartItemCommand request, CancellationToken cancellationToken)
     {
         var userName = currentUserService.GetUserName() ?? throw new ForbiddenException();
         var order = mapper.Map<Domain.Entities.CartItem>(request);

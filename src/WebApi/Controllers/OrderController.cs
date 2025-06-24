@@ -8,14 +8,14 @@ namespace WebApi.Controllers;
 public class OrderController : ApiControllerBase
 {
     [HttpPost]
-    public async Task<IActionResult> CreateOrder([FromBody] CreateOrderCommand command)
+    public async Task<IActionResult> CreateOrder([FromBody] CreateCartItemCommand command)
     {
         var response = await Mediator.Send(command);
         return Ok(response);
     }
     
     [HttpPut]
-    public async Task<IActionResult> UpdateOrder([FromBody] UpdateOrderCommand command)
+    public async Task<IActionResult> UpdateOrder([FromBody] UpdateCartItemCommand command)
     {
         var response = await Mediator.Send(command);
         return Ok(response);
@@ -24,7 +24,7 @@ public class OrderController : ApiControllerBase
     [HttpDelete("{slug}")]
     public async Task<IActionResult> DeleteOrder(string slug)
     {
-        var command = new DeleteOrderCommand { Slug = slug };
+        var command = new DeleteCartItemCommand { Slug = slug };
         var response = await Mediator.Send(command);
         return Ok();
     }

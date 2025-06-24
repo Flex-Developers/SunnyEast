@@ -1,6 +1,6 @@
 ﻿namespace Application.Contract.Order.Commands;
 
-public class UpdateOrderCommand : IRequest<string>
+public class UpdateCartItemCommand : IRequest<string>
 {
     public required string Slug { get; set; }
     public int? Gr100SelectedCount { get; set; }

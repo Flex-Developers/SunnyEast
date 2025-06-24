@@ -6,9 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.CartItems.Commands;
 
-public class UpdateOrderCommandHandler(IApplicationDbContext context) : IRequestHandler<UpdateOrderCommand, string>
+public class UpdateCartItemCommandHandler(IApplicationDbContext context) : IRequestHandler<UpdateCartItemCommand, string>
 {
-    public async Task<string> Handle(UpdateOrderCommand request, CancellationToken cancellationToken)
+    public async Task<string> Handle(UpdateCartItemCommand request, CancellationToken cancellationToken)
     {
         var order = await context.CartItems.FirstOrDefaultAsync(s => s.Slug == request.Slug, cancellationToken);
 

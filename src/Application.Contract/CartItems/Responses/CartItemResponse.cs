@@ -1,6 +1,6 @@
 ﻿namespace Application.Contract.Order.Responses;
 
-public class OrderResponse
+public class CartItemResponse
 {
     public required string Slug { get; set; }
     public required string ShopOrderSlug { get; set; }
