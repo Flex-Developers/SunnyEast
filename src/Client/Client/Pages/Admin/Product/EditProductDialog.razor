@@ -1,9 +1,12 @@
 ﻿@using Application.Contract.Product.Commands
+@using Application.Contract.ProductCategory.Responses
 @using Client.Infrastructure.Services.Category
+@using Client.Infrastructure.Services.Price
 @using Client.Infrastructure.Services.Product
 @using Severity = MudBlazor.Severity
 @inject ICategoryService CategoryService
 @inject IProductService ProductService
+@inject IPriceCalculatorService PriceCalculator
 <MudForm Model="UpdateCommand" @ref="_form">
     <MudDialog Class="edit-dialog">
         <TitleContent>
@@ -12,7 +15,7 @@
 
         <DialogContent>
             <MudSelect T="string" Class="mb-2" Required="true" RequiredError="Выберите категорию." Label="Категория" AnchorOrigin="Origin.BottomCenter" @bind-Value="CategoryName" FullWidth="true">
-                @foreach (var category in Categories)
+                @foreach (var category in Categories.Select(c => c.Name))
                 {
                     <MudSelectItem Value="@category">@category</MudSelectItem>
                 }
@@ -36,6 +39,30 @@
             </MudGrid>
             <MudTextField Label="Описание" @bind-Value="UpdateCommand.Description" InputType="InputType.Text" Clearable="true" FullWidth="true" AutoGrow="true"/>
 
+            <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                <MudText Typo="Typo.h6">Объемы / Цены</MudText>
+
+                <MudChipSet T="string?" ReadOnly="true" Ripple="true" Class="chip-row" Style="margin-left: -5px">
+                    @if (GetCurrentProductVolumes() != null)
+                    {
+                        @foreach (var volume in GetCurrentProductVolumes()!)
+                        {
+                            <MudChip Text="@volume" Value="@volume" Variant="Variant.Outlined" Color="Color.Info">@volume</MudChip>
+                        }
+                    }
+                </MudChipSet>
+                
+                <MudChipSet T="string?" ReadOnly="true" Ripple="true" Style="margin-left: -5px">
+                    @if (GetPricesForVolumes() != null)
+                    {
+                        @foreach (var volume in GetPricesForVolumes()!)
+                        {
+                            <MudChip Text="@volume" Value="@volume" Variant="Variant.Outlined" Color="Color.Info">@volume</MudChip>
+                        }
+                    }
+                </MudChipSet>
+            </MudStack>
+            
             <MudButton Color="Color.Success"  Style="margin-left: -10px; margin-top: 10px"
                        hidden="@_showTable" OnClick="ShowImageTable" StartIcon="@Icons.Material.Filled.Create">Редактировать изображения</MudButton>
 
@@ -71,7 +98,7 @@
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public string CategoryName { get; set; } = string.Empty;
     [Parameter] public Action OnSuccessfullyCreate { get; set; } = null!;
-    [Parameter] public List<string> Categories { get; set; } = null!;
+    [Parameter] public List<ProductCategoryResponse> Categories { get; set; } = null!;
     [Parameter] public UpdateProductCommand UpdateCommand { get; set; } = null!;
     private List<string> _images;
     private MudForm _form = null!;
@@ -85,6 +112,23 @@
         _images.AddRange(Enumerable.Repeat(string.Empty, 10 - _images.Count));
 
         UpdateCommand.Images = _images.ToArray(); // Чтобы при изменении, добавленные пустые строки не исчезли
+    }
+    
+    private string[]? GetCurrentProductVolumes()
+    {
+        return Categories.FirstOrDefault(c => c.Name == CategoryName)!.ProductVolumes!;
+    }
+
+    
+    private IEnumerable<string> GetPricesForVolumes()
+    {
+        var vols = GetCurrentProductVolumes();
+        if (vols is null || !UpdateCommand.Price.HasValue) return [];
+
+        var pairs = PriceCalculator.GetPrices(vols, UpdateCommand.Price!.Value, UpdateCommand.DiscountPercentage);
+
+        // форматируем: прочерк, если Price == null
+        return pairs.Select(p => p.Price is null ? "—" : $"{p.Price:N2} ₽");
     }
 
     private void ShowImageTable()
