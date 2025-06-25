@@ -6,6 +6,7 @@
 @using Client.Infrastructure.Services.Cart.Models
 @using Client.Infrastructure.Services.Category
 @using Client.Infrastructure.Services.Product
+@using Client.Infrastructure.Services.Price
 @using Severity = MudBlazor.Severity
 @inject IProductService ProductService
 @inject NavigationManager Navigation
@@ -13,29 +14,29 @@
 @inject IDialogService DialogService
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject Client.Infrastructure.Services.Cart.ICartService CartService
+@inject IPriceCalculatorService PriceCalculator
 
 <MudPaper Elevation="25">
     <MudToolBar>
         <MudSelect T="string" Label="Категория" Style="margin-right: 15px;"
-                   Value="@SelectedCategory" ValueChanged="@(async (string value) => await OnCategoryChanged(value))">
-            @foreach (var category in _categories)
+                   Value="@SelectedCategory" ValueChanged="@(async (string v)=>await OnCategoryChanged(v))">
+            @foreach (var c in _categories)
             {
-                <MudSelectItem Value="@(category.Name)">@category.Name</MudSelectItem>
+                <MudSelectItem Value="@c.Name">@c.Name</MudSelectItem>
             }
         </MudSelect>
 
         <MudSpacer/>
 
-        <MudAutocomplete T="ProductResponse" SearchFunc="SearchAsync" ToStringFunc="@(result => result.Name)"
-                         ResetValueOnEmptyText="true"
-                         Immediate="true" Clearable="true" Label="Поиск" DebounceInterval="300"
-                         AdornmentIcon="@Icons.Material.Filled.Search" Class="autocomplete"/>
+        <MudAutocomplete T="ProductResponse" SearchFunc="SearchAsync" ToStringFunc="@(r=>r.Name)"
+                         ResetValueOnEmptyText Immediate Clearable Label="Поиск"
+                         DebounceInterval="300" AdornmentIcon="@Icons.Material.Filled.Search"
+                         Class="autocomplete"/>
 
         @if (IsSearching)
         {
-            <MudProgressCircular Indeterminate="true" Size="Size.Medium" Class="ml-2"/>
+            <MudProgressCircular Indeterminate Size="Size.Medium" Class="ml-2"/>
         }
-
     </MudToolBar>
 </MudPaper>
 
@@ -45,59 +46,57 @@
         <MudItem xs="12" sm="6" md="4" lg="3">
             <MudCard Class="product-card">
 
-                <MudCarousel Style="height: 290px; border-radius: 10px;" ItemsSource="@product.Images"
-                             Context="imgContext" EnableSwipeGesture="true"
-                             BulletsPosition="Position.Bottom" ShowBullets="false" AutoCycle="true" TData="string"
-                             BulletsColor="Color.Dark"
+                <MudCarousel Style="height: 290px; border-radius: 10px;"
+                             ItemsSource="@product.Images"
+                             Context="imgContext"
+                             EnableSwipeGesture AutoCycle
+                             BulletsPosition="Position.Bottom"
+                             ShowBullets="false"
                              ShowArrows="@(product.Images != null && product.Images.Length > 1 && product.Images[0].StartsWith("http"))">
-
-                    <ItemTemplate>
-                        <MudCardMedia Image="@imgContext"></MudCardMedia>
-                    </ItemTemplate>
+                    <ItemTemplate><MudCardMedia Image="@imgContext"/></ItemTemplate>
                 </MudCarousel>
 
                 <MudCardContent Class="card-content">
-                    <MudText Typo="Typo.body1" Align="Align.Left" Class="product-name">
-                        @(product.Name.Length > 100 ? product.Name.Substring(0, 100) + "..." : product.Name)
+                    <MudText Typo="Typo.body1" Class="product-name">
+                        @(product.Name.Length > 100 ? product.Name[..100] + "…" : product.Name)
                     </MudText>
 
-                    <MudChipSet T="string?" SelectionMode="SelectionMode.SingleSelection" @bind-SelectedChip="product.SelectedVolume"
-                                 @bind-SelectedValue="product.SelectedVolume" Ripple="true" Style="margin-bottom: 20%; margin-left: -5px">
-                        @if (product.ProductVolumes != null)
+                    <MudChipSet T="string?" SelectionMode="SelectionMode.SingleSelection" SelectedValue="product.SelectedVolume"
+                                SelectedValueChanged="@(v => OnVolumeChanged(product, v))" Ripple="true"
+                                Style="margin-bottom: 20%; margin-left:-5px">
+
+                        @foreach (var v in product.ProductVolumes ?? [])
                         {
-                            @foreach (var volume in product.ProductVolumes)
-                            {
-                                <MudChip Text="@volume" Value="@volume" Variant="Variant.Text" Color="Color.Primary">@volume</MudChip>
-                            }
+                            <MudChip Text="@v" Value="@v" Variant="Variant.Text" Color="Color.Primary">@v</MudChip>
                         }
                     </MudChipSet>
 
 
                     <div class="discount-container">
-                        <MudText Typo="Typo.body1" Align="Align.Left" Style="margin: 0;">Цена:  </MudText>
+                        <MudText Typo="Typo.body1">Цена:&nbsp;</MudText>
 
-                        @if (product.DiscountPrice.HasValue)
+                        @if (product.DiscountPrice is not null)
                         {
-                            <MudText Typo="Typo.h6" Align="Align.Left"
-                                     Class="discounted-price"> @($"{product.DiscountPrice}") </MudText>
-
-                            <MudText Typo="Typo.body2" Align="Align.Right"
-                                     Class="price"> @($"{product.Price}") </MudText>
+                            <MudText Typo="Typo.h6" Class="discounted-price">@($"{product.DiscountPrice:N2}")</MudText>
+                            <MudText Typo="Typo.body2" Class="price">@($"{product.Price:N2}")</MudText>
                         }
                         else
                         {
-                            <MudText Typo="Typo.body1" Align="Align.Left" Style="margin-left: 5px;"> @($"{product.Price}") </MudText>
+                            <MudText Typo="Typo.body1" Style="margin-left:5px">@($"{product.Price:N2}")</MudText>
                         }
                     </div>
 
                     <div class="buttons-container">
                         <div class="counter-controls">
-                            <MudIconButton Icon="@Icons.Material.Filled.Remove" Color="Color.Primary" OnClick="@(() => DecreaseQuantity(product))" Class="button"/>
+                            <MudIconButton Icon="@Icons.Material.Filled.Remove" Color="Color.Primary"
+                                           Disabled="@(product.Quantity<=1)" OnClick="@(()=>DecreaseQuantity(product))"/>
                             <MudText Typo="Typo.body1" Class="quantity-text">@product.Quantity</MudText>
-                            <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="@(() => IncreaseQuantity(product))" Class="button"/>
+                            <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary"
+                                           OnClick="@(()=>IncreaseQuantity(product))"/>
                         </div>
 
-                        <MudButton Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Small" Disabled="@IsInCart(product)" OnClick="@(async () => await AddToCart(product))" Class="button">
+                        <MudButton Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Small" 
+                                   Disabled="@IsInCart(product)" OnClick="@(async () => await AddToCart(product))" Class="button">
                             @if (IsInCart(product))
                             {
                                 <MudIcon Icon="@Icons.Material.Filled.Check" Class="cart-icon" />
@@ -111,12 +110,11 @@
                         </MudButton>
                     </div>
 
-
-
                     <div class="description-container">
-                        <MudLink Typo="Typo.body2" Style="padding-left: 0; padding-bottom: 5px" OnClick="() => OpenDescriptionAsync(product)"> Читать описание...</MudLink>
+                        <MudLink Typo="Typo.body2" OnClick="@(()=>OpenDescriptionAsync(product))">
+                            Читать описание…
+                        </MudLink>
                     </div>
-
                 </MudCardContent>
             </MudCard>
         </MudItem>
@@ -127,10 +125,9 @@
     private List<ProductResponse> _products = new();
     private List<ProductCategoryResponse> _categories = new();
     private readonly GetProductsQuery _query = new();
-    
+    private readonly Dictionary<string, decimal> _basePrice = new(); // минимальная (без скидки) цена
     private HashSet<string> _cartKeys = new();
-
-    private bool IsSearching { get; set; }
+    private bool IsSearching;
 
     [Parameter] public string SelectedCategory { get; set; } = string.Empty;
 
@@ -138,121 +135,133 @@
     {
         _categories = (await CategoryService.Get())!;
         var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
-        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
-        SelectedCategory = query["category"] ?? await LoadSelectedCategoryAsync();
+        var cat = System.Web.HttpUtility.ParseQueryString(uri.Query)["category"];
+        SelectedCategory = cat ?? await LoadSelectedCategoryAsync();
+
         await LoadProductsAsync(SelectedCategory);
         await LoadCartStateAsync();
+    }
+
+    private void IncreaseQuantity(ProductResponse p) => p.Quantity = Math.Min(p.Quantity + 1, 99);
+    
+    private void DecreaseQuantity(ProductResponse p) => p.Quantity = Math.Max(p.Quantity - 1, 1);
+
+    private void OnVolumeChanged(ProductResponse p, string? vol)
+    {
+        if (string.IsNullOrWhiteSpace(vol) || p.ProductVolumes is null) return;
+
+        p.SelectedVolume = vol;
+
+        var fullRow = PriceCalculator
+                      .GetPrices(p.ProductVolumes, _basePrice[p.Slug], null)
+                      .First(x => x.Volume == vol);
+
+        var fullPrice = fullRow.Price!.Value;
+
+        if (p.DiscountPercentage is > 0)
+        {
+            var discRow = PriceCalculator
+                          .GetPrices(p.ProductVolumes, _basePrice[p.Slug], p.DiscountPercentage)
+                          .First(x => x.Volume == vol);
+
+            p.Price         = fullPrice;      
+            p.DiscountPrice = discRow.Price; 
+        }
+        else
+        {
+            p.Price = fullPrice;
+            p.DiscountPrice = null;
+        }
+
         StateHasChanged();
     }
-    
-    private void IncreaseQuantity(ProductResponse product)
-    {
-        if (product.Quantity < 99) 
-            product.Quantity++;
-    }
 
-    private void DecreaseQuantity(ProductResponse product)
+    private async Task AddToCart(ProductResponse p)
     {
-        if (product.Quantity > 0)
-            product.Quantity--;
-    }
+        var fullRow = PriceCalculator
+                      .GetPrices(p.ProductVolumes!, _basePrice[p.Slug], null)
+                      .First(x => x.Volume == p.SelectedVolume);
 
-    private async Task AddToCart(ProductResponse product)
-    {
-        if (product.Quantity <= 0)
-            return;
+        var fullPrice = fullRow.Price!.Value;
+        var discPrice = p.DiscountPercentage is > 0
+            ? PriceCalculator.GetPrices(p.ProductVolumes!, _basePrice[p.Slug], p.DiscountPercentage)
+                             .First(x => x.Volume == p.SelectedVolume).Price
+            : null;
 
-        var cartItemDto = new CartItemDto
+        var dto = new CartItemDto
         {
-            ProductSlug = product.Slug,
-            ProductName = product.Name,
-            SelectedVolume = product.SelectedVolume,
-            Quantity = product.Quantity,
-            Price = product.Price,
-            DiscountPrice = product.DiscountPrice,
-            ImageUrl = product.Images!.FirstOrDefault()
+            ProductSlug    = p.Slug,
+            ProductName    = p.Name,
+            SelectedVolume = p.SelectedVolume,
+            Quantity       = p.Quantity,
+            Price          = fullPrice,
+            DiscountPrice  = discPrice,
+            ImageUrl       = p.Images?.FirstOrDefault()
         };
 
-        await CartService.CreateOrderAsync(cartItemDto);
-        _cartKeys.Add($"{cartItemDto.ProductSlug}|{cartItemDto.SelectedVolume}");
-        Snackbar.Add($"Добавлено в корзину: {product.Name}, Кол-во: {product.Quantity} Объем: {product.SelectedVolume}", Severity.Success);
+        await CartService.CreateOrderAsync(dto);
+        _cartKeys.Add($"{dto.ProductSlug}|{dto.SelectedVolume}");
+        Snackbar.Add($"Добавлено: {p.Name}, {p.Quantity} × {p.SelectedVolume}", Severity.Success);
     }
 
+    private bool IsInCart(ProductResponse p) => _cartKeys.Contains($"{p.Slug}|{p.SelectedVolume}");
 
-    private async Task OnCategoryChanged(string value)
+    private async Task LoadCartStateAsync()
     {
-        SelectedCategory = value;
-        await LoadProductsAsync(SelectedCategory);
-        StateHasChanged();
+        var cart = await CartService.GetCartAsync();
+        _cartKeys = cart?.Orders?.Select(o => $"{o.ProductSlug}|{o.SelectedVolume}").ToHashSet() ?? new();
     }
 
-    private async Task OnProductSelected(ProductResponse selectedProduct)
+    private async Task OnCategoryChanged(string v)
     {
+        SelectedCategory = v;
+        await LoadProductsAsync(v);
     }
 
-    private async Task<IEnumerable<ProductResponse>> SearchAsync(string name, CancellationToken cancellationToken)
+    private async Task<IEnumerable<ProductResponse>> SearchAsync(string text, CancellationToken _)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            return [];
-
+        if (string.IsNullOrWhiteSpace(text)) return [];
         IsSearching = true;
-        _query.Name = name;
-
-        var result = await ProductService.Get(_query);
-
+        _query.Name = text;
+        var res = await ProductService.Get(_query);
         IsSearching = false;
-        StateHasChanged();
-
-        return result;
-    }
-
-    private async Task OpenDescriptionAsync(ProductResponse product)
-    {
-        await DialogService.ShowAsync<ProductDescriptionDialog>("",
-            new DialogParameters
-            {
-                { "ContentText", product.Description },
-                { "ProductName", product.Name }
-            });
+        return res;
     }
 
     private async Task LoadProductsAsync(string category)
     {
-        if (!string.IsNullOrEmpty(category))
-        {
-            if (category == "Все продукты")
-                _products = await ProductService.Get(new GetProductsQuery());
-            else
-                _products = await ProductService.GetByCategoryName(category);
-            await SaveSelectedCategoryAsync(category);
-        }
-    }
+        if (string.IsNullOrEmpty(category)) 
+            return;
 
-    private async Task SaveSelectedCategoryAsync(string category)
-    {
+        if (category == "Все продукты")
+            _products = await ProductService.Get(new GetProductsQuery());
+        else
+            _products = await ProductService.GetByCategoryName(category);
+
+        foreach (var p in _products)
+        {
+            if (p.ProductVolumes?.Length > 0)
+                p.SelectedVolume = p.ProductVolumes[0];
+
+            _basePrice[p.Slug] = p.Price;                   // запоминаем минимальную
+
+            OnVolumeChanged(p, p.SelectedVolume);           // выставляем актуальную цену
+        }
+
         await LocalStorage.SetItemAsync("selectedCategory", category);
     }
 
     private async Task<string> LoadSelectedCategoryAsync()
     {
-        string selectedCategory = (await LocalStorage.GetItemAsync<string>("selectedCategory"))!;
-
-        if (_categories.Any(c => c.Name == selectedCategory))
-            return selectedCategory;
-
-        return string.Empty;
+        var c = await LocalStorage.GetItemAsync<string>("selectedCategory");
+        return (_categories.Any(x => x.Name == c) ? c : string.Empty)!;
     }
-    
-    private async Task LoadCartStateAsync()
+
+    private async Task OpenDescriptionAsync(ProductResponse p)
     {
-        var cart = await CartService.GetCartAsync();
-        if (cart?.Orders is not null)
-            _cartKeys = cart.Orders.Select(o => $"{o.ProductSlug}|{o.SelectedVolume}").ToHashSet();
+        await DialogService.ShowAsync<ProductDescriptionDialog>("",
+            new DialogParameters { { "ContentText", p.Description }, { "ProductName", p.Name } });
     }
-
-    private bool IsInCart(ProductResponse product)
-        => _cartKeys.Contains($"{product.Slug}|{product.SelectedVolume}");
-
 }
 
 <style>
@@ -263,15 +272,21 @@
     }
 
     .product-card {
-        transition: transform 0.2s ease;
         position: relative;
         border-radius: 10px;
-        cursor: pointer;
         max-width: 100%;
         height: 600px;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
+        transition: box-shadow 0.3s ease, border 0.3s ease;
+        z-index: 1;
+        border: 1px solid transparent;
+    }
+
+    .product-card:hover {
+        border: 1px solid green; 
+        box-shadow: 0 0 6px rgba(25, 118, 210, 0.3);
     }
 
     .card-content {
@@ -311,10 +326,6 @@
         font-size: larger;
     }
 
-    .product-card:hover {
-        transform: scale(1.04);
-    }
-
     .image-container img {
         width: 100%;
         height: 100%;
@@ -345,7 +356,6 @@
         min-width: 20px;
         text-align: center;
     }
-
 
     .button {
         display: flex;

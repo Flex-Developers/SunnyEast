@@ -166,7 +166,6 @@
         await OnInitializedAsync();
     }
 
-
     private async Task EditProductAsync(ProductResponse product)
     {
         var updateCommand = new UpdateProductCommand
@@ -190,7 +189,7 @@
             { "UpdateCommand", updateCommand },
             { "CategoryName", categoryName},
             { "OnSuccessfullyCreate", new Action(async () => await OnInitializedAsync()) },
-            { "Categories", _categories.Where(c => c.Name != "Все продукты").Select(c => c.Name).ToList() }
+            { "Categories", _categories.Where(c => c.Name != "Все продукты").ToList() }
         };
 
         await DialogService.ShowAsync<EditProductDialog>("Edit", parameters);
@@ -251,7 +250,7 @@
         {
             { "CategoryName", SelectedCategory },
             { "OnSuccessfullyCreate", new Action(async () => await OnInitializedAsync()) },
-            { "Categories", _categories.Where(c => c.Name != "Все продукты").Select(c => c.Name).ToList()}
+            { "Categories", _categories.Where(c => c.Name != "Все продукты").ToList()}
         };
 
         await DialogService.ShowAsync<CreateProductDialog>("Create", parameters);
@@ -270,15 +269,21 @@
     }
     
     .product-card {
-        transition: transform 0.3s ease;
         position: relative;
         border-radius: 10px;
-        cursor: pointer;
         max-width: 100%; 
         height: 500px; 
         display: flex; 
         flex-direction: column; 
         justify-content: space-between;
+        transition: box-shadow 0.3s ease, border 0.3s ease;
+        z-index: 1;
+        border: 1px solid transparent;
+    }
+
+    .product-card:hover {
+        border: 1px solid green;
+        box-shadow: 0 0 6px rgba(25, 118, 210, 0.3);
     }
     
     .card-content {
@@ -314,10 +319,6 @@
         margin-right: 15px; 
         text-decoration: line-through; 
         font-size: larger;
-    }
-
-    .product-card:hover {
-        transform: scale(1.04);
     }
 
     .image-container img {

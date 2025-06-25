@@ -13,6 +13,6 @@ public record ProductResponse
     public string? Description { get; set; }
     public string? SelectedVolume { get; set; }
     public string[]? ProductVolumes { get; set; }
-    public int Quantity { get; set; } = 0;
+    public int Quantity { get; set; } = 1;
 
 }
