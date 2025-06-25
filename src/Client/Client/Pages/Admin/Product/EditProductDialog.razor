@@ -11,16 +11,16 @@
         </TitleContent>
 
         <DialogContent>
-            <MudSelect T="string" Required="true" RequiredError="Выберите категорию." Label="Категория" AnchorOrigin="Origin.BottomCenter" @bind-Value="CategoryName" FullWidth="true">
+            <MudSelect T="string" Class="mb-2" Required="true" RequiredError="Выберите категорию." Label="Категория" AnchorOrigin="Origin.BottomCenter" @bind-Value="CategoryName" FullWidth="true">
                 @foreach (var category in Categories)
                 {
                     <MudSelectItem Value="@category">@category</MudSelectItem>
                 }
             </MudSelect>
-            <MudTextField Required="true" RequiredError="Название не может быть пустым!" Label="Название" @bind-Value="UpdateCommand.Name" InputType="InputType.Text" FullWidth="true" Clearable="true" AutoGrow="true"/>
-            <MudGrid>
+            <MudTextField Class="mb-2" Required="true" RequiredError="Название не может быть пустым!" Label="Название" @bind-Value="UpdateCommand.Name" InputType="InputType.Text" FullWidth="true" Clearable="true" AutoGrow="true"/>
+            <MudGrid Class="mb-2">
                 <MudItem xs="4">
-                    <MudNumericField T="decimal?" Value="UpdateCommand.Price" Min="0" Required="true" Label="Цена" Format="F2" Clearable="true" Immediate="true" FullWidth="true"
+                    <MudNumericField T="decimal?" Value="UpdateCommand.Price" Min="0" Required="true" Label="Цена мин объема" Format="F2" Clearable="true" Immediate="true" FullWidth="true"
                                      RequiredError="Цена не может быть пустой" ValueChanged="@(price => { UpdateCommand.Price = price; UpdateDiscountPrice(UpdateCommand.DiscountPercentage); })"/>
                 </MudItem>
                 <MudItem xs="4">
