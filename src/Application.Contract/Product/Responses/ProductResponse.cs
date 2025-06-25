@@ -1,5 +1,7 @@
 namespace Application.Contract.Product.Responses;
 
+public record VolumePrice(string Volume, decimal? Full, decimal? Discount);
+
 public record ProductResponse
 {
     public required string Slug { get; set; }
@@ -14,5 +16,6 @@ public record ProductResponse
     public string? SelectedVolume { get; set; }
     public string[]? ProductVolumes { get; set; }
     public int Quantity { get; set; } = 1;
+    public required IReadOnlyList<VolumePrice> Prices { get; init; }
 
 }

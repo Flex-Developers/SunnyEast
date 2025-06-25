@@ -16,4 +16,7 @@ public class Product : BaseEntity
     public decimal? DiscountPrice { get; set; }
     public byte? DiscountPercentage { get; set; }
     public string[]? Images { get; set; }
+    
+    /// <summary>Готовые цены для каждого объёма (сер-з JSON).</summary>
+    public string? VolumePricesJson { get; set; }
 }
