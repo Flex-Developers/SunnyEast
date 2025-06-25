@@ -18,65 +18,80 @@
         }
         else
         {
-            <MudTable Items="_items"
-                      Hover="true"
-                      Elevation="0"
-                      Class="cart-table"
-                      Breakpoint="Breakpoint.Sm">
+            <MudTable Items="_items" Hover="true" Elevation="0" Class="cart-table" Breakpoint="Breakpoint.Sm">
 
                 <HeaderContent>
                     <MudTh></MudTh>
                     <MudTh>Продукт</MudTh>
                     <MudTh>Объём</MudTh>
+                    <MudTh Class="text-right">Цена/шт</MudTh>
                     <MudTh Class="text-center">Кол-во</MudTh>
-                    <MudTh Class="text-right">Цена</MudTh>
+                    <MudTh Class="text-right">Итого</MudTh>
                     <MudTh></MudTh>
                 </HeaderContent>
 
                 <RowTemplate>
+                    <!-- картинка -->
                     <MudTd>
-                        <MudImage Src="@context.ImageUrl"
-                                  Alt="@context.ProductName"
-                                  Width="90" Height="90"
-                                  Class="rounded object-cover" />
+                        <MudImage Src="@context.ImageUrl" Alt="@context.ProductName"
+                                  Width="90" Height="90" Class="rounded object-cover"/>
                     </MudTd>
 
+                    <!-- название -->
                     <MudTd DataLabel="Продукт">
                         <MudText Typo="Typo.subtitle1" Class="name-ellipsis">
                             @context.ProductName
                         </MudText>
                     </MudTd>
 
+                    <!-- объём -->
                     <MudTd DataLabel="Объём">
                         <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">
                             @context.SelectedVolume
                         </MudChip>
                     </MudTd>
 
-                    <MudTd DataLabel="Кол-во" Class="text-center">
-                        <MudText Typo="Typo.h6">@context.Quantity</MudText>
+                    <!-- цена / шт -->
+                    <MudTd DataLabel="Цена/шт" Class="text-right">
+                        <MudText>@((context.DiscountPrice ?? context.Price).ToString("N2")) ₽</MudText>
                     </MudTd>
 
-                    <MudTd DataLabel="Цена" Class="text-right">
+                    <!-- кол-во -->
+                    <MudTd DataLabel="Кол-во">
+                        <div class="qty-stack">
+                            <MudIconButton Icon="@Icons.Material.Filled.Remove"
+                                           Color="Color.Primary"
+                                           Size="Size.Medium"
+                                           Disabled="@(context.Quantity <= 1)"
+                                           OnClick="@(() => ChangeQuantity(context, -1))" />
+
+                            <MudText Typo="Typo.h6" class="qty-number">@context.Quantity</MudText>
+
+                            <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                           Color="Color.Primary"
+                                           Size="Size.Medium"
+                                           OnClick="@(() => ChangeQuantity(context, 1))" />
+                        </div>
+                    </MudTd>
+
+
+
+                    <!-- итог -->
+                    <MudTd DataLabel="Итого" Class="text-right">
                         <MudText Typo="Typo.subtitle1">
                             @((context.DiscountPrice ?? context.Price) * context.Quantity) ₽
                         </MudText>
                     </MudTd>
 
+                    <!-- удалить -->
                     <MudTd DataLabel="">
-                        <!-- десктоп/планшет -->
                         <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                           Color="Color.Error"
-                                           OnClick="@(() => RemoveItem(context))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                                           OnClick="@(() => RemoveItem(context))"/>
                         </MudHidden>
 
-                        <!-- мобильный -->
                         <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
-                            <MudButton Color="Color.Error"
-                                       Variant="Variant.Outlined"
-                                       FullWidth="true"
-                                       Class="delete-mobile"
+                            <MudButton Color="Color.Error" Variant="Variant.Outlined" FullWidth
                                        StartIcon="@Icons.Material.Filled.Delete"
                                        OnClick="@(() => RemoveItem(context))">
                                 Удалить
@@ -126,6 +141,14 @@
         await LoadAsync();
     }
 
+    private async Task ChangeQuantity(CartItemDto item, int delta)
+    {
+        item.Quantity = Math.Clamp(item.Quantity + delta, 1, 99);
+        await CartService.UpdateOrderAsync(item);
+        CalculateTotal();
+    }
+
+
     private async Task LoadAsync()
     {
         var cart = await CartService.GetCartAsync();
@@ -153,30 +176,53 @@
 }
 
 <style>
-.cart-table th,
-.cart-table td           { font-size: 1.12rem; padding: 15px 12px; }
-.cart-summary span       { font-size: 1.12rem; }
-.object-cover            { object-fit: cover; }
-.name-ellipsis {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-@@media (max-width: 600px) {
-
-    .cart-table td            { padding: 10px 0; font-size: 1rem; }
-    .cart-summary span        { font-size: 1rem; }
-
-    .cart-table td[data-label='Кол-во'],
-    .cart-table td[data-label='Цена'] {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    .cart-table th,
+    .cart-table td {
+        font-size: 1.12rem;
+        padding: 15px 12px;
     }
 
-    .delete-mobile            { margin-top: 6px; }
-}
+    .cart-summary span {
+        font-size: 1.12rem;
+    }
+
+    .object-cover {
+        object-fit: cover;
+    }
+
+    .name-ellipsis {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .qty-stack{
+        display:flex;               
+        align-items:center;
+        justify-content:center;
+        gap:8px;                   
+    }
+
+    .qty-stack .mud-icon-button{
+        width:42px; height:42px;
+        padding:0;
+    }
+
+    .qty-stack .mud-icon-button svg{ font-size:22px; }
+
+    .qty-number{ width:32px; text-align:center; font-weight:500; }
+
+    @@media (max-width:600px){
+        .qty-stack{ gap:6px; }      
+
+        .qty-stack .mud-icon-button{
+            width:46px; height:46px;
+        }
+
+        .qty-stack .mud-icon-button svg{ font-size:24px; }
+
+        .qty-number{ font-size:1.1rem; }
+    }
 </style>

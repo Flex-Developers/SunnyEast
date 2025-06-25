@@ -3,6 +3,7 @@
 @using Application.Contract.Product.Responses
 @using Application.Contract.ProductCategory.Responses
 @using Client.Components.Dialogs
+@using Client.Infrastructure.Services.Cart.Models
 @using Client.Infrastructure.Services.Category
 @using Client.Infrastructure.Services.Product
 @using Severity = MudBlazor.Severity
@@ -161,7 +162,7 @@
         if (product.Quantity <= 0)
             return;
 
-        var order = new Client.Infrastructure.Services.Cart.Models.CartItemDto
+        var cartItemDto = new CartItemDto
         {
             ProductSlug = product.Slug,
             ProductName = product.Name,
@@ -172,8 +173,8 @@
             ImageUrl = product.Images!.FirstOrDefault()
         };
 
-        await CartService.CreateOrderAsync(order);
-        _cartKeys.Add($"{order.ProductSlug}|{order.SelectedVolume}");
+        await CartService.CreateOrderAsync(cartItemDto);
+        _cartKeys.Add($"{cartItemDto.ProductSlug}|{cartItemDto.SelectedVolume}");
         Snackbar.Add($"Добавлено в корзину: {product.Name}, Кол-во: {product.Quantity} Объем: {product.SelectedVolume}", Severity.Success);
     }
 
