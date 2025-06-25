@@ -101,7 +101,7 @@
 
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
-    [Parameter] public string CategoryName { get; set; } = string.Empty;
+    [Parameter] public string? CategoryName { get; set; } = string.Empty;
     [Parameter] public Action OnSuccessfullyCreate { get; set; } = null!;
     [Parameter] public List<ProductCategoryResponse> Categories { get; set; } = null!;
     private List<string> _images = Enumerable.Repeat(string.Empty, 10).ToList();
@@ -124,21 +124,21 @@
 
     private string[]? GetCurrentProductVolumes()
     {
-        return Categories.FirstOrDefault(c => c.Name == CategoryName)!.ProductVolumes!;
+        if (string.IsNullOrEmpty(CategoryName) == false)
+            return Categories.FirstOrDefault(c => c.Name == CategoryName)!.ProductVolumes!;
+        
+        return null;
     }
 
     
     private IEnumerable<string> GetPricesForVolumes()
     {
         var vols = GetCurrentProductVolumes();
-        if (vols is null || !_command.Price.HasValue) return [];
+        if (vols is null || !_command.Price.HasValue) 
+            return [];
 
-        var pairs = PriceCalculator.GetPrices(
-            vols,
-            _command.Price!.Value,
-            _command.DiscountPercentage);
+        var pairs = PriceCalculator.GetPrices(vols, _command.Price!.Value, _command.DiscountPercentage);
 
-        // форматируем: прочерк, если Price == null
         return pairs.Select(p => p.Price is null ? "—" : $"{p.Price:N2} ₽");
     }
 
@@ -201,7 +201,7 @@
 
         if (_form.IsValid)
         {
-            _command.ProductCategorySlug = (await CategoryService.GetByName(CategoryName))!.Slug;
+            _command.ProductCategorySlug = (await CategoryService.GetByName(CategoryName!))!.Slug;
             _command.Images = _images.Where(i => !string.IsNullOrWhiteSpace(i)).ToArray(); // Избавляемся от пустых ссылок-строк
 
             var success = await ProductService.Post(_command);
@@ -232,7 +232,7 @@
             _command.DiscountPrice = null;
         }
 
-        StateHasChanged();             // <-- чип-цены обновятся сразу
+        StateHasChanged();
     }
 
 }

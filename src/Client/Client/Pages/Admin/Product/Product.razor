@@ -107,7 +107,7 @@
     private bool IsSearching { get; set; }
 
     [Parameter]
-    public string SelectedCategory { get; set; } = string.Empty;
+    public string? SelectedCategory { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -160,7 +160,9 @@
             DiscountPrice = currentProduct.DiscountPrice,
             Images = currentProduct.Images!,
             Price = currentProduct.Price,
-            ProductCategorySlug = (await CategoryService.GetByName(SelectedCategory))!.Slug
+            ProductCategorySlug  = (await CategoryService.GetByName((SelectedCategory == "Все продукты"
+                ? _categories.First(c => c.Slug == currentProduct.ProductCategorySlug).Name
+                : SelectedCategory)!))!.Slug
         });
 
         await OnInitializedAsync();

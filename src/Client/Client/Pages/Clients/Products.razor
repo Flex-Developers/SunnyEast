@@ -18,8 +18,9 @@
 
 <MudPaper Elevation="25">
     <MudToolBar>
-        <MudSelect T="string" Label="Категория" Style="margin-right: 15px;"
-                   Value="@SelectedCategory" ValueChanged="@(async (string v)=>await OnCategoryChanged(v))">
+        <MudSelect T="string" Label="Категория" Style="margin-right:15px"
+                   Value="@SelectedCategory"
+                   ValueChanged="@(async v => await OnCategoryChanged(v))">
             @foreach (var c in _categories)
             {
                 <MudSelectItem Value="@c.Name">@c.Name</MudSelectItem>
@@ -28,104 +29,121 @@
 
         <MudSpacer/>
 
-        <MudAutocomplete T="ProductResponse" SearchFunc="SearchAsync" ToStringFunc="@(r=>r.Name)"
-                         ResetValueOnEmptyText Immediate Clearable Label="Поиск"
-                         DebounceInterval="300" AdornmentIcon="@Icons.Material.Filled.Search"
+        <MudAutocomplete T="ProductResponse"
+                         SearchFunc="SearchAsync"
+                         ToStringFunc="@(r => r.Name)"
+                         ResetValueOnEmptyText
+                         Immediate Clearable
+                         Label="Поиск"
+                         DebounceInterval="300"
+                         AdornmentIcon="@Icons.Material.Filled.Search"
                          Class="autocomplete"/>
 
         @if (IsSearching)
         {
-            <MudProgressCircular Indeterminate Size="Size.Medium" Class="ml-2"/>
+            <MudProgressCircular Class="ml-2" Indeterminate Size="Size.Medium"/>
         }
     </MudToolBar>
 </MudPaper>
 
-<MudGrid Spacing="3" Justify="Justify.FlexStart" Style="margin-top: 3px; margin-bottom: 50px">
-    @foreach (var product in _products)
-    {
-        <MudItem xs="12" sm="6" md="4" lg="3">
-            <MudCard Class="product-card">
+<MudGrid Spacing="3" Justify="Justify.FlexStart" Style="margin-top:3px;margin-bottom:50px">
+@foreach (var product in _products)
+{
+    <MudItem xs="12" sm="6" md="4" lg="3">
+        <MudCard Class="product-card">
 
-                <MudCarousel Style="height: 290px; border-radius: 10px;"
-                             ItemsSource="@product.Images"
-                             Context="imgContext"
-                             EnableSwipeGesture AutoCycle
-                             BulletsPosition="Position.Bottom"
-                             ShowBullets="false"
-                             ShowArrows="@(product.Images != null && product.Images.Length > 1 && product.Images[0].StartsWith("http"))">
-                    <ItemTemplate><MudCardMedia Image="@imgContext"/></ItemTemplate>
-                </MudCarousel>
+            <!-- Карусель изображений -->
+            <MudCarousel Style="height:290px;border-radius:10px"
+                         ItemsSource="product.Images"
+                         Context="img"
+                         EnableSwipeGesture AutoCycle
+                         BulletsPosition="Position.Bottom"
+                         ShowBullets="false"
+                         ShowArrows="@(product.Images?.Length > 1 && product.Images[0].StartsWith("http"))">
+                <ItemTemplate><MudCardMedia Image="@img"/></ItemTemplate>
+            </MudCarousel>
 
-                <MudCardContent Class="card-content">
-                    <MudText Typo="Typo.body1" Class="product-name">
-                        @(product.Name.Length > 100 ? product.Name[..100] + "…" : product.Name)
-                    </MudText>
+            <MudCardContent Class="card-content">
+                <!-- название -->
+                <MudText Typo="Typo.body1" Class="product-name">
+                    @(product.Name.Length > 100 ? product.Name[..100] + "…" : product.Name)
+                </MudText>
 
-                    <MudChipSet T="string?" SelectionMode="SelectionMode.SingleSelection" SelectedValue="product.SelectedVolume"
-                                SelectedValueChanged="@(v => OnVolumeChanged(product, v))" Ripple="true"
-                                Style="margin-bottom: 20%; margin-left:-5px">
+                <!-- выбор объёма -->
+                <MudChipSet T="string"
+                            SelectionMode="SelectionMode.SingleSelection"
+                            SelectedValue="product.SelectedVolume"
+                            SelectedValueChanged="v => OnVolumeChanged(product, v)"
+                            Ripple
+                            Style="margin-bottom:20%;margin-left:-5px">
+                    @foreach (var vp in product.Prices)
+                    {
+                        <MudChip Text="@vp.Volume" Value="@vp.Volume"
+                                 Color="Color.Primary" Variant="Variant.Text"/>
+                    }
+                </MudChipSet>
 
-                        @foreach (var v in product.ProductVolumes ?? [])
+                @{
+                    var vp = product.Prices
+                                 .FirstOrDefault(x => x.Volume == product.SelectedVolume)
+                             ?? product.Prices.First();  
+                }
+                <div class="discount-container">
+                    <MudText Typo="Typo.body1">Цена:&nbsp;</MudText>
+
+                    @if (vp.Discount is not null)
+                    {
+                        <MudText Typo="Typo.h6" Class="discounted-price">@($"{vp.Discount:N2}")</MudText>
+                        <MudText Typo="Typo.body2" Class="price">@($"{vp.Full:N2}")</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body1" Style="margin-left:5px">@($"{vp.Full:N2}")</MudText>
+                    }
+                </div>
+
+
+                <!-- количество + кнопка «в корзину» -->
+                <div class="buttons-container">
+                    <div class="counter-controls">
+                        <MudIconButton Icon="@Icons.Material.Filled.Remove" Color="Color.Primary"
+                                       Disabled="@(product.Quantity <= 1)"
+                                       OnClick="@(() => DecreaseQuantity(product))"/>
+                        <MudText Typo="Typo.body1" Class="quantity-text">@product.Quantity</MudText>
+                        <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary"
+                                       OnClick="@(() => IncreaseQuantity(product))"/>
+                    </div>
+
+                    <MudButton Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Small"
+                               Disabled="@IsInCart(product)"
+                               OnClick="@(async () => await AddToCart(product))"
+                               Class="button">
+                        @if (IsInCart(product))
                         {
-                            <MudChip Text="@v" Value="@v" Variant="Variant.Text" Color="Color.Primary">@v</MudChip>
-                        }
-                    </MudChipSet>
-
-
-                    <div class="discount-container">
-                        <MudText Typo="Typo.body1">Цена:&nbsp;</MudText>
-
-                        @if (product.DiscountPrice is not null)
-                        {
-                            <MudText Typo="Typo.h6" Class="discounted-price">@($"{product.DiscountPrice:N2}")</MudText>
-                            <MudText Typo="Typo.body2" Class="price">@($"{product.Price:N2}")</MudText>
+                            <MudIcon Icon="@Icons.Material.Filled.Check" Class="cart-icon"/> <span style="margin-left:6px">В корзине</span>
                         }
                         else
                         {
-                            <MudText Typo="Typo.body1" Style="margin-left:5px">@($"{product.Price:N2}")</MudText>
+                            <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Class="cart-icon"/> <span style="margin-left:6px">В корзину</span>
                         }
-                    </div>
+                    </MudButton>
+                </div>
 
-                    <div class="buttons-container">
-                        <div class="counter-controls">
-                            <MudIconButton Icon="@Icons.Material.Filled.Remove" Color="Color.Primary"
-                                           Disabled="@(product.Quantity<=1)" OnClick="@(()=>DecreaseQuantity(product))"/>
-                            <MudText Typo="Typo.body1" Class="quantity-text">@product.Quantity</MudText>
-                            <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary"
-                                           OnClick="@(()=>IncreaseQuantity(product))"/>
-                        </div>
-
-                        <MudButton Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Small" 
-                                   Disabled="@IsInCart(product)" OnClick="@(async () => await AddToCart(product))" Class="button">
-                            @if (IsInCart(product))
-                            {
-                                <MudIcon Icon="@Icons.Material.Filled.Check" Class="cart-icon" />
-                                <span style="margin-left: 6px;">В корзине</span>
-                            }
-                            else
-                            {
-                                <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Class="cart-icon" />
-                                <span style="margin-left: 6px;">В корзину</span>
-                            }
-                        </MudButton>
-                    </div>
-
-                    <div class="description-container">
-                        <MudLink Typo="Typo.body2" OnClick="@(()=>OpenDescriptionAsync(product))">
-                            Читать описание…
-                        </MudLink>
-                    </div>
-                </MudCardContent>
-            </MudCard>
-        </MudItem>
-    }
+                <div class="description-container">
+                    <MudLink Typo="Typo.body2" OnClick="@(() => OpenDescriptionAsync(product))">
+                        Читать описание…
+                    </MudLink>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+}
 </MudGrid>
 
 @code {
     private List<ProductResponse> _products = new();
     private List<ProductCategoryResponse> _categories = new();
     private readonly GetProductsQuery _query = new();
-    private readonly Dictionary<string, decimal> _basePrice = new(); // минимальная (без скидки) цена
     private HashSet<string> _cartKeys = new();
     private bool IsSearching;
 
@@ -148,55 +166,31 @@
 
     private void OnVolumeChanged(ProductResponse p, string? vol)
     {
-        if (string.IsNullOrWhiteSpace(vol) || p.ProductVolumes is null) return;
-
+        if (string.IsNullOrWhiteSpace(vol)) 
+            return;
+        
         p.SelectedVolume = vol;
 
-        var fullRow = PriceCalculator
-                      .GetPrices(p.ProductVolumes, _basePrice[p.Slug], null)
-                      .First(x => x.Volume == vol);
-
-        var fullPrice = fullRow.Price!.Value;
-
-        if (p.DiscountPercentage is > 0)
-        {
-            var discRow = PriceCalculator
-                          .GetPrices(p.ProductVolumes, _basePrice[p.Slug], p.DiscountPercentage)
-                          .First(x => x.Volume == vol);
-
-            p.Price         = fullPrice;      
-            p.DiscountPrice = discRow.Price; 
-        }
-        else
-        {
-            p.Price = fullPrice;
-            p.DiscountPrice = null;
-        }
+        var vp = p.Prices.FirstOrDefault(x => x.Volume == vol);
+        p.Price = vp!.Full ?? 0m;
+        p.DiscountPrice = vp.Discount;
 
         StateHasChanged();
     }
 
     private async Task AddToCart(ProductResponse p)
     {
-        var fullRow = PriceCalculator
-                      .GetPrices(p.ProductVolumes!, _basePrice[p.Slug], null)
-                      .First(x => x.Volume == p.SelectedVolume);
-
-        var fullPrice = fullRow.Price!.Value;
-        var discPrice = p.DiscountPercentage is > 0
-            ? PriceCalculator.GetPrices(p.ProductVolumes!, _basePrice[p.Slug], p.DiscountPercentage)
-                             .First(x => x.Volume == p.SelectedVolume).Price
-            : null;
+        var volumePrice = p.Prices.First(x => x.Volume == p.SelectedVolume);
 
         var dto = new CartItemDto
         {
-            ProductSlug    = p.Slug,
-            ProductName    = p.Name,
-            SelectedVolume = p.SelectedVolume,
-            Quantity       = p.Quantity,
-            Price          = fullPrice,
-            DiscountPrice  = discPrice,
-            ImageUrl       = p.Images?.FirstOrDefault()
+            ProductSlug = p.Slug,
+            ProductName = p.Name,
+            SelectedVolume = volumePrice.Volume,
+            Quantity = p.Quantity,
+            Price = volumePrice.Full!.Value,
+            DiscountPrice = volumePrice.Discount,
+            ImageUrl = p.Images?.FirstOrDefault()
         };
 
         await CartService.CreateOrderAsync(dto);
@@ -242,9 +236,7 @@
         {
             if (p.ProductVolumes?.Length > 0)
                 p.SelectedVolume = p.ProductVolumes[0];
-
-            _basePrice[p.Slug] = p.Price;                   // запоминаем минимальную
-
+            
             OnVolumeChanged(p, p.SelectedVolume);           // выставляем актуальную цену
         }
 
@@ -295,7 +287,7 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        gap: 0px;
+        gap: 0;
     }
 
     .product-name {
@@ -336,6 +328,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        margin-bottom: 10px;
     }
 
     .buttons-container {
