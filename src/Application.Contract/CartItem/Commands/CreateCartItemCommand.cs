@@ -1,6 +1,6 @@
-﻿namespace Application.Contract.Order.Commands;
+﻿namespace Application.Contract.CartItem.Commands;
 
-public class CreateOrderCommand : IRequest<string>
+public class CreateCartItemCommand : IRequest<string>
 {
     public required string ShopOrderSlug { get; set; }
     public int Quantity { get; set; } = 1;
