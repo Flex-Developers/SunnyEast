@@ -116,14 +116,18 @@
     
     private string[]? GetCurrentProductVolumes()
     {
-        return Categories.FirstOrDefault(c => c.Name == CategoryName)!.ProductVolumes!;
+        if (!string.IsNullOrEmpty(CategoryName))
+            return Categories.FirstOrDefault(c => c.Name == CategoryName)!.ProductVolumes!;
+        
+        return null;
     }
 
     
     private IEnumerable<string> GetPricesForVolumes()
     {
         var vols = GetCurrentProductVolumes();
-        if (vols is null || !UpdateCommand.Price.HasValue) return [];
+        if (vols is null || !UpdateCommand.Price.HasValue) 
+            return [];
 
         var pairs = PriceCalculator.GetPrices(vols, UpdateCommand.Price!.Value, UpdateCommand.DiscountPercentage);
 

@@ -124,7 +124,7 @@
 
     private string[]? GetCurrentProductVolumes()
     {
-        if (string.IsNullOrEmpty(CategoryName) == false)
+        if (!string.IsNullOrEmpty(CategoryName))
             return Categories.FirstOrDefault(c => c.Name == CategoryName)!.ProductVolumes!;
         
         return null;
