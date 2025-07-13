@@ -1,6 +1,7 @@
 using Application.Contract.Order.Commands;
 using Application.Contract.Order.Queries;
 using Application.Contract.Order.Responses;
+using Application.Contract.Enums;
 using Client.Infrastructure.Services.Cart.Models;
 using Client.Infrastructure.Services.HttpClient;
 using System.Linq;
@@ -39,5 +40,11 @@ public class OrderService(IHttpClientService httpClient) : IOrderService
     {
         var res = await httpClient.GetFromJsonAsync<OrderResponse>($"/api/order/GetOrder?Slug={slug}");
         return res.Success ? res.Response : null;
+    }
+
+    public async Task UpdateStatusAsync(string slug, OrderStatus status)
+    {
+        var command = new UpdateOrderStatusCommand { Slug = slug, Status = status };
+        await httpClient.PutAsJsonAsync("/api/order", command);
     }
 }

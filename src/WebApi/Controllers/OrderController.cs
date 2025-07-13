@@ -1,5 +1,6 @@
 using Application.Contract.Order.Commands;
 using Application.Contract.Order.Queries;
+using Application.Contract.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,5 +28,13 @@ public class OrderController : ApiControllerBase
     {
         var response = await Mediator.Send(query);
         return Ok(response);
+    }
+
+    [HttpPut]
+    [Authorize(Roles = ApplicationRoles.Salesman + "," + ApplicationRoles.Administrator)]
+    public async Task<IActionResult> UpdateOrderStatus([FromBody] UpdateOrderStatusCommand command)
+    {
+        await Mediator.Send(command);
+        return Ok();
     }
 }
