@@ -20,7 +20,9 @@ public static class DependencyInitializer
             .AddScoped<ICartService, CartService>()
             .AddScoped<IPriceCalculatorService, PriceCalculatorService>()
             .AddScoped<IHttpClientService, HttpClientService>()
-            .AddScoped<IValidationService, ValidationService>();
+            .AddScoped<IValidationService, ValidationService>()
+            .AddScoped<Shop.IShopService, Shop.ShopService>()
+            .AddScoped<Order.IOrderService, Order.OrderService>();
 
     }
 }
