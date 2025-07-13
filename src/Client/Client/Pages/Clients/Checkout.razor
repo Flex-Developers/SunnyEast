@@ -1,0 +1,70 @@
+@page "/checkout"
+@using Client.Infrastructure.Services.Cart
+@using Client.Infrastructure.Services.Cart.Models
+@using Client.Infrastructure.Services.Order
+@using Client.Infrastructure.Services.Shop
+@using Application.Contract.Shops.Responses
+@inject ICartService CartService
+@inject IOrderService OrderService
+@inject IShopService ShopService
+@inject NavigationManager Navigation
+@inject MudBlazor.ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
+    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">Оформление заказа</MudText>
+
+    <MudSelect T="string" Label="Магазин" @bind-Value="_shop" Class="mb-4">
+        @foreach (var s in _shops)
+        {
+            <MudSelectItem Value="@s.Slug">@s.Address</MudSelectItem>
+        }
+    </MudSelect>
+
+    <MudTable Items="_items" Dense="true">
+        <HeaderContent>
+            <MudTh>Товар</MudTh>
+            <MudTh>Кол-во</MudTh>
+            <MudTh Class="text-right">Сумма</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.ProductName</MudTd>
+            <MudTd>@context.Quantity</MudTd>
+            <MudTd Class="text-right">@((context.DiscountPrice ?? context.Price) * context.Quantity) ₽</MudTd>
+        </RowTemplate>
+    </MudTable>
+
+    <MudDivider Class="my-2" />
+    <MudText Typo="Typo.h6" Align="Align.Right">Итого: @_total ₽</MudText>
+
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" Class="mt-4"
+               Disabled="@(_items.Count==0 || string.IsNullOrEmpty(_shop))" OnClick="CreateOrder">
+        Оформить
+    </MudButton>
+</MudContainer>
+
+@code {
+    private List<CartItemDto> _items = new();
+    private List<ShopResponse> _shops = new();
+    private string? _shop;
+    private decimal _total;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var cart = await CartService.GetCartAsync();
+        _items = cart?.Orders ?? [];
+        _total = _items.Sum(i => i.Quantity * (i.DiscountPrice ?? i.Price));
+        _shops = await ShopService.GetShopsAsync();
+    }
+
+    private async Task CreateOrder()
+    {
+        if (string.IsNullOrEmpty(_shop)) return;
+        var slug = await OrderService.CreateAsync(_shop, _items);
+        if (slug != null)
+        {
+            await CartService.ClearAsync();
+            Snackbar.Add("Заказ оформлен", MudBlazor.Severity.Success);
+            Navigation.NavigateTo("/orders");
+        }
+    }
+}
