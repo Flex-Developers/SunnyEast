@@ -19,11 +19,11 @@ public class HttpClientService(
 {
     private readonly string _baseUrl = configuration[Config.ApiBaseUrl]!;
     
-    public string? ExceptionMessage { get; private set; } // Оставил если вдруг пригодится в будущем
+    public string? ExceptionMessage { get; private set; } 
 
     public async Task<ServerResponse> GetAsync(string url)
     {
-        Console.WriteLine(_baseUrl + "fadfasdfsadfad");
+        Console.WriteLine($"This is base url: {_baseUrl}");
         var response = await SendAsync(new HttpRequestMessage(HttpMethod.Get, _baseUrl + url));
         return new ServerResponse
         {
@@ -58,18 +58,38 @@ public class HttpClientService(
     public async Task<ServerResponse<T>> PostAsJsonAsync<T>(string url, object content)
     {
         var response = await SendAsync(new HttpRequestMessage(HttpMethod.Post, _baseUrl + url)
-            { Content = JsonContent.Create(content) });
+        {
+            Content = JsonContent.Create(content)
+        });
+
         T? resultContent = default;
         if (response?.IsSuccessStatusCode == true)
         {
-            resultContent = await response.Content.ReadFromJsonAsync<T>();
+            var mediaType = response.Content.Headers.ContentType?.MediaType;
+            try
+            {
+                if (typeof(T) == typeof(string) && mediaType is not ("application/json" or "text/json"))
+                {
+                    var text = await response.Content.ReadAsStringAsync();
+                    resultContent = (T)(object)text;
+                }
+                else
+                {
+                    resultContent = await response.Content.ReadFromJsonAsync<T>();
+                }
+            }
+            catch (Exception ex)
+            {
+                snackbar.Add("Ошибка десериализации ответа сервера.", Severity.Error);
+                Console.WriteLine(ex);
+            }
         }
 
         return new ServerResponse<T>
         {
-            Success = response?.IsSuccessStatusCode ?? false,
+            Success    = response?.IsSuccessStatusCode ?? false,
             StatusCode = response?.StatusCode,
-            Response = resultContent
+            Response   = resultContent
         };
     }
 
@@ -114,7 +134,7 @@ public class HttpClientService(
         }
         catch (Exception e)
         {
-            snackbar.Add("Проблема соеденения с сервером. Попробуйте попытку позже.", Severity.Error);
+            snackbar.Add("Проблема соединения с сервером. Попробуйте попытку позже.", Severity.Error);
             Console.WriteLine(e);
         }
 

@@ -19,12 +19,12 @@ public class UpdateOrderStatusCommandHandler(IApplicationDbContext context)
         if (order == null)
             throw new NotFoundException($"Order with slug {request.Slug} not found.");
 
-        order.Status = request.Status;
+        order.Status = (OrderStatus)(int) request.Status;
         if (order.OrderItems is not null)
         {
             foreach (var item in order.OrderItems)
             {
-                item.Status = request.Status;
+                item.Status = (OrderStatus)(int) request.Status;
             }
         }
 

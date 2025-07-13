@@ -60,8 +60,11 @@
 
     private async Task CreateOrder()
     {
-        if (string.IsNullOrEmpty(_shop)) return;
+        if (string.IsNullOrEmpty(_shop)) 
+            return;
+        
         var slug = await OrderService.CreateAsync(_shop, _items);
+        
         if (slug != null)
         {
             await CartService.ClearAsync();
