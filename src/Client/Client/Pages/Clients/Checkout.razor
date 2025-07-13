@@ -4,6 +4,7 @@
 @using Client.Infrastructure.Services.Order
 @using Client.Infrastructure.Services.Shop
 @using Application.Contract.Shops.Responses
+@using System.Linq
 @inject ICartService CartService
 @inject IOrderService OrderService
 @inject IShopService ShopService
@@ -54,6 +55,7 @@
         _items = cart?.Orders ?? [];
         _total = _items.Sum(i => i.Quantity * (i.DiscountPrice ?? i.Price));
         _shops = await ShopService.GetShopsAsync();
+        _shop ??= _shops.FirstOrDefault()?.Slug;
     }
 
     private async Task CreateOrder()
