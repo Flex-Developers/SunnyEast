@@ -5,6 +5,7 @@ using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using Application.Contract.Enums;
 
 namespace Application.Features.Orders.Queries;
 
@@ -18,7 +19,14 @@ public class GetOrdersQueryHandler(IApplicationDbContext context, IMapper mapper
             query = query.Where(o => o.ShopSlug == request.ShopSlug);
 
         var orders = await query
-            .Select(o => mapper.Map<OrderResponse>(o))
+            .Select(o => new OrderResponse
+            {
+                Slug = o.Slug,
+                OrderNumber = o.OrderNumber,
+                ShopSlug = o.ShopSlug!,
+                Status = (OrderStatus)o.Status,
+                Sum = o.OrderItems!.Sum(i => i.SummaryPrice)
+            })
             .ToListAsync(cancellationToken);
 
         return orders;

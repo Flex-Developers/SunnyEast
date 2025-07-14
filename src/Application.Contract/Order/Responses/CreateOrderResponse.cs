@@ -1,3 +1,7 @@
 namespace Application.Contract.Order.Responses;
 
-public record CreateOrderResponse(string Slug);
+public class CreateOrderResponse
+{
+    public required string Slug { get; set; }
+    public required string OrderNumber { get; set; }
+}

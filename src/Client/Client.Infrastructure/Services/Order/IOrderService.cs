@@ -8,8 +8,8 @@ namespace Client.Infrastructure.Services.Order;
 
 public interface IOrderService
 {
-    Task<string?> CreateAsync(string shopSlug, IEnumerable<CartItemDto> items);
+    Task<CreateOrderResponse?> CreateAsync(string shopSlug, IEnumerable<CartItemDto> items);
     Task<List<OrderResponse>> GetAsync(string shopSlug);
     Task<OrderResponse?> GetAsyncBySlug(string slug);
-    Task UpdateStatusAsync(string slug, OrderStatus status);
+    Task UpdateStatusAsync(string slug, OrderStatus status, string? comment =  null);
 }

@@ -36,6 +36,11 @@ a, .btn-link {
     outline: 1px solid red;
 }
 
+.mud-table .mud-button.mud-size-small{
+    padding-inline:14px;
+    min-width:92px;          
+}
+
 .validation-message {
     color: red;
 }

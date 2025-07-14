@@ -1,11 +1,12 @@
 @using Application.Contract.Enums
+@using MudBlazor
 
-<MudChip T="OrderStatus"
-         Color="@ChipColor"
+<MudChip Color="@ChipColor"
+         T="OrderStatus"
          Variant="Variant.Filled"
          Size="Size.Small"
          Class="text-uppercase">
-    @Status
+    @StatusRu
 </MudChip>
 
 @code {
@@ -13,10 +14,20 @@
 
     private Color ChipColor => Status switch
     {
-        OrderStatus.Opened => Color.Info,
-        OrderStatus.Submited => Color.Warning,
+        OrderStatus.Submitted => Color.Info,
+        OrderStatus.Ready => Color.Warning,
         OrderStatus.Issued => Color.Success,
+        OrderStatus.Canceled => Color.Error,
         _ => Color.Default
+    };
+
+    private string StatusRu => Status switch
+    {
+        OrderStatus.Submitted => "Оформлен",
+        OrderStatus.Ready => "Готов",
+        OrderStatus.Issued => "Выдан",
+        OrderStatus.Canceled => "Отменен",
+        _ => Status.ToString()
     };
 
 }

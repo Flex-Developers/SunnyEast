@@ -1,14 +1,15 @@
 @page "/admin/orders"
 @attribute [Authorize(Roles = "Administrator,Salesman")]
-
 @using Application.Contract.Enums
 @using Application.Contract.Order.Responses
 @using Client.Components.Common
+@using Client.Components.Dialogs
 @using Client.Infrastructure.Services.Order
 @using Microsoft.AspNetCore.Authorization
 @using Severity = MudBlazor.Severity
-@inject IOrderService OrderService
 @inject ISnackbar Snackbar
+@inject IDialogService Dialogs
+@inject IOrderService OrderService
 
 <MudPaper Class="mx-auto mt-4 pa-4" Style="max-width:1280px">
 
@@ -16,9 +17,12 @@
         Список заказов
     </MudText>
 
-    <MudTable Items="_orders" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0"
-              Dense="true" Bordered="true" FixedHeader="true"
-              Filterable="true" Class="border rounded-lg">
+    <MudTable Items="_orders"
+              Hover="true" Dense="true"
+              Bordered="true" FixedHeader="true"
+              Breakpoint="Breakpoint.Sm"
+              Filter="FilterFunc"
+              Class="border rounded-lg">
 
         <ToolBarContent>
             <MudTextField @bind-Value="_search"
@@ -26,31 +30,58 @@
                           Adornment="Adornment.Start"
                           AdornmentIcon="@Icons.Material.Filled.Search"
                           Immediate="true"
-                          Class="w-100" />
+                          Class="w-100"/>
         </ToolBarContent>
 
         <HeaderContent>
-            <MudTh SortBy="Slug">Номер</MudTh>
+            <MudTh SortBy="OrderNumber">Номер</MudTh>
             <MudTh SortBy="ShopSlug">Магазин</MudTh>
             <MudTh SortBy="Status">Статус</MudTh>
-            <MudTh Class="text-right" SortBy="Sum">Сумма</MudTh>
-            <MudTh />
+            <MudTh SortBy="Sum" Class="text-right">Сумма</MudTh>
+            <MudTh Class="text-center" Style="width:220px">Действия</MudTh>
         </HeaderContent>
 
         <RowTemplate>
-            <MudTd DataLabel="№ заказа">@context.Slug</MudTd>
+            <MudTd DataLabel="Номер">@context.OrderNumber</MudTd>
             <MudTd DataLabel="Магазин">@context.ShopSlug</MudTd>
-            <MudTd DataLabel="Статус"><OrderStatusChip Status="@context.Status" /></MudTd>
-            <MudTd DataLabel="Сумма" Class="text-right">@context.Sum.ToString("N2") ₽</MudTd>
-            <MudTd>
-                <MudIconButton Icon="@Icons.Material.Filled.DoneAll"
-                               Disabled="@(context.Status == OrderStatus.Issued)"
-                               Color="Color.Primary"
-                               Size="Size.Small"
-                               Title="Выдать"
-                               OnClick="@(() => Issue(context))" />
+            <MudTd DataLabel="Статус">
+                <OrderStatusChip Status="@context.Status"/>
+            </MudTd>
+            <MudTd DataLabel="Сумма" Class="text-right">@($"{context.Sum:N2} ₽")</MudTd>
+
+            <MudTd DataLabel="Действия" Class="text-center" Style="width:220px">
+
+                @if (context.Status == OrderStatus.Submitted)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Info" Size="Size.Small"
+                               OnClick="@(() => ChangeStatus(context, OrderStatus.Ready))">
+                        Готов
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                               OnClick="@(() => AskCancel(context))">
+                        Отменить
+                    </MudButton>
+                }
+                else if (context.Status == OrderStatus.Ready)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small"
+                               OnClick="@(() => ChangeStatus(context, OrderStatus.Issued))">
+                        Выдать
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                               OnClick="@(() => AskCancel(context))">
+                        Отменить
+                    </MudButton>
+                }
+                else
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Dark">—</MudText>
+                }
             </MudTd>
         </RowTemplate>
+
 
     </MudTable>
 </MudPaper>
@@ -62,15 +93,37 @@
     protected override async Task OnInitializedAsync()
         => _orders = await OrderService.GetAsync(string.Empty);
 
-    private async Task Issue(OrderResponse order)
+    /* ---------- helpers ---------- */
+
+    private bool FilterFunc(OrderResponse o) =>
+        string.IsNullOrWhiteSpace(_search)
+        || o.OrderNumber.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || o.ShopSlug.Contains(_search, StringComparison.OrdinalIgnoreCase);
+
+    private static string ToRu(OrderStatus s) => s switch
     {
-        await OrderService.UpdateStatusAsync(order.Slug, OrderStatus.Issued);
-        order.Status = OrderStatus.Issued;
-        Snackbar.Add($"Заказ {order.Slug} выдан", Severity.Success);
+        OrderStatus.Submitted => "Оформлен",
+        OrderStatus.Ready => "Готов",
+        OrderStatus.Issued => "Выдан",
+        OrderStatus.Canceled => "Отменён",
+        _ => s.ToString()
+    };
+
+    private async Task ChangeStatus(OrderResponse order, OrderStatus to, string? comment = null)
+    {
+        await OrderService.UpdateStatusAsync(order.Slug, to, comment);
+        order.Status = to;
+        Snackbar.Add($"Заказ {order.OrderNumber} → {ToRu(to)}", Severity.Success);
+        StateHasChanged();
     }
 
-    private bool FilterFunc(OrderResponse order)
-        => string.IsNullOrWhiteSpace(_search)
-           || order.Slug.Contains(_search, StringComparison.OrdinalIgnoreCase)
-           || order.ShopSlug.Contains(_search, StringComparison.OrdinalIgnoreCase);
+    private async Task AskCancel(OrderResponse order)
+    {
+        var prm = new DialogParameters { ["Name"] = $"заказ {order.OrderNumber}" };
+        var dlg = await Dialogs.ShowAsync<DeleteConfirmation>("Отмена заказа", prm);
+        var res = await dlg.Result;
+        if (!res!.Canceled)
+            await ChangeStatus(order, OrderStatus.Canceled);
+    }
+
 }

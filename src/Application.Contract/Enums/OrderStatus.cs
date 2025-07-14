@@ -3,6 +3,8 @@
 public enum OrderStatus
 {
     Opened,
-    Submited,
-    Issued
+    Submitted,
+    Ready,
+    Issued,
+    Canceled
 }

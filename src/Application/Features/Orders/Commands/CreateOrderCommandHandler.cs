@@ -2,6 +2,7 @@ using Application.Common.Exceptions;
 using Application.Common.Interfaces.Contexts;
 using Application.Common.Interfaces.Services;
 using Application.Contract.Order.Commands;
+using Application.Contract.Order.Responses;
 using Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -12,9 +13,9 @@ public class CreateOrderCommandHandler(
     IApplicationDbContext context,
     ISlugService slugService,
     ICurrentUserService currentUserService)
-    : IRequestHandler<CreateOrderCommand, string>
+    : IRequestHandler<CreateOrderCommand, CreateOrderResponse>
 {
-    public async Task<string> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
+    public async Task<CreateOrderResponse> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
     {
         var userName = currentUserService.GetUserName() ?? throw new ForbiddenException();
 
@@ -31,8 +32,9 @@ public class CreateOrderCommandHandler(
             ShopId = shop.Id,
             ShopSlug = shop.Slug,
             CustomerId = user.Id,
-            Status = OrderStatus.Submited,
-            OrderItems = new List<Domain.Entities.OrderItem>()
+            Status = OrderStatus.Submitted,
+            OrderItems = new List<Domain.Entities.OrderItem>(),
+            OrderNumber = await GenerateOrderNumberAsync(cancellationToken)
         };
 
         foreach (var item in request.Items)
@@ -50,12 +52,29 @@ public class CreateOrderCommandHandler(
                 ProductSlug = product.Slug,
                 Quantity = item.Quantity,
                 SummaryPrice = summary,
-                Status = OrderStatus.Submited
+                Status = OrderStatus.Submitted
             });
         }
 
         await context.Orders.AddAsync(order, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
-        return order.Slug;
+        return new CreateOrderResponse
+        {
+            Slug = order.Slug,
+            OrderNumber = order.OrderNumber,
+        };
     }
+    
+    private async Task<string> GenerateOrderNumberAsync(CancellationToken ct)
+    {
+        string number;
+        do
+        {
+            number = $"{DateTime.UtcNow:yyyy-MM-dd}-{Random.Shared.Next(0, 10000):D4}";
+        }
+        while (await context.Orders.AnyAsync(o => o.OrderNumber == number, ct));
+
+        return number;
+    }
+
 }

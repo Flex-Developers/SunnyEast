@@ -10,7 +10,7 @@ namespace Client.Infrastructure.Services.Order;
 
 public class OrderService(IHttpClientService httpClient, ISnackbar snackbar) : IOrderService
 {
-    public async Task<string?> CreateAsync(string shopSlug, IEnumerable<CartItemDto> items)
+    public async Task<CreateOrderResponse?> CreateAsync(string shopSlug, IEnumerable<CartItemDto> items)
     {
         var command = new CreateOrderCommand
         {
@@ -31,7 +31,7 @@ public class OrderService(IHttpClientService httpClient, ISnackbar snackbar) : I
             return null;
         }
 
-        return res.Response?.Slug;
+        return res.Response;
     }
 
 
@@ -50,9 +50,10 @@ public class OrderService(IHttpClientService httpClient, ISnackbar snackbar) : I
         return res.Success ? res.Response : null;
     }
 
-    public async Task UpdateStatusAsync(string slug, OrderStatus status)
+    public async Task UpdateStatusAsync(string slug, OrderStatus to, string? comment = null)
     {
-        var command = new UpdateOrderStatusCommand { Slug = slug, Status = status };
-        await httpClient.PutAsJsonAsync("/api/order", command);
+        var cmd = new ChangeOrderStatusCommand { Slug = slug, Status = to, Comment = comment };
+        await httpClient.PutAsJsonAsync("/api/order/change-status", cmd);
     }
+
 }

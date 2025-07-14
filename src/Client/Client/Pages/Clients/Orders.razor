@@ -2,29 +2,64 @@
 @using Client.Infrastructure.Services.Order
 @inject IOrderService OrderService
 @using Application.Contract.Order.Responses
+@using Client.Components.Common
 
-<MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
-    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">Мои заказы</MudText>
-    <MudTable Items="_orders" Dense="true">
-        <HeaderContent>
-            <MudTh>Номер</MudTh>
-            <MudTh>Статус</MudTh>
-            <MudTh Class="text-right">Сумма</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd>@context.Slug</MudTd>
-            <MudTd>@context.Status</MudTd>
-            <MudTd Class="text-right">@context.Sum ₽</MudTd>
-        </RowTemplate>
-    </MudTable>
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-6">
+
+    <!-- заголовок страницы -->
+    <MudText Typo="Typo.h4"
+             Align="Align.Center"
+             Class="mb-4 font-weight-bold">
+        Мои заказы
+    </MudText>
+
+    <!-- «карточка» с таблицей ------------------------------------------>
+    <MudPaper Class="pa-0">
+
+        <MudTable Items="_orders"
+                  Dense="true"
+                  Hover="true"
+                  FixedHeader="true"
+                  Elevation="0">
+
+            <!-- Заголовок колонок -->
+            <HeaderContent>
+                <MudTh>Номер</MudTh>
+                <MudTh>Статус</MudTh>
+                <MudTh Class="text-right">Сумма</MudTh>
+            </HeaderContent>
+
+            <!-- Строки данных -->
+            <RowTemplate>
+                <MudTd DataLabel="Номер">@context.OrderNumber</MudTd>
+
+                <MudTd DataLabel="Статус">
+                    <OrderStatusChip Status="@context.Status" />
+                </MudTd>
+
+                <MudTd DataLabel="Сумма" Class="text-right">
+                    @($"{context.Sum:N2} ₽")
+                </MudTd>
+            </RowTemplate>
+
+            <!-- Пустое состояние -->
+            <NoRecordsContent>
+                <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="my-6">
+                    У вас пока нет оформленных заказов.
+                </MudText>
+            </NoRecordsContent>
+
+        </MudTable>
+
+    </MudPaper>
 </MudContainer>
+
 
 @code {
     private List<OrderResponse> _orders = new();
 
     protected override async Task OnInitializedAsync()
     {
-        // In this demo we just get orders without shop filter
         _orders = await OrderService.GetAsync(string.Empty);
     }
 }

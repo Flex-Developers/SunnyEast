@@ -14,8 +14,9 @@ public class OrderController : ApiControllerBase
     [ProducesResponseType(typeof(CreateOrderResponse), StatusCodes.Status201Created)]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderCommand command)
     {
-        var slug = await Mediator.Send(command);
-        return CreatedAtAction(nameof(GetOrder), new { slug }, new CreateOrderResponse(slug));
+        var created = await Mediator.Send(command);
+
+        return CreatedAtAction(nameof(GetOrder), routeValues: new { slug = created.Slug }, value: created);
     }
 
 
@@ -33,11 +34,12 @@ public class OrderController : ApiControllerBase
         return Ok(response);
     }
 
-    [HttpPut]
+    [HttpPut("change-status")]
     [Authorize(Roles = ApplicationRoles.Salesman + "," + ApplicationRoles.Administrator)]
-    public async Task<IActionResult> UpdateOrderStatus([FromBody] UpdateOrderStatusCommand command)
+    public async Task<IActionResult> ChangeStatus([FromBody] ChangeOrderStatusCommand cmd)
     {
-        await Mediator.Send(command);
-        return Ok();
+        await Mediator.Send(cmd);
+        return NoContent();
     }
+
 }
