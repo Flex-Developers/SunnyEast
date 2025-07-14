@@ -1,49 +1,76 @@
 @page "/admin/orders"
+@attribute [Authorize(Roles = "Administrator,Salesman")]
+
 @using Application.Contract.Enums
 @using Application.Contract.Order.Responses
+@using Client.Components.Common
 @using Client.Infrastructure.Services.Order
-@using MudBlazor
+@using Microsoft.AspNetCore.Authorization
 @using Severity = MudBlazor.Severity
 @inject IOrderService OrderService
 @inject ISnackbar Snackbar
 
-<MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
-    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">Заказы</MudText>
-    <MudTable Items="_orders" Hover="true" Dense="true">
+<MudPaper Class="mx-auto mt-4 pa-4" Style="max-width:1280px">
+
+    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">
+        Список заказов
+    </MudText>
+
+    <MudTable Items="_orders" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0"
+              Dense="true" Bordered="true" FixedHeader="true"
+              Filterable="true" Class="border rounded-lg">
+
+        <ToolBarContent>
+            <MudTextField @bind-Value="_search"
+                          Placeholder="Поиск по № заказа / магазину…"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true"
+                          Class="w-100" />
+        </ToolBarContent>
+
         <HeaderContent>
-            <MudTh>Номер</MudTh>
-            <MudTh>Магазин</MudTh>
-            <MudTh>Статус</MudTh>
-            <MudTh Class="text-right">Сумма</MudTh>
-            <MudTh></MudTh>
+            <MudTh SortBy="Slug">Номер</MudTh>
+            <MudTh SortBy="ShopSlug">Магазин</MudTh>
+            <MudTh SortBy="Status">Статус</MudTh>
+            <MudTh Class="text-right" SortBy="Sum">Сумма</MudTh>
+            <MudTh />
         </HeaderContent>
+
         <RowTemplate>
-            <MudTd>@context.Slug</MudTd>
-            <MudTd>@context.ShopSlug</MudTd>
-            <MudTd>@context.Status</MudTd>
-            <MudTd Class="text-right">@context.Sum ₽</MudTd>
+            <MudTd DataLabel="№ заказа">@context.Slug</MudTd>
+            <MudTd DataLabel="Магазин">@context.ShopSlug</MudTd>
+            <MudTd DataLabel="Статус"><OrderStatusChip Status="@context.Status" /></MudTd>
+            <MudTd DataLabel="Сумма" Class="text-right">@context.Sum.ToString("N2") ₽</MudTd>
             <MudTd>
-                @if (context.Status != OrderStatus.Issued)
-                {
-                    <MudButton Size="Size.Small" Color="Color.Primary" OnClick="() => UpdateAsync(context)">Выдать</MudButton>
-                }
+                <MudIconButton Icon="@Icons.Material.Filled.DoneAll"
+                               Disabled="@(context.Status == OrderStatus.Issued)"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               Title="Выдать"
+                               OnClick="@(() => Issue(context))" />
             </MudTd>
         </RowTemplate>
+
     </MudTable>
-</MudContainer>
+</MudPaper>
 
 @code {
-    private List<OrderResponse> _orders = new();
+    private List<OrderResponse> _orders = [];
+    private string? _search;
 
     protected override async Task OnInitializedAsync()
-    {
-        _orders = await OrderService.GetAsync(string.Empty);
-    }
+        => _orders = await OrderService.GetAsync(string.Empty);
 
-    private async Task UpdateAsync(OrderResponse order)
+    private async Task Issue(OrderResponse order)
     {
         await OrderService.UpdateStatusAsync(order.Slug, OrderStatus.Issued);
         order.Status = OrderStatus.Issued;
-        Snackbar.Add("Статус обновлен", Severity.Success);
+        Snackbar.Add($"Заказ {order.Slug} выдан", Severity.Success);
     }
+
+    private bool FilterFunc(OrderResponse order)
+        => string.IsNullOrWhiteSpace(_search)
+           || order.Slug.Contains(_search, StringComparison.OrdinalIgnoreCase)
+           || order.ShopSlug.Contains(_search, StringComparison.OrdinalIgnoreCase);
 }

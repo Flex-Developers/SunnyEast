@@ -1,6 +1,7 @@
 using Application.Contract.Order.Commands;
 using Application.Contract.Order.Queries;
 using Application.Contract.Identity;
+using Application.Contract.Order.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,11 +11,13 @@ namespace WebApi.Controllers;
 public class OrderController : ApiControllerBase
 {
     [HttpPost]
+    [ProducesResponseType(typeof(CreateOrderResponse), StatusCodes.Status201Created)]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderCommand command)
     {
-        var response = await Mediator.Send(command);
-        return Ok(response);
+        var slug = await Mediator.Send(command);
+        return CreatedAtAction(nameof(GetOrder), new { slug }, new CreateOrderResponse(slug));
     }
+
 
     [HttpGet(nameof(GetOrder))]
     public async Task<IActionResult> GetOrder([FromQuery] GetOrderQuery query)

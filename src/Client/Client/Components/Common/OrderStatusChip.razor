@@ -1,0 +1,22 @@
+@using Application.Contract.Enums
+
+<MudChip T="OrderStatus"
+         Color="@ChipColor"
+         Variant="Variant.Filled"
+         Size="Size.Small"
+         Class="text-uppercase">
+    @Status
+</MudChip>
+
+@code {
+    [Parameter, EditorRequired] public OrderStatus Status { get; set; }
+
+    private Color ChipColor => Status switch
+    {
+        OrderStatus.Opened => Color.Info,
+        OrderStatus.Submited => Color.Warning,
+        OrderStatus.Issued => Color.Success,
+        _ => Color.Default
+    };
+
+}

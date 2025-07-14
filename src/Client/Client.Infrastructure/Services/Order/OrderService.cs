@@ -4,11 +4,11 @@ using Application.Contract.Order.Responses;
 using Application.Contract.Enums;
 using Client.Infrastructure.Services.Cart.Models;
 using Client.Infrastructure.Services.HttpClient;
-using System.Linq;
+using MudBlazor;
 
 namespace Client.Infrastructure.Services.Order;
 
-public class OrderService(IHttpClientService httpClient) : IOrderService
+public class OrderService(IHttpClientService httpClient, ISnackbar snackbar) : IOrderService
 {
     public async Task<string?> CreateAsync(string shopSlug, IEnumerable<CartItemDto> items)
     {
@@ -23,9 +23,17 @@ public class OrderService(IHttpClientService httpClient) : IOrderService
             }).ToList()
         };
 
-        var result = await httpClient.PostAsJsonAsync<string>("/api/order", command);
-        return result.Success ? result.Response : null;
+        var res = await httpClient.PostAsJsonAsync<CreateOrderResponse>("/api/order", command);
+
+        if (!res.Success)
+        {
+            snackbar.Add(httpClient.ExceptionMessage ?? "Ошибка оформления заказа.", Severity.Error);
+            return null;
+        }
+
+        return res.Response?.Slug;
     }
+
 
     public async Task<List<OrderResponse>> GetAsync(string shopSlug)
     {

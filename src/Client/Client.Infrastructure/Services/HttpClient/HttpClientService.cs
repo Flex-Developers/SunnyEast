@@ -4,9 +4,11 @@ using System.Net.Http.Json;
 using Application.Contract.User.Responses;
 using Blazored.LocalStorage;
 using Client.Infrastructure.Consts;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Configuration;
 using MudBlazor;
 using Newtonsoft.Json;
+using System.Text.Json;  
 
 namespace Client.Infrastructure.Services.HttpClient;
 
@@ -14,11 +16,12 @@ public class HttpClientService(
     IHttpClientFactory httpClientFactory,
     ISnackbar snackbar,
     ILocalStorageService localStorageService,
-    IConfiguration configuration)
+    IConfiguration configuration,
+    NavigationManager navigationManager)
     : IHttpClientService
 {
     private readonly string _baseUrl = configuration[Config.ApiBaseUrl]!;
-    
+
     public string? ExceptionMessage { get; private set; } 
 
     public async Task<ServerResponse> GetAsync(string url)
@@ -39,7 +42,7 @@ public class HttpClientService(
         {
             Success = response?.IsSuccessStatusCode ?? false,
             StatusCode = response?.StatusCode,
-            Response = response?.IsSuccessStatusCode == true ? await response.Content.ReadFromJsonAsync<T>() : default
+            Response = response?.IsSuccessStatusCode == true ? await response.Content.ReadFromJsonAsync<T>(HttpJsonOptions.Instance) : default
         };
     }
 
@@ -75,7 +78,7 @@ public class HttpClientService(
                 }
                 else
                 {
-                    resultContent = await response.Content.ReadFromJsonAsync<T>();
+                    resultContent = await response.Content.ReadFromJsonAsync<T>(HttpJsonOptions.Instance);
                 }
             }
             catch (Exception ex)
@@ -118,23 +121,33 @@ public class HttpClientService(
     {
         try
         {
-            var token = await localStorageService.GetItemAsync<JwtTokenResponse>("authToken");
+            var token  = await localStorageService.GetItemAsync<JwtTokenResponse>("authToken");
             var client = httpClientFactory.CreateClient(Startup.SunnyEastClientName);
+
             if (token != null)
-            {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.AccessToken);
-            }
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", token.AccessToken);
 
             var response = await client.SendAsync(request);
+
             await CheckForException(response);
             
+            if (response?.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+            {
+                snackbar.Add("Пожалуйста, войдите в систему.", Severity.Warning);
 
-            //todo create handlers for another status codes 409 500 and others;
+               
+                var returnUrl = Uri.EscapeDataString(navigationManager.Uri);
+                navigationManager.NavigateTo($"/account/login?returnUrl={returnUrl}", forceLoad: true);
+
+                return null;   
+            }
+            
             return response;
         }
         catch (Exception e)
         {
-            snackbar.Add("Проблема соединения с сервером. Попробуйте попытку позже.", Severity.Error);
+            snackbar.Add("Проблема соединения с сервером. Попробуйте позже.", Severity.Error);
             Console.WriteLine(e);
         }
 

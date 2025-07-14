@@ -1,0 +1,70 @@
+@page "/orders/{Slug}"
+@attribute [Authorize]
+
+@using Application.Contract.Order.Responses
+@using Client.Components.Common
+@using Client.Infrastructure.Services.Order
+@using Microsoft.AspNetCore.Authorization
+@using Severity = MudBlazor.Severity
+@inject IOrderService OrderService
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
+
+    @if (_loading)
+    {
+        <MudProgressCircular Class="mx-auto d-block mt-6" Size="Size.Large" />
+    }
+    else if (_order is null)
+    {
+        <MudAlert Severity="Severity.Error" Elevation="0" Dense="true" Class="mt-6 mx-auto"
+                  Style="max-width:400px">
+            Заказ не найден
+        </MudAlert>
+    }
+    else
+    {
+        <MudPaper Class="pa-4">
+
+            <div class="d-flex justify-space-between align-center mb-2 flex-wrap gap-2">
+                <MudText Typo="Typo.h4">Заказ №@_order.Slug</MudText>
+                <OrderStatusChip Status="@_order.Status" />
+            </div>
+
+            <MudDivider />
+
+            <MudTable Items="_order.Items" Dense="true" Hover="true" FixedHeader="true"
+                      Breakpoint="Breakpoint.Sm" Class="mt-3">
+                <HeaderContent>
+                    <MudTh>Товар</MudTh>
+                    <MudTh Class="text-right">Кол-во × Цена</MudTh>
+                    <MudTh Class="text-right">Сумма</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.ProductName</MudTd>
+                    <MudTd Class="text-right">
+                        @context.Quantity × @context.UnitPrice.ToString("N2") ₽
+                    </MudTd>
+                    <MudTd Class="text-right">@context.SummaryPrice.ToString("N2") ₽</MudTd>
+                </RowTemplate>
+            </MudTable>
+
+            <MudDivider Class="my-3" />
+            <MudText Typo="Typo.h6" Align="Align.Right">
+                Итого: @_order.Sum.ToString("N2") ₽
+            </MudText>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public string Slug { get; set; } = default!;
+
+    private OrderResponse? _order;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _order  = await OrderService.GetAsyncBySlug(Slug);
+        _loading = false;
+    }
+}

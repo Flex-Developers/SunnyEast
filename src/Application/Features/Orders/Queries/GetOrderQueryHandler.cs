@@ -11,16 +11,19 @@ namespace Application.Features.Orders.Queries;
 public class GetOrderQueryHandler(IApplicationDbContext context, IMapper mapper)
     : IRequestHandler<GetOrderQuery, OrderResponse>
 {
-    public async Task<OrderResponse> Handle(GetOrderQuery request, CancellationToken cancellationToken)
+    public async Task<OrderResponse> Handle(GetOrderQuery request, CancellationToken ct)
     {
         var order = await context.Orders
-            .FirstOrDefaultAsync(o => o.Slug == request.Slug, cancellationToken);
-
-        if (order == null)
-            throw new NotFoundException($"The order with slug {request.Slug} not found.");
+                        .Include(o => o.OrderItems!)
+                        .ThenInclude(i => i.Product)
+                        .FirstOrDefaultAsync(o => o.Slug == request.Slug, ct)
+                    ?? throw new NotFoundException($"Order {request.Slug} not found.");
 
         var response = mapper.Map<OrderResponse>(order);
-        response.Sum = order.OrderItems?.Sum(i => i.SummaryPrice) ?? 0;
+
+        response.Items = mapper.Map<List<OrderItemResponse>>(order.OrderItems!);
+        response.Sum = response.Items.Sum(i => i.SummaryPrice);
+
         return response;
     }
 }
