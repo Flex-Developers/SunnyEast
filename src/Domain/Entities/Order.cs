@@ -15,4 +15,9 @@ public sealed class Order : BaseEntity
     public ApplicationUser? Customer { get; set; }
 
     public OrderStatus Status { get; set; }
+    public string OrderNumber { get; set; } = default!;
+    
+    public string? CustomerComment { get; set; } // комментарий от клиента
+    public DateTime? CanceledAt { get; set; } // если отменён
+    public DateTime? ClosedAt { get; set; } // если обслужен
 }
