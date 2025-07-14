@@ -1,0 +1,30 @@
+@page "/orders"
+@using Client.Infrastructure.Services.Order
+@inject IOrderService OrderService
+@using Application.Contract.Order.Responses
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
+    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">Мои заказы</MudText>
+    <MudTable Items="_orders" Dense="true">
+        <HeaderContent>
+            <MudTh>Номер</MudTh>
+            <MudTh>Статус</MudTh>
+            <MudTh Class="text-right">Сумма</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Slug</MudTd>
+            <MudTd>@context.Status</MudTd>
+            <MudTd Class="text-right">@context.Sum ₽</MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private List<OrderResponse> _orders = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // In this demo we just get orders without shop filter
+        _orders = await OrderService.GetAsync(string.Empty);
+    }
+}

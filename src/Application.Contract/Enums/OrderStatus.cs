@@ -2,5 +2,7 @@
 
 public enum OrderStatus
 {
-    
+    Opened,
+    Submited,
+    Issued
 }

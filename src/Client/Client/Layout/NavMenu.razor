@@ -1,7 +1,7 @@
 ﻿@using Application.Contract.Identity
 <MudNavMenu>
     <CascadingAuthenticationState>
-        <AuthorizeView Roles="@ApplicationRoles.Administrator">
+        <AuthorizeView Roles="@($"{ApplicationRoles.Administrator}, {ApplicationRoles.Salesman}")">
             <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="ml-4 my-3">
                 Админка
             </MudText>
@@ -13,6 +13,9 @@
             </MudNavLink>
             <MudNavLink Href="/admin/shops" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Shop">
                 Магазины
+            </MudNavLink>
+            <MudNavLink Href="/admin/orders" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.List">
+                Заказы
             </MudNavLink>
         </AuthorizeView>
     </CascadingAuthenticationState>

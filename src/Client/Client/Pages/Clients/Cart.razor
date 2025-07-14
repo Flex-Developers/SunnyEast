@@ -2,6 +2,7 @@
 @using Client.Infrastructure.Services.Cart
 @using Client.Infrastructure.Services.Cart.Models
 @inject ICartService CartService
+@inject NavigationManager Navigation
 @implements IDisposable
 
 <MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
@@ -123,7 +124,7 @@
 
             <MudButton Variant="Variant.Filled" Color="Color.Primary"
                        FullWidth="true" Size="Size.Large"
-                       Disabled="@(_items.Count == 0)">
+                       Disabled="@(_items.Count == 0)" OnClick="@(() => Navigation.NavigateTo("/checkout"))">
                 Перейти к оформлению
             </MudButton>
         </MudPaper>
