@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using Domain.Enums;
 
 namespace Domain.Entities;
@@ -16,6 +17,7 @@ public sealed class CartItem : BaseEntity
     public Product? Product { get; set; }
 
     public int Quantity { get; set; }
+    [Column(TypeName = "decimal(10,2)")]
     public decimal SummaryPrice { get; set; } //quantity * product.Price
 
     public OrderStatus Status { get; set; }
