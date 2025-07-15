@@ -1,5 +1,4 @@
 @using Application.Contract.Enums
-@using MudBlazor
 
 <MudChip Color="@ChipColor"
          T="OrderStatus"
@@ -14,7 +13,7 @@
 
     private Color ChipColor => Status switch
     {
-        OrderStatus.Submitted => Color.Info,
+        OrderStatus.Submitted or OrderStatus.InProgress => Color.Info,
         OrderStatus.Ready => Color.Warning,
         OrderStatus.Issued => Color.Success,
         OrderStatus.Canceled => Color.Error,
@@ -27,6 +26,7 @@
         OrderStatus.Ready => "Готов",
         OrderStatus.Issued => "Выдан",
         OrderStatus.Canceled => "Отменен",
+        OrderStatus.InProgress => "В процессе",
         _ => Status.ToString()
     };
 

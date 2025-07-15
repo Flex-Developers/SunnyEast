@@ -129,3 +129,10 @@ code {
 .animated-content {
     animation: fadeIn 1.5s ease-in-out;
 }
+
+/* ===== Blazor loading progress default values ===== */
+:root {
+    --blazor-load-percentage:      0;
+    --blazor-load-percentage-text: "0 %";
+}
+

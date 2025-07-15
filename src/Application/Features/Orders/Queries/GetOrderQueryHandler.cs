@@ -17,7 +17,7 @@ public class GetOrderQueryHandler(IApplicationDbContext context, IMapper mapper)
                         .Include(o => o.OrderItems!)
                         .ThenInclude(i => i.Product)
                         .FirstOrDefaultAsync(o => o.Slug == request.Slug, ct)
-                    ?? throw new NotFoundException($"Order {request.Slug} not found.");
+                    ?? throw new NotFoundException($"Заказ {request.Slug} не найден.");
 
         var response = mapper.Map<OrderResponse>(order);
 

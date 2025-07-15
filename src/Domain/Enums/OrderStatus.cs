@@ -6,5 +6,6 @@ public enum OrderStatus
     Submitted,
     Ready,
     Issued,
-    Canceled
+    Canceled,
+    InProgress
 }

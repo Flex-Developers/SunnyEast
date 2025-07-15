@@ -20,4 +20,5 @@ public sealed class Order : BaseEntity
     public string? CustomerComment { get; set; } // комментарий от клиента
     public DateTime? CanceledAt { get; set; } // если отменён
     public DateTime? ClosedAt { get; set; } // если обслужен
+    public DateTime? CreatedAt { get; set; }
 }

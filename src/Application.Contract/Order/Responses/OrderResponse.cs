@@ -12,5 +12,6 @@ public class OrderResponse
     public List<OrderItemResponse> Items { get; set; } = new();
     public DateTime? ClosedAt   { get; set; }
     public DateTime? CanceledAt { get; set; }
+    public DateTime CreatedAt { get; set; }
     public string?  CustomerComment { get; set; }
 }
