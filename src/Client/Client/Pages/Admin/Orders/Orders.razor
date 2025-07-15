@@ -1,5 +1,6 @@
 @page "/admin/orders"
 @attribute [Authorize(Roles = "Administrator,Salesman")]
+
 @using Application.Contract.Enums
 @using Application.Contract.Order.Responses
 @using Client.Components.Common
@@ -7,11 +8,13 @@
 @using Client.Infrastructure.Services.Order
 @using Microsoft.AspNetCore.Authorization
 @using Severity = MudBlazor.Severity
+
+@inject IOrderService OrderService
 @inject ISnackbar Snackbar
 @inject IDialogService Dialogs
-@inject IOrderService OrderService
+@inject NavigationManager Navigation
 
-<MudPaper Class="mx-auto mt-4 pa-4" Style="max-width:1280px">
+<MudPaper Class="mx-auto mt-4 pa-4" MaxWidth="1280px">
 
     <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">
         Список заказов
@@ -34,55 +37,63 @@
         </ToolBarContent>
 
         <HeaderContent>
-            <MudTh SortBy="OrderNumber">Номер</MudTh>
-            <MudTh SortBy="ShopSlug">Магазин</MudTh>
-            <MudTh SortBy="Status">Статус</MudTh>
-            <MudTh SortBy="Sum" Class="text-right">Сумма</MudTh>
-            <MudTh Class="text-center" Style="width:220px">Действия</MudTh>
+            <MudTh Class="text-center" SortBy="OrderNumber">Номер заказа</MudTh>
+            <MudTh Class="text-center" SortBy="ShopSlug">Магазин</MudTh>
+            <MudTh Class="text-center" SortBy="Status">Статус</MudTh>
+            <MudTh Class="text-center" SortBy="Sum">Сумма</MudTh>
+            <MudTh Class="text-center" Style="width:275px">Действия</MudTh>
         </HeaderContent>
 
         <RowTemplate>
-            <MudTd DataLabel="Номер">@context.OrderNumber</MudTd>
-            <MudTd DataLabel="Магазин">@context.ShopSlug</MudTd>
-            <MudTd DataLabel="Статус">
+            <MudTd>@context.OrderNumber</MudTd>
+            <MudTd>@context.Shop!.Address</MudTd>
+            <MudTd>
                 <OrderStatusChip Status="@context.Status"/>
             </MudTd>
-            <MudTd DataLabel="Сумма" Class="text-right">@($"{context.Sum:N2} ₽")</MudTd>
+            <MudTd Class="text-right">@($"{context.Sum:N2} ₽")</MudTd>
 
-            <MudTd DataLabel="Действия" Class="text-center" Style="width:220px">
+            <MudTd Class="d-flex justify-center flex-wrap" Style="gap:8px; width:275px">
+                @* кнопка «Подробнее» всегда доступна *@
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Visibility"
+                           @onclick="@(() => Navigation.NavigateTo($"/admin/orders/{context.Slug}"))">Подробнее
+                </MudButton>
 
-                @if (context.Status == OrderStatus.Submitted)
+
+                @* остальные кнопки зависят от статуса *@
+                @switch (context.Status)
                 {
-                    <MudButton Variant="Variant.Outlined" Color="Color.Info" Size="Size.Small"
-                               OnClick="@(() => ChangeStatus(context, OrderStatus.Ready))">
-                        Готов
-                    </MudButton>
+                    case OrderStatus.Submitted:
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Info" Size="Size.Small"
+                                   @onclick="() => ChangeStatus(context, OrderStatus.Ready)">
+                            Готов
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Error" Size="Size.Small"
+                                   @onclick="() => AskCancel(context)">
+                            Отменить
+                        </MudButton>
+                        break;
 
-                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
-                               OnClick="@(() => AskCancel(context))">
-                        Отменить
-                    </MudButton>
-                }
-                else if (context.Status == OrderStatus.Ready)
-                {
-                    <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small"
-                               OnClick="@(() => ChangeStatus(context, OrderStatus.Issued))">
-                        Выдать
-                    </MudButton>
-
-                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
-                               OnClick="@(() => AskCancel(context))">
-                        Отменить
-                    </MudButton>
-                }
-                else
-                {
-                    <MudText Typo="Typo.caption" Color="Color.Dark">—</MudText>
+                    case OrderStatus.Ready:
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Success" Size="Size.Small"
+                                   @onclick="() => ChangeStatus(context, OrderStatus.Issued)">
+                            Выдать
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Error" Size="Size.Small"
+                                   @onclick="() => AskCancel(context)">
+                            Отменить
+                        </MudButton>
+                        break;
+               
                 }
             </MudTd>
         </RowTemplate>
-
-
     </MudTable>
 </MudPaper>
 
@@ -93,13 +104,13 @@
     protected override async Task OnInitializedAsync()
         => _orders = await OrderService.GetAsync(string.Empty);
 
-    /* ---------- helpers ---------- */
-
+    /* ---------- поиск ---------- */
     private bool FilterFunc(OrderResponse o) =>
         string.IsNullOrWhiteSpace(_search)
         || o.OrderNumber.Contains(_search, StringComparison.OrdinalIgnoreCase)
-        || o.ShopSlug.Contains(_search, StringComparison.OrdinalIgnoreCase);
+        || o.Shop!.Slug.Contains(_search, StringComparison.OrdinalIgnoreCase);
 
+    /* ---------- статус → RU ---------- */
     private static string ToRu(OrderStatus s) => s switch
     {
         OrderStatus.Submitted => "Оформлен",
@@ -109,7 +120,10 @@
         _ => s.ToString()
     };
 
-    private async Task ChangeStatus(OrderResponse order, OrderStatus to, string? comment = null)
+    /* ---------- изменение статуса ---------- */
+    private async Task ChangeStatus(OrderResponse order,
+        OrderStatus to,
+        string? comment = null)
     {
         await OrderService.UpdateStatusAsync(order.Slug, to, comment);
         order.Status = to;
@@ -117,12 +131,12 @@
         StateHasChanged();
     }
 
+    /* ---------- подтверждение отмены ---------- */
     private async Task AskCancel(OrderResponse order)
     {
-        var prm = new DialogParameters { ["Name"] = $"заказ {order.OrderNumber}" };
-        var dlg = await Dialogs.ShowAsync<DeleteConfirmation>("Отмена заказа", prm);
-        var res = await dlg.Result;
-        if (!res!.Canceled)
+        var dialogParameters = new DialogParameters { ["Content"] = $"{order.OrderNumber}" };
+        var dialog = await Dialogs.ShowAsync<CancelConfirmation>("Отмена заказа", dialogParameters);
+        if (!(await dialog.Result)!.Canceled)
             await ChangeStatus(order, OrderStatus.Canceled);
     }
 
