@@ -102,7 +102,12 @@
     private string? _search;
 
     protected override async Task OnInitializedAsync()
-        => _orders = await OrderService.GetAsync(string.Empty);
+    {
+        _orders = (await OrderService.GetAsync(string.Empty))
+            .OrderByDescending(o => o.CreatedAt)   
+            .ToList();
+    }
+
 
     /* ---------- поиск ---------- */
     private bool FilterFunc(OrderResponse o) =>
@@ -139,5 +144,4 @@
         if (!(await dialog.Result)!.Canceled)
             await ChangeStatus(order, OrderStatus.Canceled);
     }
-
 }
