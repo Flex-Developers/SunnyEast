@@ -12,6 +12,7 @@
 @inject IOrderService OrderService
 @inject NavigationManager Navigation
 @inject IDialogService Dialogs
+@inject ISnackbar Snackbar
 
 <MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
 
@@ -50,11 +51,10 @@
                     @if (!string.IsNullOrWhiteSpace(_order.Shop?.Images?.FirstOrDefault()))
                     {
                         <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                            @if (!string.IsNullOrWhiteSpace(_order.Shop?.Images?.FirstOrDefault()))
-                            {
-                                <MudImage Src="@_order.Shop!.Images!.First()" Alt="shop"
-                                          Width="100" Height="100" Class="rounded object-cover"/>
-                            }
+                            <MudImage Src="@_order.Shop!.Images!.First()"
+                                      Alt="shop"
+                                      Width="100" Height="100"
+                                      Class="rounded object-cover"/>
                         </MudStack>
                     }
                 </MudItem>
@@ -138,7 +138,7 @@
 
             <MudDivider Class="my-3"/>
 
-            <!-- Итог (оставляем слева, как просили) -->
+            <!-- Итог -->
             <MudText Typo="Typo.h6">
                 @($"Итого: {_order.Sum:N2} ₽")
             </MudText>
@@ -156,12 +156,12 @@
                 </MudAlert>
             }
 
-            <!-- ───── Управление статусом (добавлено) ───── -->
+            <!-- ───── Управление статусом + Архив ───── -->
             @if (_order.Status is OrderStatus.Submitted or OrderStatus.Ready)
             {
                 <MudDivider Class="my-3"/>
 
-                <MudStack Row AlignItems="AlignItems.Center" JustifyContent="Justify.FlexStart" Spacing="2">
+                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
 
                     @if (_order.Status == OrderStatus.Submitted)
                     {
@@ -175,7 +175,7 @@
                             Отменить
                         </MudButton>
                     }
-                    else if (_order.Status == OrderStatus.Ready)
+                    else
                     {
                         <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small"
                                    @onclick="() => ChangeStatus(_order, OrderStatus.Issued)">
@@ -188,6 +188,16 @@
                         </MudButton>
                     }
                 </MudStack>
+            }
+            else if ((_order.Status is OrderStatus.Issued or OrderStatus.Canceled) && _order.IsInArchive == false)
+            {
+                <MudDivider Class="my-3"/>
+
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Archive"
+                           @onclick="() => MoveToArchive(_order)">
+                    В архив
+                </MudButton>
             }
         </MudPaper>
     }
@@ -205,6 +215,7 @@
         _loading = false;
     }
 
+    /* ---------- helpers ---------- */
     private static string ToRu(OrderStatus s) => s switch
     {
         OrderStatus.Submitted => "Оформлен",
@@ -216,24 +227,25 @@
 
     private async Task ChangeStatus(OrderResponse order, OrderStatus status, string? comment = null)
     {
-        // 1. меняем статус на сервере
         await OrderService.UpdateStatusAsync(order.Slug, status, comment);
-
-        // 2. забираем свежие данные, чтобы LocalTime-даты, ClosedAt / CanceledAt
-        _order = await OrderService.GetAsyncBySlug(order.Slug);
-
+        _order = await OrderService.GetAsyncBySlug(order.Slug); // обновить данные
         Snackbar.Add($"Заказ {order.OrderNumber} → {ToRu(status)}", Severity.Success);
-
         StateHasChanged();
     }
 
     private async Task AskCancel(OrderResponse order)
     {
-        var dialogParameters = new DialogParameters { ["Content"] = $"{order.OrderNumber}" };
-        var dialog = await Dialogs.ShowAsync<CancelConfirmation>("Отмена заказа", dialogParameters);
-
-        if ((await dialog.Result)!.Canceled is false)
+        var prm = new DialogParameters { ["Content"] = $"{order.OrderNumber}" };
+        var dialog = await Dialogs.ShowAsync<CancelConfirmation>("Отмена заказа", prm);
+        if (!(await dialog.Result)!.Canceled)
             await ChangeStatus(order, OrderStatus.Canceled);
+    }
+
+    private async Task MoveToArchive(OrderResponse order)
+    {
+        await OrderService.ArchiveAsync(order.Slug, true, order.Status);
+        Snackbar.Add($"Заказ {order.OrderNumber} перемещён в архив", Severity.Success);
+        Navigation.NavigateTo("/admin/orders"); // вернуться к списку
     }
 
 }

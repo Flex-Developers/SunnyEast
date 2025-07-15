@@ -74,7 +74,7 @@ public class CreateOrderCommandHandler(
         string number;
         do
         {
-            number = $"{DateTime.UtcNow:yyyy-MM-dd}-{Random.Shared.Next(0, 10000):D4}";
+            number = $"{dateTimeService.Moscow:yyyy-MM-dd}-{Random.Shared.Next(0, 10000):D4}";
         }
         while (await context.Orders.AnyAsync(o => o.OrderNumber == number, ct));
 

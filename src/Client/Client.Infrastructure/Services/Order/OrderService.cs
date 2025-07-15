@@ -35,11 +35,12 @@ public class OrderService(IHttpClientService httpClient, ISnackbar snackbar) : I
     }
 
 
-    public async Task<List<OrderResponse>> GetAsync(string shopSlug)
+    public async Task<List<OrderResponse>> GetAsync(string shopSlug, bool archived = false)
     {
         var url = string.IsNullOrEmpty(shopSlug)
-            ? "/api/order/GetOrders"
-            : $"/api/order/GetOrders?ShopSlug={shopSlug}";
+            ? $"/api/order/GetOrders?OnlyArchived={archived.ToString().ToLower()}"
+            : $"/api/order/GetOrders?ShopSlug={shopSlug}&OnlyArchived={archived.ToString().ToLower()}";
+
         var res = await httpClient.GetFromJsonAsync<List<OrderResponse>>(url);
         return res.Success ? res.Response ?? [] : [];
     }
@@ -56,4 +57,14 @@ public class OrderService(IHttpClientService httpClient, ISnackbar snackbar) : I
         await httpClient.PutAsJsonAsync("/api/order/change-status", cmd);
     }
 
+    public async Task ArchiveAsync(string slug, bool value, OrderStatus status)
+    {
+        var cmd = new ArchiveOrderCommand
+        {
+            Slug = slug,
+            CurrentStatus = status,
+            IsInArchive = value
+        };
+        await httpClient.PutAsJsonAsync($"/api/order/{slug}/archive", cmd);
+    }
 }

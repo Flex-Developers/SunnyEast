@@ -42,4 +42,10 @@ public class OrderController : ApiControllerBase
         return NoContent();
     }
 
+    [HttpPut("{slug}/archive")]
+    public async Task<IActionResult> Archive([FromBody] ArchiveOrderCommand command)
+    {
+        await Mediator.Send(command);
+        return NoContent();
+    }
 }

@@ -21,7 +21,8 @@ public class OrderProfile : Profile
             .ForMember(d => d.Customer,
                 opt => opt.MapFrom(s => s.Customer))
             .ForMember(d => d.Shop,
-                m => m.MapFrom(s => s.Shop));  
+                m => m.MapFrom(s => s.Shop))
+            .ForMember(d => d.IsInArchive, m => m.MapFrom(s => s.IsInArchive));
 
 
         CreateMap<GetOrderQuery, OrderResponse>();

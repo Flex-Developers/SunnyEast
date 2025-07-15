@@ -89,9 +89,24 @@
                                    @onclick="() => AskCancel(context)">
                             Отменить
                         </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default" Size="Size.Small"
+                                   @onclick="() => MoveToArchive(context)">
+                            В архив
+                        </MudButton>
                         break;
-               
+
+                    /* --------  добавьте эти две ветки  -------- */
+                    case OrderStatus.Issued:
+                    case OrderStatus.Canceled:
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default" Size="Size.Small"
+                                   @onclick="() => MoveToArchive(context)">
+                            В архив
+                        </MudButton>
+                        break;
                 }
+
             </MudTd>
         </RowTemplate>
     </MudTable>
@@ -103,9 +118,15 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _orders = (await OrderService.GetAsync(string.Empty))
-            .OrderByDescending(o => o.CreatedAt)   
-            .ToList();
+        _orders = (await OrderService.GetAsync(string.Empty)).ToList();
+    }
+
+    private async Task MoveToArchive(OrderResponse order)
+    {
+        await OrderService.ArchiveAsync(order.Slug, true, order.Status);
+        _orders.Remove(order);
+        Snackbar.Add($"Заказ {order.OrderNumber} перемещён в архив", Severity.Success);
+        StateHasChanged();
     }
 
 
@@ -144,4 +165,5 @@
         if (!(await dialog.Result)!.Canceled)
             await ChangeStatus(order, OrderStatus.Canceled);
     }
+
 }

@@ -11,6 +11,7 @@ public class OrderResponse
     public string OrderNumber { get; set; } = default!;
     public OrderStatus Status { get; set; }
     public decimal Sum { get; set; }
+    public bool IsInArchive { get; set; }
     public List<OrderItemResponse> Items { get; set; } = new();
     public CustomerResponse  Customer { get; set; } = default!;
     public DateTime? ClosedAt   { get; set; }

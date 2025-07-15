@@ -14,16 +14,20 @@ public sealed class GetOrdersQueryHandler(IApplicationDbContext context, IMapper
     public async Task<List<OrderResponse>> Handle(GetOrdersQuery request,
         CancellationToken cancellationToken)
     {
-        var q = context.Orders
+        var orders = context.Orders
             .Include(o => o.Customer) // нужны данные клиента
             .Include(o => o.OrderItems) // чтобы корректно посчитать Sum
             .Include(o => o.Shop)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(request.ShopSlug))
-            q = q.Where(o => o.ShopSlug == request.ShopSlug);
+            orders = orders.Where(o => o.ShopSlug == request.ShopSlug);
+        
+        orders = request.OnlyArchived ? orders.Where(o => o.IsInArchive) : orders.Where(o => !o.IsInArchive);
 
-        return await q.ProjectTo<OrderResponse>(mapper.ConfigurationProvider)
+
+        return await orders.ProjectTo<OrderResponse>(mapper.ConfigurationProvider)
+            .OrderByDescending(o => o.CreatedAt)
             .ToListAsync(cancellationToken);
     }
 }

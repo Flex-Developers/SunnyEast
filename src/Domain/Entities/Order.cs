@@ -16,7 +16,7 @@ public sealed class Order : BaseEntity
 
     public OrderStatus Status { get; set; }
     public string OrderNumber { get; set; } = default!;
-    
+    public bool IsInArchive { get; set; } 
     public string? CustomerComment { get; set; } // комментарий от клиента
     public DateTime? CanceledAt { get; set; } // если отменён
     public DateTime? ClosedAt { get; set; } // если обслужен
