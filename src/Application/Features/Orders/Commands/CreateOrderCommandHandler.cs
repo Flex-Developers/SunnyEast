@@ -12,7 +12,8 @@ namespace Application.Features.Orders.Commands;
 public class CreateOrderCommandHandler(
     IApplicationDbContext context,
     ISlugService slugService,
-    ICurrentUserService currentUserService)
+    ICurrentUserService currentUserService,
+    IDateTimeService dateTimeService)
     : IRequestHandler<CreateOrderCommand, CreateOrderResponse>
 {
     public async Task<CreateOrderResponse> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
@@ -24,7 +25,7 @@ public class CreateOrderCommandHandler(
 
         var shop = await context.Shops.FirstOrDefaultAsync(s => s.Slug == request.ShopSlug, cancellationToken);
         if (shop == null)
-            throw new NotFoundException($"The shop with slug {request.ShopSlug} not found.");
+            throw new NotFoundException($"Магазин {request.ShopSlug} не найден.");
 
         var order = new Domain.Entities.Order
         {
@@ -32,6 +33,8 @@ public class CreateOrderCommandHandler(
             ShopId = shop.Id,
             ShopSlug = shop.Slug,
             CustomerId = user.Id,
+            Customer = user,
+            CreatedAt = dateTimeService.Moscow,
             Status = OrderStatus.Submitted,
             OrderItems = new List<Domain.Entities.OrderItem>(),
             OrderNumber = await GenerateOrderNumberAsync(cancellationToken)
@@ -40,7 +43,7 @@ public class CreateOrderCommandHandler(
         foreach (var item in request.Items)
         {
             var product = await context.Products.FirstOrDefaultAsync(p => p.Slug == item.ProductSlug, cancellationToken)
-                          ?? throw new NotFoundException($"Product {item.ProductSlug} not found.");
+                          ?? throw new NotFoundException($"Продукт {item.ProductSlug} не найден.");
 
             var price = product.DiscountPrice ?? product.Price;
             var summary = price * item.Quantity;
@@ -52,6 +55,7 @@ public class CreateOrderCommandHandler(
                 ProductSlug = product.Slug,
                 Quantity = item.Quantity,
                 SummaryPrice = summary,
+                Volume = item.SelectedVolume,
                 Status = OrderStatus.Submitted
             });
         }

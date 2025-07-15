@@ -14,6 +14,8 @@ public class GetOrderQueryHandler(IApplicationDbContext context, IMapper mapper)
     public async Task<OrderResponse> Handle(GetOrderQuery request, CancellationToken ct)
     {
         var order = await context.Orders
+                        .Include(o => o.Customer)
+                        .Include(o => o.Shop) 
                         .Include(o => o.OrderItems!)
                         .ThenInclude(i => i.Product)
                         .FirstOrDefaultAsync(o => o.Slug == request.Slug, ct)

@@ -2,33 +2,28 @@ using Application.Common.Interfaces.Contexts;
 using Application.Contract.Order.Queries;
 using Application.Contract.Order.Responses;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using Application.Contract.Enums;
 
 namespace Application.Features.Orders.Queries;
 
-public class GetOrdersQueryHandler(IApplicationDbContext context, IMapper mapper)
+public sealed class GetOrdersQueryHandler(IApplicationDbContext context, IMapper mapper)
     : IRequestHandler<GetOrdersQuery, List<OrderResponse>>
 {
-    public async Task<List<OrderResponse>> Handle(GetOrdersQuery request, CancellationToken cancellationToken)
+    public async Task<List<OrderResponse>> Handle(GetOrdersQuery request,
+        CancellationToken cancellationToken)
     {
-        var query = context.Orders.AsQueryable();
-        if (!string.IsNullOrEmpty(request.ShopSlug))
-            query = query.Where(o => o.ShopSlug == request.ShopSlug);
+        var q = context.Orders
+            .Include(o => o.Customer) // нужны данные клиента
+            .Include(o => o.OrderItems) // чтобы корректно посчитать Sum
+            .Include(o => o.Shop)
+            .AsQueryable();
 
-        var orders = await query
-            .Select(o => new OrderResponse
-            {
-                Slug = o.Slug,
-                OrderNumber = o.OrderNumber,
-                ShopSlug = o.ShopSlug!,
-                Status = (OrderStatus)o.Status,
-                Sum = o.OrderItems!.Sum(i => i.SummaryPrice)
-            })
+        if (!string.IsNullOrWhiteSpace(request.ShopSlug))
+            q = q.Where(o => o.ShopSlug == request.ShopSlug);
+
+        return await q.ProjectTo<OrderResponse>(mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
-
-        return orders;
     }
 }
