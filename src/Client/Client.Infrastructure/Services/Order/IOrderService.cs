@@ -13,4 +13,5 @@ public interface IOrderService
     Task<OrderResponse?> GetAsyncBySlug(string slug);
     Task UpdateStatusAsync(string slug, OrderStatus status, string? comment =  null);
     Task ArchiveAsync(string slug, bool value, OrderStatus status);
+    Task CancelOwnAsync(string slug);
 }

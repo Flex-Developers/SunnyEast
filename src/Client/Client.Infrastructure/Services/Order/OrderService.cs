@@ -58,6 +58,14 @@ public class OrderService(IHttpClientService httpClient, ISnackbar snackbar) : I
         await httpClient.PutAsJsonAsync("/api/order/change-status", cmd);
     }
 
+    public async Task CancelOwnAsync(string slug)
+    {
+        var res = await httpClient.PutAsync($"/api/order/{Uri.EscapeDataString(slug)}/cancel");
+
+        if (!res.Success)
+            snackbar.Add(httpClient.ExceptionMessage ?? "Не удалось отменить заказ.", Severity.Error);
+    }
+
     public async Task ArchiveAsync(string slug, bool value, OrderStatus status)
     {
         var cmd = new ArchiveOrderCommand

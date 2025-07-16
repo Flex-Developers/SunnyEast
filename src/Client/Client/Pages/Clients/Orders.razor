@@ -54,9 +54,11 @@
                     @if (context.Status is OrderStatus.Submitted or OrderStatus.InProgress or OrderStatus.Ready)
                     {
                         <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
-                                   @onclick="() => AskCancel(context)">Отменить
+                                   @onclick="() => AskCancel(context)">
+                            Отменить
                         </MudButton>
                     }
+
                 </MudTd>
             </RowTemplate>
 
@@ -82,30 +84,22 @@
         string.IsNullOrWhiteSpace(_search)
         || o.OrderNumber.Contains(_search, StringComparison.OrdinalIgnoreCase)
         || o.Shop!.Slug.Contains(_search, StringComparison.OrdinalIgnoreCase);
-    
-    private static string ToRu(OrderStatus s) => s switch
-    {
-        OrderStatus.Submitted => "Оформлен",
-        OrderStatus.Ready => "Готов",
-        OrderStatus.Issued => "Выдан",
-        OrderStatus.Canceled => "Отменён",
-        _ => s.ToString()
-    };
 
-    private async Task ChangeStatus(OrderResponse order, OrderStatus to, string? comment = null)
+    private async Task CancelOrder(OrderResponse order)
     {
-        await OrderService.UpdateStatusAsync(order.Slug, to, comment);
-        order.Status = to;
-        Snackbar.Add($"Заказ {order.OrderNumber} → {ToRu(to)}", Severity.Success);
+        //TODO: after fixes call OnInitialized()
+        await OrderService.CancelOwnAsync(order.Slug);
+        order.Status = OrderStatus.Canceled;            // локально помечаем
+        Snackbar.Add($"Заказ {order.OrderNumber} отменён", Severity.Success);
         StateHasChanged();
     }
 
     private async Task AskCancel(OrderResponse order)
     {
-        var prm = new DialogParameters { ["Content"] = order.OrderNumber };
-        var dlg = await Dialogs.ShowAsync<CancelConfirmation>("Отмена заказа", prm);
-        if (!(await dlg.Result)!.Canceled)
-            await ChangeStatus(order, OrderStatus.Canceled);
+        var dialogParameters = new DialogParameters { ["Content"] = order.OrderNumber };
+        var dialogReference = await Dialogs.ShowAsync<CancelConfirmation>("Отмена заказа", dialogParameters);
+        if (!(await dialogReference.Result)!.Canceled)
+            await CancelOrder(order);
     }
 }
 

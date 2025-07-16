@@ -42,6 +42,16 @@ public class OrderController : ApiControllerBase
         return NoContent();
     }
 
+    [HttpPut("{slug}/cancel")]
+    [Authorize] 
+    public async Task<IActionResult> CancelOwnOrder(string slug)
+    {
+        await Mediator.Send(new CancelOrderCommand { Slug = slug });
+        return NoContent();
+    }
+
+
+
     [HttpPut("{slug}/archive")]
     public async Task<IActionResult> Archive([FromBody] ArchiveOrderCommand command)
     {

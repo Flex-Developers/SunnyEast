@@ -135,12 +135,13 @@
             @if (_order.Status is OrderStatus.Submitted or OrderStatus.InProgress or OrderStatus.Ready)
             {
                 <MudDivider Class="my-3"/>
-                
+
                 <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
                            @onclick="() => AskCancel(_order)">
                     Отменить
                 </MudButton>
             }
+
         </MudPaper>
     }
 </MudContainer>
@@ -159,26 +160,18 @@
     
     private async Task AskCancel(OrderResponse order)
     {
-        var prm = new DialogParameters { ["Content"] = $"{order.OrderNumber}" };
-        var dialog = await Dialogs.ShowAsync<CancelConfirmation>("Отмена заказа", prm);
-        if (!(await dialog.Result)!.Canceled)
-            await ChangeStatus(order, OrderStatus.Canceled);
+        var dialogParameters = new DialogParameters { ["Content"] = order.OrderNumber };
+        var dialogReference = await Dialogs.ShowAsync<CancelConfirmation>("Отмена заказа", dialogParameters);
+        if (!(await dialogReference.Result)!.Canceled)
+            await CancelOrder(order);
     }
     
-    private async Task ChangeStatus(OrderResponse order, OrderStatus status, string? comment = null)
+    private async Task CancelOrder(OrderResponse order)
     {
-        await OrderService.UpdateStatusAsync(order.Slug, status, comment);
-        _order = await OrderService.GetAsyncBySlug(order.Slug); 
-        Snackbar.Add($"Заказ {order.OrderNumber} → {ToRu(status)}", Severity.Success);
+        await OrderService.CancelOwnAsync(order.Slug);
+        _order = await OrderService.GetAsyncBySlug(order.Slug);   // перезагружаем
+        Snackbar.Add($"Заказ {order.OrderNumber} отменён", Severity.Success);
         StateHasChanged();
     }
     
-    private static string ToRu(OrderStatus s) => s switch
-    {
-        OrderStatus.Submitted => "Оформлен",
-        OrderStatus.Ready => "Готов",
-        OrderStatus.Issued => "Выдан",
-        OrderStatus.Canceled => "Отменён",
-        _ => s.ToString()
-    };
 }
