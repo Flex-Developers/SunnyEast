@@ -5,7 +5,7 @@
 @using Client.Components.Common
 @using Client.Infrastructure.Services.Order
 @using Microsoft.AspNetCore.Authorization
-@inject IOrderService OrderService
+@inject IOrderService   OrderService
 @inject NavigationManager Navigation
 
 <MudPaper Class="mx-auto mt-4 pa-4" MaxWidth="1280px">
@@ -14,23 +14,35 @@
         Архив заказов
     </MudText>
 
-    <MudTable Items="_orders" Hover Dense Bordered FixedHeader Breakpoint="Breakpoint.Sm"
+    <!-- ▸▸▸  ТАБЛИЦА  ◂◂◂ -->
+    <MudTable Items="_orders"
+              Hover Dense Bordered FixedHeader Breakpoint="Breakpoint.Sm"
+              Filter="FilterFunc"                          
               Class="border rounded-lg">
+
+        <ToolBarContent>
+            <MudTextField @bind-Value="_search"
+                          Placeholder="Поиск по № заказа / магазину…"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate
+                          Class="w-100" />
+        </ToolBarContent>
 
         <HeaderContent>
             <MudTh Class="text-center">Номер заказа</MudTh>
-            <MudTh class="text-center">Магазин</MudTh>
-            <MudTh class="text-center">Статус</MudTh>
-            <MudTh class="text-center">Сумма</MudTh>
-            <MudTh class="text-center" Style="width:140px">Действия</MudTh>
+            <MudTh Class="text-center">Магазин</MudTh>
+            <MudTh Class="text-center">Статус</MudTh>
+            <MudTh Class="text-center">Сумма</MudTh>
+            <MudTh Class="text-center" Style="width:140px">Действия</MudTh>
         </HeaderContent>
 
         <RowTemplate>
-            <MudTd>@context.OrderNumber</MudTd>
-            <MudTd>@context.Shop!.Address</MudTd>
-            <MudTd><OrderStatusChip Status="@context.Status"/></MudTd>
-            <MudTd Class="text-right">@($"{context.Sum:N2} ₽")</MudTd>
-            <MudTd Class="d-flex justify-center" Style="gap:8px">
+            <MudTd DataLabel="Номер">@context.OrderNumber</MudTd>
+            <MudTd DataLabel="Магазин">@context.Shop!.Address</MudTd>
+            <MudTd DataLabel="Статус"><OrderStatusChip Status="@context.Status" /></MudTd>
+            <MudTd DataLabel="Сумма"  Class="text-right">@($"{context.Sum:N2} ₽")</MudTd>
+            <MudTd DataLabel="Действия" Class="d-flex justify-center" Style="gap:8px">
                 <MudButton Variant="Variant.Outlined"
                            Color="Color.Primary" Size="Size.Small"
                            StartIcon="@Icons.Material.Filled.Visibility"
@@ -44,9 +56,18 @@
 
 @code {
     private List<OrderResponse> _orders = [];
+    private string? _search;                         // ← для поиска
 
     protected override async Task OnInitializedAsync()
     {
-        _orders = (await OrderService.GetAsync(string.Empty, archived: true)).ToList();
+        _orders = (await OrderService.GetAsync(string.Empty, archived: true))
+                  .OrderByDescending(o => o.CreatedAt)    // новые сверху
+                  .ToList();
     }
+
+    /* ---------- поиск по № и магазину ---------- */
+    private bool FilterFunc(OrderResponse o) =>
+        string.IsNullOrWhiteSpace(_search)
+        || o.OrderNumber.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || o.Shop!.Slug.Contains(_search, StringComparison.OrdinalIgnoreCase);
 }

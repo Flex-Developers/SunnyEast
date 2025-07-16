@@ -10,11 +10,12 @@ namespace Client.Infrastructure.Services.Order;
 
 public class OrderService(IHttpClientService httpClient, ISnackbar snackbar) : IOrderService
 {
-    public async Task<CreateOrderResponse?> CreateAsync(string shopSlug, IEnumerable<CartItemDto> items)
+    public async Task<CreateOrderResponse?> CreateAsync(string shopSlug, IEnumerable<CartItemDto> items, string? comment = null)
     {
         var command = new CreateOrderCommand
         {
             ShopSlug = shopSlug,
+            Comment = comment,
             Items = items.Select(i => new CreateOrderItem
             {
                 ProductSlug = i.ProductSlug,

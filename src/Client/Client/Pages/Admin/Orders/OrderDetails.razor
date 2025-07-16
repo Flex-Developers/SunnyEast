@@ -10,7 +10,6 @@
 @using Severity = MudBlazor.Severity
 
 @inject IOrderService OrderService
-@inject NavigationManager Navigation
 @inject IDialogService Dialogs
 @inject ISnackbar Snackbar
 
@@ -87,7 +86,7 @@
                 <!-- Комментарий -->
                 <MudItem xs="12" sm="6">
                     <MudText Color="Color.Secondary" Typo="Typo.h5">Комментарий клиента:</MudText>
-                    <MudText Typo="Typo.subtitle1">@(_order.CustomerComment ?? "—")</MudText>
+                    <MudText Typo="Typo.h6">@(_order.CustomerComment ?? "—")</MudText>
                 </MudItem>
             </MudGrid>
 

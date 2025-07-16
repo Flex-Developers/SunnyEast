@@ -1,65 +1,114 @@
 @page "/orders"
+@using Application.Contract.Enums
 @using Client.Infrastructure.Services.Order
-@inject IOrderService OrderService
 @using Application.Contract.Order.Responses
 @using Client.Components.Common
+@using Client.Components.Dialogs
+@using Severity = MudBlazor.Severity
+@inject IOrderService OrderService
+@inject NavigationManager Navigation
+@inject IDialogService Dialogs
 
-<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-6">
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-6 mx-auto">
 
-    <!-- заголовок страницы -->
-    <MudText Typo="Typo.h4"
-             Align="Align.Center"
+    <MudText Typo="Typo.h4" Align="Align.Center"
              Class="mb-4 font-weight-bold">
         Мои заказы
     </MudText>
 
-    <!-- «карточка» с таблицей ------------------------------------------>
     <MudPaper Class="pa-0">
 
         <MudTable Items="_orders"
-                  Dense="true"
-                  Hover="true"
-                  FixedHeader="true"
-                  Elevation="0">
+                  Dense Hover FixedHeader Elevation="0"
+                  Bordered Class="border rounded-lg"
+                  Filter="FilterFunc">
 
-            <!-- Заголовок колонок -->
+            <ToolBarContent>
+                <MudTextField @bind-Value="_search"
+                              Placeholder="Поиск по № заказа / магазину…"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Immediate Class="w-100" />
+            </ToolBarContent>
+
             <HeaderContent>
-                <MudTh>Номер</MudTh>
+                <MudTh Class="nowrap">Номер</MudTh>
+                <MudTh>Магазин</MudTh>
                 <MudTh>Статус</MudTh>
                 <MudTh Class="text-right">Сумма</MudTh>
+                <MudTh Class="text-center" Style="width:140px">Действия</MudTh>
             </HeaderContent>
 
-            <!-- Строки данных -->
             <RowTemplate>
-                <MudTd DataLabel="Номер">@context.OrderNumber</MudTd>
-
-                <MudTd DataLabel="Статус">
-                    <OrderStatusChip Status="@context.Status" />
-                </MudTd>
-
-                <MudTd DataLabel="Сумма" Class="text-right">
-                    @($"{context.Sum:N2} ₽")
+                <MudTd DataLabel="Номер"  Class="nowrap">@context.OrderNumber</MudTd>
+                <MudTd DataLabel="Магазин">@context.Shop!.Address</MudTd>
+                <MudTd DataLabel="Статус"><OrderStatusChip Status="@context.Status" /></MudTd>
+                <MudTd DataLabel="Сумма"  Class="text-right">@($"{context.Sum:N2} ₽")</MudTd>
+                <MudTd DataLabel="Действия" Class="d-flex justify-center" Style="gap:8px">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary" Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Visibility"
+                               @onclick="@(() => Navigation.NavigateTo($"/orders/{context.Slug}"))">
+                        Подробнее
+                    </MudButton>
+                    @if (context.Status is OrderStatus.Submitted or OrderStatus.InProgress or OrderStatus.Ready)
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                                   @onclick="() => AskCancel(context)">Отменить
+                        </MudButton>
+                    }
                 </MudTd>
             </RowTemplate>
 
-            <!-- Пустое состояние -->
             <NoRecordsContent>
                 <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="my-6">
                     У вас пока нет оформленных заказов.
                 </MudText>
             </NoRecordsContent>
-
         </MudTable>
-
     </MudPaper>
 </MudContainer>
 
-
 @code {
-    private List<OrderResponse> _orders = new();
+    private readonly List<OrderResponse> _orders = new();
+    private string? _search;
 
     protected override async Task OnInitializedAsync()
     {
-        _orders = await OrderService.GetAsync(string.Empty);
+        _orders.AddRange(await OrderService.GetAsync(string.Empty));
+    }
+
+    private bool FilterFunc(OrderResponse o) =>
+        string.IsNullOrWhiteSpace(_search)
+        || o.OrderNumber.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || o.Shop!.Slug.Contains(_search, StringComparison.OrdinalIgnoreCase);
+    
+    private static string ToRu(OrderStatus s) => s switch
+    {
+        OrderStatus.Submitted => "Оформлен",
+        OrderStatus.Ready => "Готов",
+        OrderStatus.Issued => "Выдан",
+        OrderStatus.Canceled => "Отменён",
+        _ => s.ToString()
+    };
+
+    private async Task ChangeStatus(OrderResponse order, OrderStatus to, string? comment = null)
+    {
+        await OrderService.UpdateStatusAsync(order.Slug, to, comment);
+        order.Status = to;
+        Snackbar.Add($"Заказ {order.OrderNumber} → {ToRu(to)}", Severity.Success);
+        StateHasChanged();
+    }
+
+    private async Task AskCancel(OrderResponse order)
+    {
+        var prm = new DialogParameters { ["Content"] = order.OrderNumber };
+        var dlg = await Dialogs.ShowAsync<CancelConfirmation>("Отмена заказа", prm);
+        if (!(await dlg.Result)!.Canceled)
+            await ChangeStatus(order, OrderStatus.Canceled);
     }
 }
+
+<style>
+    .nowrap { white-space: nowrap; }
+</style>

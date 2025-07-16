@@ -37,7 +37,8 @@ public class CreateOrderCommandHandler(
             CreatedAt = dateTimeService.Moscow,
             Status = OrderStatus.Submitted,
             OrderItems = new List<Domain.Entities.OrderItem>(),
-            OrderNumber = await GenerateOrderNumberAsync(cancellationToken)
+            OrderNumber = await GenerateOrderNumberAsync(cancellationToken),
+            CustomerComment = request.Comment
         };
 
         foreach (var item in request.Items)

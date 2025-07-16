@@ -1,0 +1,184 @@
+@page "/orders/{Slug}"
+@attribute [Authorize]                       
+@using Application.Contract.Enums
+@using Application.Contract.Order.Responses
+@using Client.Components.Common
+@using Client.Components.Dialogs
+@using Client.Infrastructure.Services.Order
+@using Microsoft.AspNetCore.Authorization
+@using Severity = MudBlazor.Severity
+@inject IOrderService      OrderService
+@inject NavigationManager  Navigation
+@inject IDialogService Dialogs
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
+
+    @if (_loading)
+    {
+        <MudProgressCircular Size="Size.Large" Class="mx-auto mt-6" />
+    }
+    else if (_order is null)
+    {
+        <MudAlert Dense Elevation="0" Severity="Severity.Error"
+                  Class="mx-auto mt-6" Style="max-width:400px">
+            Заказ не найден
+        </MudAlert>
+    }
+    else
+    {
+        <MudPaper Class="pa-4">
+
+            <!-- Заголовок -->
+            <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                <MudText Typo="Typo.h4">Заказ №@_order.OrderNumber</MudText>
+                <MudSpacer />
+                <OrderStatusChip Status="@_order.Status" />
+            </MudStack>
+
+            <MudDivider Class="mt-3 mb-4" />
+
+            <!-- Сведения -->
+            <MudGrid Class="mb-2">
+
+                <MudItem xs="12" sm="6">
+                    <MudText Color="Color.Secondary" Typo="Typo.h5">Магазин:</MudText>
+                    <MudText Typo="Typo.h6">@_order.Shop?.Address</MudText>
+
+                    @if (!string.IsNullOrWhiteSpace(_order.Shop?.Images?.FirstOrDefault()))
+                    {
+                        <MudImage Src="@_order.Shop!.Images!.First()" Alt="shop"
+                                  Width="100" Height="100"
+                                  Class="rounded object-cover mt-1" />
+                    }
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudText Color="Color.Secondary" Typo="Typo.h5">Создан:</MudText>
+                    <MudText Typo="Typo.h6">@_order.CreatedAt</MudText>
+                </MudItem>
+
+                <!-- Комментарий (если есть) -->
+                @if (!string.IsNullOrWhiteSpace(_order.CustomerComment))
+                {
+                    <MudItem xs="12">
+                        <MudText Color="Color.Secondary" Typo="Typo.h5">Комментарий:</MudText>
+                        <MudText Typo="Typo.h6">@_order.CustomerComment</MudText>
+                    </MudItem>
+                }
+            </MudGrid>
+
+            <MudDivider Class="my-3" />
+
+            <!-- Таблица товаров -->
+            <MudTable Items="_order.Items" Dense Hover Elevation="0" Breakpoint="Breakpoint.Sm">
+
+                <HeaderContent>
+                    <MudTh/>
+                    <MudTh>Товар</MudTh>
+                    <MudTh>Объём</MudTh>
+                    <MudTh Class="text-right">Кол-во × Цена</MudTh>
+                    <MudTh Class="text-right">Сумма</MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd>
+                        <MudImage Src="@(string.IsNullOrWhiteSpace(context.ImageUrl) ? null : context.ImageUrl)"
+                                  Alt="@context.ProductName" Width="60" Height="60"
+                                  Class="rounded object-cover" />
+                    </MudTd>
+
+                    <MudTd>@context.ProductName</MudTd>
+
+                    <MudTd>
+                        @if (!string.IsNullOrWhiteSpace(context.Volume))
+                        {
+                            <MudChip T="string" Variant="Variant.Outlined"
+                                     Color="Color.Primary">@context.Volume</MudChip>
+                        }
+                        else
+                        {
+                            <span>—</span>
+                        }
+                    </MudTd>
+
+                    <MudTd Class="text-right nowrap">
+                        @($"{context.Quantity} × {context.UnitPrice:N2} ₽")
+                    </MudTd>
+
+                    <MudTd Class="text-right">
+                        @($"{context.SummaryPrice:N2} ₽")
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+
+            <MudDivider Class="my-3" />
+
+            <!-- Итог -->
+            <MudText Typo="Typo.h6">
+                @($"Итого: {_order.Sum:N2} ₽")
+            </MudText>
+
+            <!-- Информация о выдаче / отмене -->
+            @if (_order.CanceledAt is not null)
+            {
+                <MudAlert Dense Severity="Severity.Error" Class="mt-2">
+                    Заказ отменён: @_order.CanceledAt.Value.ToLocalTime()
+                </MudAlert>
+            }
+            else if (_order.ClosedAt is not null)
+            {
+                <MudAlert Dense Severity="Severity.Success" Class="mt-2">
+                    Заказ выдан: @_order.ClosedAt.Value.ToLocalTime()
+                </MudAlert>
+            }
+            
+            @if (_order.Status is OrderStatus.Submitted or OrderStatus.InProgress or OrderStatus.Ready)
+            {
+                <MudDivider Class="my-3"/>
+                
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                           @onclick="() => AskCancel(_order)">
+                    Отменить
+                </MudButton>
+            }
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public string Slug { get; set; } = default!;
+
+    private OrderResponse? _order;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _order = await OrderService.GetAsyncBySlug(Slug);
+        _loading = false;
+    }
+    
+    private async Task AskCancel(OrderResponse order)
+    {
+        var prm = new DialogParameters { ["Content"] = $"{order.OrderNumber}" };
+        var dialog = await Dialogs.ShowAsync<CancelConfirmation>("Отмена заказа", prm);
+        if (!(await dialog.Result)!.Canceled)
+            await ChangeStatus(order, OrderStatus.Canceled);
+    }
+    
+    private async Task ChangeStatus(OrderResponse order, OrderStatus status, string? comment = null)
+    {
+        await OrderService.UpdateStatusAsync(order.Slug, status, comment);
+        _order = await OrderService.GetAsyncBySlug(order.Slug); 
+        Snackbar.Add($"Заказ {order.OrderNumber} → {ToRu(status)}", Severity.Success);
+        StateHasChanged();
+    }
+    
+    private static string ToRu(OrderStatus s) => s switch
+    {
+        OrderStatus.Submitted => "Оформлен",
+        OrderStatus.Ready => "Готов",
+        OrderStatus.Issued => "Выдан",
+        OrderStatus.Canceled => "Отменён",
+        _ => s.ToString()
+    };
+}
