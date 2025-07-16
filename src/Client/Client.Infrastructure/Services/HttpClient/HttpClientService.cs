@@ -95,8 +95,26 @@ public class HttpClientService(
             Response   = resultContent
         };
     }
+    
+    public async Task<ServerResponse> PutAsync(string url)
+    {
+        var msg = new HttpRequestMessage(HttpMethod.Put, _baseUrl + url)
+        {
+            Content = new StringContent(string.Empty)
+        };
 
-    public async Task<ServerResponse> PutAsJsonAsync(string url, object content)
+        var response = await SendAsync(msg);
+
+        return new ServerResponse
+        {
+            Success    = response?.IsSuccessStatusCode ?? false,
+            StatusCode = response?.StatusCode
+        };
+    }
+
+
+
+    public async Task<ServerResponse> PutAsJsonAsync(string url, object? content)
     {
         var response = await SendAsync(new HttpRequestMessage(HttpMethod.Put, _baseUrl + url)
             { Content = JsonContent.Create(content) });
