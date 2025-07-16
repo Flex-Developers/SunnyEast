@@ -81,19 +81,22 @@
                 </HeaderContent>
 
                 <RowTemplate>
+                    <!-- фото -->
                     <MudTd>
                         <MudImage Src="@(string.IsNullOrWhiteSpace(context.ImageUrl) ? null : context.ImageUrl)"
-                                  Alt="@context.ProductName" Width="60" Height="60"
-                                  Class="rounded object-cover" />
+                                  Alt="@context.ProductName"
+                                  Width="60" Height="60"
+                                  Class="rounded object-cover"/>
                     </MudTd>
 
-                    <MudTd>@context.ProductName</MudTd>
+                    <!-- товар -->
+                    <MudTd DataLabel="Товар">@context.ProductName</MudTd>
 
-                    <MudTd>
+                    <!-- объём -->
+                    <MudTd DataLabel="Объём">
                         @if (!string.IsNullOrWhiteSpace(context.Volume))
                         {
-                            <MudChip T="string" Variant="Variant.Outlined"
-                                     Color="Color.Primary">@context.Volume</MudChip>
+                            <MudChip T="string" Variant="Variant.Outlined" Color="Color.Primary">@context.Volume</MudChip>
                         }
                         else
                         {
@@ -101,14 +104,17 @@
                         }
                     </MudTd>
 
-                    <MudTd Class="text-right nowrap">
+                    <!-- количество × цена -->
+                    <MudTd DataLabel="Кол-во × Цена" Class="text-right nowrap">
                         @($"{context.Quantity} × {context.UnitPrice:N2} ₽")
                     </MudTd>
 
-                    <MudTd Class="text-right">
+                    <!-- сумма -->
+                    <MudTd DataLabel="Сумма" Class="text-right">
                         @($"{context.SummaryPrice:N2} ₽")
                     </MudTd>
                 </RowTemplate>
+
             </MudTable>
 
             <MudDivider Class="my-3" />
@@ -175,3 +181,21 @@
     }
     
 }
+
+<style>
+    /* подписи .DataLabel видимы только до 600 px */
+    @@media (max-width:600px){
+        .mud-table-cell[data-label]::before{
+            content:attr(data-label);
+            display:block;
+            font-size:.80rem;
+            font-weight:500;
+            margin-bottom:4px;
+        }
+    }
+    @@media (min-width:601px){
+        .mud-table-cell[data-label]::before{content:none;}
+    }
+
+    .object-cover{object-fit:cover;}   
+</style>

@@ -111,13 +111,12 @@
                                   Class="rounded object-cover"/>
                     </MudTd>
 
-                    <MudTd>@context.ProductName</MudTd>
+                    <MudTd DataLabel="Товар">@context.ProductName</MudTd>
 
-                    <MudTd>
+                    <MudTd DataLabel="Объём">
                         @if (!string.IsNullOrWhiteSpace(context.Volume))
                         {
-                            <MudChip T="string" Variant="Variant.Outlined"
-                                     Color="Color.Primary">@context.Volume</MudChip>
+                            <MudChip T="string" Variant="Variant.Outlined" Color="Color.Primary">@context.Volume</MudChip>
                         }
                         else
                         {
@@ -125,14 +124,15 @@
                         }
                     </MudTd>
 
-                    <MudTd Class="text-right nowrap">
+                    <MudTd DataLabel="Кол-во × Цена" Class="text-right nowrap">
                         @($"{context.Quantity} × {context.UnitPrice:N2} ₽")
                     </MudTd>
 
-                    <MudTd Class="text-right">
+                    <MudTd DataLabel="Сумма" Class="text-right">
                         @($"{context.SummaryPrice:N2} ₽")
                     </MudTd>
                 </RowTemplate>
+
             </MudTable>
 
             <MudDivider Class="my-3"/>
@@ -248,3 +248,25 @@
     }
 
 }
+
+<style>
+    /* ---------- подписи (data-label) для мобильного ---------- */
+    /* показываем всегда; цвет и отступ можно менять по вкусу    */
+    @@media (max-width: 600px) {
+        .mud-table-cell[data-label]::before {
+            content: attr(data-label);
+            display: block;
+            font-size: .80rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+    }
+
+    /* ---------- изображение в таблице ---------- */
+    .object-cover { object-fit: cover; }
+
+    /* чтобы подписи не «прилипали» в десктопе                         */
+    @@media (min-width: 601px) {
+        .mud-table-cell[data-label]::before { content: none; }
+    }
+</style>
