@@ -226,7 +226,7 @@
     {
         if (string.IsNullOrWhiteSpace(term))
         {
-            _products = _allProducts.ToList(); // сброс фильтра
+            _products = _allProducts.ToList(); 
         }
         else
         {
@@ -243,12 +243,10 @@
         if (string.IsNullOrEmpty(category))
             return;
 
-        // ─── 1. получаем данные ──────────────────────────
         var result = category == "Все продукты"
             ? await ProductService.Get(new GetProductsQuery())
             : await ProductService.GetByCategoryName(category);
 
-        // ─── 2. выставляем объём и цену для каждого товара ─
         foreach (var p in result)
         {
             if (p.ProductVolumes?.Length > 0)
@@ -256,14 +254,13 @@
 
             OnVolumeChanged(p, p.SelectedVolume);
         }
-
-        // ─── 3. кладём в _allProducts и применяем поиск ────
+        
         _allProducts = result;
 
         if (string.IsNullOrWhiteSpace(_searchTerm))
-            _products = _allProducts.ToList(); // нет запроса → показываем всё
+            _products = _allProducts.ToList(); 
         else
-            ApplySearch(_searchTerm); // уже введён запрос → сразу фильтруем
+            ApplySearch(_searchTerm); 
 
         await LocalStorage.SetItemAsync("selectedCategory", category);
     }
