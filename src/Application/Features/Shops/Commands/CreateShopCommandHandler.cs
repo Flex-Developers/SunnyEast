@@ -17,10 +17,12 @@ public class CreateShopCommandHandler(IApplicationDbContext context, IMapper map
         var shop = mapper.Map<Shop>(request);
 
         shop.Slug = slugService.GenerateSlug(shop.Address);
+        
         if (await context.Shops.AnyAsync(s => s.Slug == shop.Slug, cancellationToken))
             throw new ExistException($"Магазин с адресом {shop.Address} уже существует");
+        
+        shop.Images = shop.Images?.Where(i => !string.IsNullOrWhiteSpace(i)).ToArray();
 
-        shop.Images = request.Images;
         await context.Shops.AddAsync(shop, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
         return shop.Slug;

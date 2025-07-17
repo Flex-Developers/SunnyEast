@@ -1,13 +1,39 @@
+using Application.Contract.Shops.Commands;
 using Application.Contract.Shops.Responses;
 using Client.Infrastructure.Services.HttpClient;
+using MudBlazor;
 
 namespace Client.Infrastructure.Services.Shop;
 
-public class ShopService(IHttpClientService httpClient) : IShopService
+public sealed class ShopService(IHttpClientService http, ISnackbar snackbar) : IShopService
 {
-    public async Task<List<ShopResponse>> GetShopsAsync()
+    private const string Base = "/api/shop";
+
+    public async Task<List<ShopResponse>> GetShopsAsync(CancellationToken ct = default)
     {
-        var res = await httpClient.GetFromJsonAsync<List<ShopResponse>>("/api/shop/GetShops");
+        var res = await http.GetFromJsonAsync<List<ShopResponse>>($"{Base}/GetShops");
         return res.Success ? res.Response ?? [] : [];
+    }
+
+    public async Task<bool> CreateAsync(CreateShopCommand cmd, CancellationToken ct = default)
+    {
+        var res = await http.PostAsJsonAsync(Base, cmd);
+        return res.Success;
+    }
+
+    public async Task<bool> UpdateAsync(UpdateShopCommand cmd, CancellationToken ct = default)
+    {
+        var res = await http.PutAsJsonAsync(Base, cmd);
+        return res.Success;
+    }
+
+    public async Task<bool> DeleteAsync(string slug, CancellationToken ct = default)
+    {
+        var res = await http.DeleteAsync($"{Base}/{slug}");
+
+        if (!res.Success)
+            snackbar.Add(http.ExceptionMessage ?? "Не удалось удалить магазин.", Severity.Error);
+
+        return res.Success;
     }
 }

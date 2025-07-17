@@ -26,13 +26,13 @@
 
         <MudSpacer/>
 
-        <MudAutocomplete T="ProductResponse" SearchFunc="SearchAsync" ToStringFunc="@(result => result.Name)" ResetValueOnEmptyText="true"
-                         Immediate="true" Clearable="true" Label="Поиск" DebounceInterval="300" AdornmentIcon="@Icons.Material.Filled.Search" Class="autocomplete"/>
-
-        @if (IsSearching)
-        {
-            <MudProgressCircular Indeterminate="true" Size="Size.Medium" Class="ml-2"/>
-        }
+        <MudTextField @bind-Value="SearchTerm"
+                      Placeholder="Поиск товаров"
+                      Adornment="Adornment.End"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Immediate="true"
+                      DebounceInterval="300"
+                      Class="search-field" />
 
     </MudToolBar>
 </MudPaper>
@@ -104,7 +104,18 @@
     private List<ProductResponse> _products = new();
     private List<ProductCategoryResponse> _categories = new();
     private readonly GetProductsQuery _query = new();
-    private bool IsSearching { get; set; }
+    private string? _searchTerm;
+    private List<ProductResponse> _allProducts = new(); 
+    
+    private string? SearchTerm
+    {
+        get => _searchTerm;
+        set
+        {
+            _searchTerm = value;
+            ApplySearch(value); }
+    }
+    
 
     [Parameter]
     public string? SelectedCategory { get; set; } = string.Empty;
@@ -123,28 +134,26 @@
     private async Task OnCategoryChanged(string value)
     {
         SelectedCategory = value;
+        SearchTerm = null;
         await LoadProductsAsync(SelectedCategory);
         StateHasChanged();
     }
 
-    private async Task OnProductSelected(ProductResponse selectedProduct)
+   
+    private void ApplySearch(string? term)
     {
-    }
+        if (string.IsNullOrWhiteSpace(term))
+        {
+            _products = _allProducts.ToList(); 
+        }
+        else
+        {
+            _products = _allProducts
+                .Where(p => p.Name.Contains(term, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
 
-    private async Task<IEnumerable<ProductResponse>> SearchAsync(string name, CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-            return [];
-
-        IsSearching = true;
-        _query.Name = name;
-
-        var result = await ProductService.Get(_query);
-
-        IsSearching = false;
         StateHasChanged();
-
-        return result;
     }
 
     private async Task DuplicateProduct(ProductResponse currentProduct)
@@ -181,7 +190,7 @@
             Description = product.Description,
         };
 
-        string categoryName = SelectedCategory;
+        string categoryName = SelectedCategory!;
         
         if (categoryName == "Все продукты")
             categoryName = _categories.FirstOrDefault(c => c.Slug == product.ProductCategorySlug)!.Name;
@@ -223,13 +232,15 @@
     {
         if (!string.IsNullOrEmpty(category))
         {
-            if (category == "Все продукты")
-                _products = await ProductService.Get(new GetProductsQuery());
-            else
-                _products = await ProductService.GetByCategoryName(category);
+            _allProducts = category == "Все продукты"
+                ? await ProductService.Get(new GetProductsQuery())
+                : await ProductService.GetByCategoryName(category);
+
+            _products = _allProducts.ToList();            
             await SaveSelectedCategoryAsync(category);
         }
     }
+
 
     private async Task SaveSelectedCategoryAsync(string category)
     {
@@ -264,17 +275,17 @@
         vertical-align: middle;
         margin-bottom: -10px
     }
-    
-    .autocomplete {
-        width: calc(100% - 1px); 
-        margin-right: -200px;
+
+    .search-field {
+        width: 200px;
+        margin-left: auto;
     }
     
     .product-card {
         position: relative;
         border-radius: 10px;
         max-width: 100%; 
-        height: 500px; 
+        height: 450px; 
         display: flex; 
         flex-direction: column; 
         justify-content: space-between;
