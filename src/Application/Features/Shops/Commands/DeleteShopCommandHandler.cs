@@ -18,6 +18,6 @@ public class DeleteShopCommandHandler(IApplicationDbContext context) : IRequestH
             await context.SaveChangesAsync(cancellationToken);
             return Unit.Value;
         }
-        throw new NotFoundException($"shop with slug {request.Slug} not found");
+        throw new NotFoundException($"Магазин {request.Slug} не найден.");
     }
 }
