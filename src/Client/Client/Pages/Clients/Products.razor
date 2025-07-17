@@ -30,12 +30,12 @@
         <MudSpacer/>
 
         <MudTextField @bind-Value="SearchTerm"
-                      Placeholder="Поиск товаров"
+                      Label="Поиск товаров"
                       Adornment="Adornment.End"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       Immediate="true"
                       DebounceInterval="300"
-                      Class="search-field"/>
+                      Class="search-field" />
 
     </MudToolBar>
 </MudPaper>
@@ -282,7 +282,7 @@
 <style>
 
     .search-field {
-        width: 200px;
+        width: 50px;
         margin-left: auto;
     }
 
