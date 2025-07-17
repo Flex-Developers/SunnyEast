@@ -10,9 +10,14 @@ public class ShopProfile : Profile
 {
     public ShopProfile()
     {
-        CreateMap<CreateShopCommand, Shop>();
-        CreateMap<Shop, ShopResponse>();
-        CreateMap<Shop, UpdateShopCommand>();
+        CreateMap<CreateShopCommand, Shop>()
+            .ForMember(d => d.Images,
+                c => c.MapFrom(s => s.Images ?? Array.Empty<string>()));
+        CreateMap<Shop, UpdateShopCommand>()
+            .ForAllMembers(opt => opt.Condition(
+                (src, _, val) => val != null));
+        
         CreateMap<UpdateShopCommand, Shop>();
+        CreateMap<Shop, ShopResponse>();
     }
 }
