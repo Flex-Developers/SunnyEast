@@ -167,27 +167,33 @@
     protected override async Task OnInitializedAsync()
     {
         _items.AddRange((await CartService.GetCartAsync())?.Orders ?? []);
+
+        if (_items.Count == 0)
+        {
+            Navigation.NavigateTo("/cart");
+            return;
+        }
         _shops.AddRange(await ShopService.GetShopsAsync());
         _selectedShop ??= _shops.FirstOrDefault()?.Slug;
-        RecalcTotal();
+        RecalculateTotal();
     }
 
-    private void RecalcTotal() =>
+    private void RecalculateTotal() =>
         _total = _items.Sum(i => i.Quantity * (i.DiscountPrice ?? i.Price));
 
-    private async Task ChangeQty(CartItemDto it, int d)
+    private async Task ChangeQty(CartItemDto item, int d)
     {
-        it.Quantity = Math.Clamp(it.Quantity + d, 1, 99);
-        await CartService.UpdateOrderAsync(it);
-        RecalcTotal();
+        item.Quantity = Math.Clamp(item.Quantity + d, 1, 99);
+        await CartService.UpdateOrderAsync(item);
+        RecalculateTotal();
         StateHasChanged();
     }
 
-    private async Task RemoveItem(CartItemDto it)
+    private async Task RemoveItem(CartItemDto item)
     {
-        await CartService.RemoveOrderAsync(it.ProductSlug, it.SelectedVolume);
-        _items.Remove(it);
-        RecalcTotal();
+        await CartService.RemoveOrderAsync(item.ProductSlug, item.SelectedVolume);
+        _items.Remove(item);
+        RecalculateTotal();
         StateHasChanged();
     }
 
@@ -208,9 +214,7 @@
 }
 
 <style>
-    /* ============================================================
-       1. ТАБЛИЦА ТОВАРОВ
-       ============================================================ */
+    
     .checkout-table th,
     .checkout-table td {
         font-size: 1.12rem;
@@ -229,7 +233,6 @@
         text-overflow: ellipsis;
     }
 
-    /* qty (+ / –) ------------------------------------------------*/
     .qty-stack {
         display: flex;
         align-items: center;
@@ -253,29 +256,23 @@
         font-weight: 500;
     }
 
-    /* ============================================================
-       2. ОСНОВНАЯ ФОРМА
-       ============================================================ */
     .checkout-form {
         max-width: 880px;
         margin-inline: auto;
     }
 
-    /* ============================================================
-       3. КАРУСЕЛЬ МАГАЗИНА
-       ============================================================ */
     .carousel-wrapper {
         max-width: 420px;
         width: 100%;
         margin-inline: auto;
-        position: relative; /* база для стрелок */
-        overflow: visible; /* стрелки могут выходить наружу */
+        position: relative; 
+        overflow: visible; 
         margin-top: 20px;
             }
 
     .carousel-banner {
         width: 100%;
-        height: 260px; /* совпадает с Height="260px" в Razor */
+        height: 260px; 
     }
 
     .carousel-banner .mud-carousel-item {
@@ -286,10 +283,9 @@
     .carousel-image {
         width: 100%;
         height: 100%;
-        object-fit: cover; /* картинка заполняет слайд */
+        object-fit: cover; 
     }
 
-    /* стрелки ----------------------------------------------------*/
     .carousel-banner .mud-carousel-btn-left,
     .carousel-banner .mud-carousel-btn-right {
         position: absolute;
@@ -313,19 +309,14 @@
         right: -34px;
     }
 
-    /* ============================================================
-       4. МОБИЛЬНАЯ АДАПТАЦИЯ
-       ============================================================ */
     @@media (max-width: 600px) {
 
-        /* таблица компактнее */
         .checkout-table th,
         .checkout-table td {
             font-size: 1rem;
             padding: 12px 8px;
         }
 
-        /* qty-кнопки немного больше */
         .qty-stack {
             gap: 6px;
         }
@@ -343,7 +334,6 @@
             font-size: 1.05rem;
         }
 
-        /* форма во всю ширину */
         .checkout-form {
             max-width: none;
             margin-inline: 0;
@@ -353,7 +343,6 @@
             max-width: none;
         }
 
-        /* стрелки внутрь и меньше */
         .carousel-banner .mud-carousel-btn-left,
         .carousel-banner .mud-carousel-btn-right {
             width: 34px;
@@ -368,7 +357,6 @@
             right: 8px;
         }
 
-        /* высота карусели пониже */
         .carousel-banner {
             height: 220px;
         }

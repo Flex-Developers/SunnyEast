@@ -15,7 +15,6 @@
     Архив заказов
 </MudText>
 
-    <!-- ▸▸▸  ТАБЛИЦА  ◂◂◂ -->
     <MudTable Items="_orders"
               Hover="true" 
               Dense="true" 
@@ -93,9 +92,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _orders = (await OrderService.GetAsync(string.Empty, true))
-                  .OrderByDescending(o => o.CreatedAt)  
-                  .ToList();
+        _orders = (await OrderService.GetAsync(string.Empty, true)).ToList();
     }
 
     /* ---------- поиск по № и магазину ---------- */
