@@ -7,6 +7,7 @@
 @using Client.Infrastructure.Services.Category
 @using Client.Infrastructure.Services.Product
 @using Client.Infrastructure.Services.Price
+@using Microsoft.AspNetCore.Components.Authorization
 @using Severity = MudBlazor.Severity
 @inject IProductService ProductService
 @inject NavigationManager Navigation
@@ -15,6 +16,7 @@
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject Client.Infrastructure.Services.Cart.ICartService CartService
 @inject IPriceCalculatorService PriceCalculator
+@inject AuthenticationStateProvider AuthStateProvider
 
 <MudPaper Elevation="25">
     <MudToolBar>
@@ -188,6 +190,16 @@
 
     private async Task AddToCart(ProductResponse p)
     {
+        // Проверяем авторизацию пользователя
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (!authState.User.Identity?.IsAuthenticated ?? true)
+        {
+            // Если пользователь не авторизован, перенаправляем на страницу входа
+            var returnUrl = System.Web.HttpUtility.UrlEncode(Navigation.Uri);
+            Navigation.NavigateTo($"/login?returnUrl={returnUrl}");
+            return;
+        }
+
         var volumePrice = p.Prices.First(x => x.Volume == p.SelectedVolume);
 
         var dto = new CartItemDto

@@ -24,13 +24,17 @@
     <MudSpacer />
 
     <div class="right-icons" style="display: flex; align-items: center; gap: 12px; margin-right: 8px;">
-        <div class="cart-wrapper">
-            <MudIconButton Icon="@Icons.Material.Filled.ShoppingCart" Color="Color.Inherit" OnClick="@(() => Navigation.NavigateTo("/cart"))" />
-            @if (_cartCount > 0)
-            {
-                <span class="cart-counter">@_cartCount</span>
-            }
-        </div>
+        <AuthorizeView>
+            <Authorized>
+                <div class="cart-wrapper">
+                    <MudIconButton Icon="@Icons.Material.Filled.ShoppingCart" Color="Color.Inherit" OnClick="@(() => Navigation.NavigateTo("/cart"))" />
+                    @if (_cartCount > 0)
+                    {
+                        <span class="cart-counter">@_cartCount</span>
+                    }
+                </div>
+            </Authorized>
+        </AuthorizeView>
 
         <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">
             <DarkModePanel OnIconClicked="ToggleDarkLightMode" />
@@ -48,7 +52,7 @@
         </ActivatorContent>
         <ChildContent>
             <div class="py-2" style="min-width: 220px">
-                <AuthorizeView Roles="@($"{ApplicationRoles.Administrator}, {ApplicationRoles.Salesman}, {ApplicationRoles.Customer}")">
+                <AuthorizeView>
                     <Authorized>
 
                         <MudMenuItem OnClick="@(Profile)">

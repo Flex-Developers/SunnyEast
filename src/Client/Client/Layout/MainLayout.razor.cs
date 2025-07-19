@@ -17,7 +17,11 @@ public partial class MainLayout
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender) _isDarkMode = await _mudThemeProvider.GetSystemPreference();
+        if (firstRender)
+        {
+            _isDarkMode = await _mudThemeProvider.GetSystemPreference();
+            StateHasChanged();
+        }
     }
 
     protected override async Task OnInitializedAsync()
@@ -34,6 +38,18 @@ public partial class MainLayout
     {
         _isDarkMode = themePreference.IsDarkMode;
         _drawerOpen = themePreference.IsDrawerOpen;
+        StateHasChanged();
+    }
+
+    private async Task ToggleDarkMode()
+    {
+        _isDarkMode = !_isDarkMode;
+        if (_themePreference != null)
+        {
+            _themePreference.IsDarkMode = _isDarkMode;
+            await ClientPreferences.SetPreference(_themePreference);
+        }
+        await OnDarkModeToggle.InvokeAsync();
         StateHasChanged();
     }
 }
