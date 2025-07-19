@@ -14,7 +14,13 @@
         </TitleContent>
 
         <DialogContent>
-            <MudSelect T="string" Class="mb-2" Required="true" RequiredError="Выберите категорию." Label="Категория" AnchorOrigin="Origin.BottomCenter" @bind-Value="CategoryName" FullWidth="true">
+            <MudSelect T="string" 
+                       Class="mb-2" 
+                       Required="true" 
+                       RequiredError="Выберите категорию." 
+                       Label="Категория" 
+                       AnchorOrigin="Origin.BottomCenter" 
+                       @bind-Value="CategoryName" FullWidth="true">
                 @foreach (var category in Categories.Select(c => c.Name))
                 {
                     <MudSelectItem Value="@category">@category</MudSelectItem>
@@ -30,7 +36,7 @@
                 </MudItem>
                 <MudItem xs="4">
                     <MudNumericField T="byte?" Label="Скидка (%)" ValueChanged="@(percentage => UpdateDiscountPrice(percentage))"
-                                     Min="0" Max="100" Immediate="true" FullWidth="true" Clearable="true"/>
+                                     Min="0" Max="100" Immediate="true" FullWidth="true" Clearable="true" Value="@_command.DiscountPercentage"/>
                 </MudItem>
                 @if (_command.DiscountPercentage is >= 0)
                 {
@@ -101,12 +107,24 @@
 
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
-    [Parameter] public string? CategoryName { get; set; } = string.Empty;
     [Parameter] public Action OnSuccessfullyCreate { get; set; } = null!;
     [Parameter] public List<ProductCategoryResponse> Categories { get; set; } = null!;
     private List<string> _images = Enumerable.Repeat(string.Empty, 10).ToList();
     private MudForm _form = null!;
     private bool _showTable;
+    private ProductCategoryResponse? _currentCategory;
+    private string _categoryName = string.Empty;
+    [Parameter]
+    public string CategoryName
+    {
+        get => _categoryName;
+        set
+        {
+            if (_categoryName == value) 
+                return;   
+            _categoryName = value;
+        }
+    }
 
     private readonly CreateProductCommand _command = new()
     {
@@ -120,7 +138,27 @@
     {
         if (CategoryName == "Все продукты")
             CategoryName = string.Empty;
+        
+        ApplyCategoryDefaults(); 
     }
+    
+    protected override void OnParametersSet()
+    {
+        ApplyCategoryDefaults();
+    }
+
+    private void ApplyCategoryDefaults()
+    {
+        if (Categories is null || Categories.Count == 0)
+            return;                                 
+
+        _currentCategory = Categories
+            .FirstOrDefault(c => c.Name == CategoryName);
+
+        _command.DiscountPercentage = _currentCategory?.DiscountPercentage;
+        UpdateDiscountPrice(_command.DiscountPercentage);
+    }
+
 
     private string[]? GetCurrentProductVolumes()
     {
