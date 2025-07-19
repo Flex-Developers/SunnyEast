@@ -8,15 +8,15 @@ namespace Application.Features.Orders.Commands;
 
 public sealed class ArchiveOrderCommandHandler(IApplicationDbContext context) : IRequestHandler<ArchiveOrderCommand, Unit>
 {
-    public async Task<Unit> Handle(ArchiveOrderCommand req, CancellationToken ct)
+    public async Task<Unit> Handle(ArchiveOrderCommand request, CancellationToken cancellationToken)
     {
         var order = await context.Orders
-                        .FirstOrDefaultAsync(o => o.Slug == req.Slug, ct)
-                    ?? throw new NotFoundException($"Заказ {req.Slug} не найден.");
+                        .FirstOrDefaultAsync(o => o.Slug == request.Slug, cancellationToken)
+                    ?? throw new NotFoundException($"Заказ {request.Slug} не найден.");
 
-        order.IsInArchive = req.IsInArchive; 
+        order.IsInArchive = true; 
         
-        await context.SaveChangesAsync(ct);
+        await context.SaveChangesAsync(cancellationToken);
         return Unit.Value;
     }
 }
