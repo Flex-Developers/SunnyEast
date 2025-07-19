@@ -18,7 +18,6 @@ public sealed class ChangeOrderStatusCommandHandler(IApplicationDbContext contex
                     ?? throw new NotFoundException($"Order {req.Slug} not found.");
 
         order.Status = (Domain.Enums.OrderStatus)req.Status;
-        order.CustomerComment = req.Comment;
 
         switch (req.Status)
         {

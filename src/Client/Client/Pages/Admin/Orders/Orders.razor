@@ -120,11 +120,11 @@
         _ => s.ToString()
     };
 
-    private async Task ChangeStatus(OrderResponse order, OrderStatus to, string? comment = null)
+    private async Task ChangeStatus(OrderResponse order, OrderStatus status)
     {
-        await OrderService.UpdateStatusAsync(order.Slug, to, comment);
-        order.Status = to;
-        Snackbar.Add($"Заказ {order.OrderNumber} → {ToRu(to)}", Severity.Success);
+        await OrderService.UpdateStatusAsync(order.Slug, status);
+        order.Status = status;
+        Snackbar.Add($"Заказ {order.OrderNumber} → {ToRu(status)}", Severity.Success);
         StateHasChanged();
     }
 

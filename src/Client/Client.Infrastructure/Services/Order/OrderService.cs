@@ -52,9 +52,9 @@ public class OrderService(IHttpClientService httpClient, ISnackbar snackbar) : I
         return res.Success ? res.Response : null;
     }
 
-    public async Task UpdateStatusAsync(string slug, OrderStatus to, string? comment = null)
+    public async Task UpdateStatusAsync(string slug, OrderStatus status)
     {
-        var cmd = new ChangeOrderStatusCommand { Slug = slug, Status = to, Comment = comment };
+        var cmd = new ChangeOrderStatusCommand { Slug = slug, Status = status};
         await httpClient.PutAsJsonAsync("/api/order/change-status", cmd);
     }
 
