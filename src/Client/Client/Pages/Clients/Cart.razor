@@ -154,6 +154,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        AuthProvider.AuthenticationStateChanged += OnAuthStateChanged;
         CartService.OnChange += CartChanged;
         await LoadAsync();
         
@@ -161,9 +162,15 @@
         _isAuth = state.User.Identity?.IsAuthenticated == true;
     }
     
+    private void OnAuthStateChanged(Task<AuthenticationState> task)
+    {
+        _isAuth = task.Result.User.Identity?.IsAuthenticated == true;
+        StateHasChanged();
+    }
+    
     private void LoginRedirect()
     {
-        Navigation.NavigateTo($"/login?returnUrl={Uri.EscapeDataString("/checkout")}");
+        Navigation.NavigateTo($"/login?returnUrl={Uri.EscapeDataString("/cart")}");
     }
 
 
@@ -203,7 +210,11 @@
         StateHasChanged();
     }
 
-    public void Dispose() => CartService.OnChange -= CartChanged;
+    public void Dispose()
+    {
+        CartService.OnChange -= CartChanged;
+        AuthProvider.AuthenticationStateChanged -= OnAuthStateChanged;
+    }
 }
 
 <style>
