@@ -154,7 +154,7 @@ public class HttpClientService(
             {
                 snackbar.Add("Пожалуйста, войдите в систему.", Severity.Warning);
 
-               
+                //TODO: Maybe should remove or fix this redirection
                 var returnUrl = Uri.EscapeDataString(navigationManager.Uri);
                 navigationManager.NavigateTo($"/account/login?returnUrl={returnUrl}", forceLoad: true);
 
