@@ -11,13 +11,13 @@ public class AuthService(
     NavigationManager navigationManager,
     CustomAuthStateProvider authStateProvider) : IAuthService
 {
-    public async Task<bool> LoginAsync(LoginUserCommand command)
+    public async Task<bool> LoginAsync(LoginUserCommand command, string? returnUrl = null)
     {
         var loginResponse = await httpClient.PostAsJsonAsync<JwtTokenResponse>("/api/user/login", command);
         if (loginResponse.Success)
         {
             await authStateProvider.MarkUserAsAuthenticated(loginResponse.Response!);
-            navigationManager.NavigateTo("/");
+            navigationManager.NavigateTo(string.IsNullOrEmpty(returnUrl) ? "/" : returnUrl);
         }
 
         return loginResponse.Success;
