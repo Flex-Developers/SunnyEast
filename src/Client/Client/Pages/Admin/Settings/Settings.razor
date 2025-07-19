@@ -1,0 +1,55 @@
+@page "/admin/settings"
+@using Client.Infrastructure.Services.Settings
+@using Application.Contract.SiteSettings.Commands
+@using Application.Contract.SiteSettings.Responses
+@using MudBlazor
+@inject ISettingsService SettingsService
+@inject ISnackbar Snackbar
+
+<h3>Настройки сайта</h3>
+
+<MudForm @ref="_form">
+    <MudTextField @bind-Value="_model.PhoneNumber" Label="Телефон" />
+    <MudTextField @bind-Value="_model.Email" Label="Email" />
+    <MudTextField @bind-Value="_model.Address" Label="Адрес" />
+    <MudTextField @bind-Value="_model.TelegramLink" Label="Telegram" />
+    <MudTextField @bind-Value="_model.WhatsAppLink" Label="WhatsApp" />
+    <MudTextField @bind-Value="_model.InstagramLink" Label="Instagram" />
+    <MudTextField @bind-Value="_model.FacebookLink" Label="Facebook" />
+    <MudTextField @bind-Value="_model.Copyright" Label="Копирайт" />
+    <MudButton Variant="Variant.Filled" OnClick="UpdateAsync">Сохранить</MudButton>
+</MudForm>
+
+@code {
+    private readonly UpdateSiteSettingCommand _model = new();
+    private MudForm? _form;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var data = await SettingsService.GetAsync();
+        if (data is not null)
+        {
+            _model.PhoneNumber = data.PhoneNumber;
+            _model.Email = data.Email;
+            _model.Address = data.Address;
+            _model.TelegramLink = data.TelegramLink;
+            _model.WhatsAppLink = data.WhatsAppLink;
+            _model.InstagramLink = data.InstagramLink;
+            _model.FacebookLink = data.FacebookLink;
+            _model.Copyright = data.Copyright;
+        }
+    }
+
+    private async Task UpdateAsync()
+    {
+        await _form!.Validate();
+        if (_form.IsValid)
+        {
+            var success = await SettingsService.UpdateAsync(_model);
+            if (success)
+                Snackbar.Add("Сохранено", MudBlazor.Severity.Success);
+            else
+                Snackbar.Add("Ошибка при сохранении", MudBlazor.Severity.Error);
+        }
+    }
+}

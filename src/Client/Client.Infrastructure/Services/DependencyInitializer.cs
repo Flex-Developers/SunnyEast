@@ -5,6 +5,7 @@ using Client.Infrastructure.Services.Cart;
 using Client.Infrastructure.Services.Price;
 using Client.Infrastructure.Services.Product;
 using Client.Infrastructure.Services.Shop;
+using Client.Infrastructure.Services.Settings;
 using Client.Infrastructure.Services.Validation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -22,7 +23,8 @@ public static class DependencyInitializer
             .AddScoped<IPriceCalculatorService, PriceCalculatorService>()
             .AddScoped<IHttpClientService, HttpClientService>()
             .AddScoped<IValidationService, ValidationService>()
-            .AddScoped<IShopService, ShopService>();
+            .AddScoped<IShopService, ShopService>()
+            .AddScoped<ISettingsService, SettingsService>();
 
     }
 }
