@@ -45,14 +45,15 @@
         </HeaderContent>
 
         <RowTemplate>
-            <MudTd DataLabel="Номер заказа">@context.OrderNumber</MudTd>
+            <MudTd DataLabel="Номер заказа" Class="text-center">@context.OrderNumber</MudTd>
             <MudTd DataLabel="Магазин">@context.Shop!.Address</MudTd>
-            <MudTd DataLabel="Статус">
+            <MudTd DataLabel="Статус" Class="text-center">
                 <OrderStatusChip Status="@context.Status"/>
             </MudTd>
-            <MudTd DataLabel="Сумма" class="text-right">@($"{context.Sum:N2} ₽")</MudTd>
+            <MudTd DataLabel="Сумма" Class="text-center">@($"{context.Sum:N2} ₽")</MudTd>
 
-            <MudTd DataLabel="Действия" class="actions-cell">
+            <MudTd DataLabel="Действия" >
+                <div class="actions-cell">
                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
                            StartIcon="@Icons.Material.Filled.Visibility"
                            @onclick="@(() => Navigation.NavigateTo($"/admin/orders/{context.Slug}"))">
@@ -86,6 +87,7 @@
                         </MudButton>
                         break;
                 }
+                </div>
             </MudTd>
         </RowTemplate>
         
@@ -177,6 +179,8 @@
         display: grid;
         grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));
         gap: 8px;
+        padding-left: 10px;
+        padding-right: 10px;
     }
 
     .actions-cell .mud-button-root {

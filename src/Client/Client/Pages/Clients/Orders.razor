@@ -36,19 +36,20 @@
             </ToolBarContent>
 
             <HeaderContent>
-                <MudTh Class="nowrap">Номер</MudTh>
-                <MudTh>Магазин</MudTh>
-                <MudTh>Статус</MudTh>
-                <MudTh Class="text-right">Сумма</MudTh>
-                <MudTh Class="text-center" Style="width:140px">Действия</MudTh>
+                <MudTh Class="nowrap text-center">Номер</MudTh>
+                <MudTh Class="text-center">Магазин</MudTh>
+                <MudTh Class="text-center">Статус</MudTh>
+                <MudTh Class="text-center">Сумма</MudTh>
+                <MudTh Class="text-center" Style="width:300px">Действия</MudTh>
             </HeaderContent>
 
             <RowTemplate>
-                <MudTd DataLabel="Номер"  Class="nowrap">@context.OrderNumber</MudTd>
+                <MudTd DataLabel="Номер" Class="nowrap text-center">@context.OrderNumber</MudTd>
                 <MudTd DataLabel="Магазин">@context.Shop!.Address</MudTd>
-                <MudTd DataLabel="Статус"><OrderStatusChip Status="@context.Status" /></MudTd>
-                <MudTd DataLabel="Сумма"  Class="text-right">@($"{context.Sum:N2} ₽")</MudTd>
-                <MudTd DataLabel="Действия" Class="d-flex justify-center" Style="gap:8px">
+                <MudTd DataLabel="Статус" Class="text-center"><OrderStatusChip Status="@context.Status" /></MudTd>
+                <MudTd DataLabel="Сумма"  Class="text-center">@($"{context.Sum:N2} ₽")</MudTd>
+                <MudTd DataLabel="Действия">
+                    <div class="actions-cell">
                     <MudButton Variant="Variant.Outlined"
                                Color="Color.Primary" Size="Size.Small"
                                StartIcon="@Icons.Material.Filled.Visibility"
@@ -62,7 +63,7 @@
                             Отменить
                         </MudButton>
                     }
-
+                    </div>
                 </MudTd>
             </RowTemplate>
 
@@ -156,5 +157,25 @@
 }
 
 <style>
-    .nowrap { white-space: nowrap; }
+    .nowrap 
+    { 
+        white-space: nowrap;
+    }
+
+    .actions-cell {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+        gap: 8px;
+        
+    }
+
+    .actions-cell .mud-button-root {
+        width: 100%;
+    }
+
+    @@media (max-width: 600px) {
+        .actions-cell {
+            grid-template-columns:repeat(2, 1fr);
+        }
+    }
 </style>
