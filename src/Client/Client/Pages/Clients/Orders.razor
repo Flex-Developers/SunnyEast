@@ -8,6 +8,8 @@
 @inject IOrderService OrderService
 @inject NavigationManager Navigation
 @inject IDialogService Dialogs
+@inject AuthenticationStateProvider AuthProvider
+
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-6 mx-auto">
 
@@ -74,10 +76,28 @@
 @code {
     private readonly List<OrderResponse> _orders = new();
     private string? _search;
+    private bool   _isAuth; 
 
     protected override async Task OnInitializedAsync()
     {
-        _orders.AddRange(await OrderService.GetAsync(string.Empty));
+        var state  = await AuthProvider.GetAuthenticationStateAsync();
+        _isAuth = state.User.Identity?.IsAuthenticated == true;
+
+        if (_isAuth)
+            _orders.AddRange(await OrderService.GetAsync(string.Empty));
+
+        AuthProvider.AuthenticationStateChanged += OnAuthStateChanged;
+    }
+    
+    private async void OnAuthStateChanged(Task<AuthenticationState> task)
+    {
+        _isAuth = task.Result.User.Identity?.IsAuthenticated == true;
+
+        _orders.Clear();
+        if (_isAuth)
+            _orders.AddRange(await OrderService.GetAsync(string.Empty));
+
+        StateHasChanged();
     }
 
     private bool FilterFunc(OrderResponse o) =>
@@ -100,6 +120,11 @@
         var dialogReference = await Dialogs.ShowAsync<CancelConfirmation>("Отмена заказа", dialogParameters);
         if (!(await dialogReference.Result)!.Canceled)
             await CancelOrder(order);
+    }
+    
+    public void Dispose()
+    {
+        AuthProvider.AuthenticationStateChanged -= OnAuthStateChanged;
     }
 }
 
