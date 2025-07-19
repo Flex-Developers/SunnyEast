@@ -2,6 +2,7 @@
 using Client.Infrastructure.Services.Category;
 using Client.Infrastructure.Services.HttpClient;
 using Client.Infrastructure.Services.Cart;
+using Client.Infrastructure.Services.Order;
 using Client.Infrastructure.Services.Price;
 using Client.Infrastructure.Services.Product;
 using Client.Infrastructure.Services.Shop;
@@ -22,7 +23,8 @@ public static class DependencyInitializer
             .AddScoped<IPriceCalculatorService, PriceCalculatorService>()
             .AddScoped<IHttpClientService, HttpClientService>()
             .AddScoped<IValidationService, ValidationService>()
-            .AddScoped<IShopService, ShopService>();
+            .AddScoped<IShopService, ShopService>()
+            .AddScoped<IOrderService, OrderService>();
 
     }
 }

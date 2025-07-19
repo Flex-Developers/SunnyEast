@@ -41,8 +41,7 @@
 
     private readonly CreateProductCategoryCommand _command = new() { Name = "" };
     private IReadOnlyCollection<string> SelectedVolumes { get; set; } = new HashSet<string>();
-
-
+    
     private string[] ProductVolumes =
     {
         "100 Г", "300 Г", "500 Г", "1 Кг", "2 Кг", "3 Кг", "5 Кг", "100 мл", "300 мл",
@@ -60,7 +59,12 @@
         {
             if (SelectedVolumes.Count > 5)
             {
-                Snackbar.Add("Можно выбрать максимум 5 вариантов.", Severity.Warning);
+                Snackbar.Add("Можно выбрать максимум 5 объемов.", Severity.Warning);
+                return;
+            }
+            if (SelectedVolumes.Count < 4)
+            {
+                Snackbar.Add("Нужно выбрать минимум 3 объема.", Severity.Warning);
                 return;
             }
             

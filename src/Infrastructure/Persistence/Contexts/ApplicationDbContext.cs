@@ -15,6 +15,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<ShopOrder> ShopsOrders { get; set; }
     public new DbSet<ApplicationUser> Users { get; set; }
     public DbSet<CartItem> CartItems { get; set; }
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Shop> Shops { get; set; }
     public DbSet<ShopOrder> ShopOrders { get; set; }
 }

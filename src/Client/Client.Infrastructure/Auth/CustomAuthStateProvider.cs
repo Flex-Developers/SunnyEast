@@ -13,22 +13,47 @@ public class CustomAuthStateProvider(ILocalStorageService localStorageService) :
         try
         {
             var token = await localStorageService.GetItemAsync<JwtTokenResponse>("authToken");
-            if (token != null)
+            if (token != null && !string.IsNullOrEmpty(token.AccessToken))
             {
                 var tokenHandler = new JwtSecurityTokenHandler();
-                var claims = tokenHandler.ReadJwtToken(token.AccessToken).Claims;
-                var identity = new ClaimsIdentity(claims);
+                var jwtToken = tokenHandler.ReadJwtToken(token.AccessToken);
+
+                if (jwtToken.ValidTo < DateTime.UtcNow)
+                {
+                    await localStorageService.RemoveItemAsync("authToken");
+                    return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
+                }
+
+                var claims = jwtToken.Claims;
+                var identity = new ClaimsIdentity(claims, "jwt");
                 var principal = new ClaimsPrincipal(identity);
-                var authState = new AuthenticationState(principal);
-                NotifyAuthenticationStateChanged(Task.FromResult(authState));
-                return authState;
+                return new AuthenticationState(principal);
             }
         }
         catch (Exception)
         {
-            // ignored
+            await localStorageService.RemoveItemAsync("authToken");
         }
 
-        return new AuthenticationState(new ClaimsPrincipal());
+        return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
+    }
+
+    public async Task MarkUserAsAuthenticated(JwtTokenResponse token)
+    {
+        await localStorageService.SetItemAsync("authToken", token);
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var jwtToken = tokenHandler.ReadJwtToken(token.AccessToken);
+        var claims = jwtToken.Claims;
+        var identity = new ClaimsIdentity(claims, "jwt");
+        var principal = new ClaimsPrincipal(identity);
+        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(principal)));
+    }
+
+    public async Task MarkUserAsLoggedOut()
+    {
+        await localStorageService.RemoveItemAsync("authToken");
+        var identity = new ClaimsIdentity();
+        var principal = new ClaimsPrincipal(identity);
+        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(principal)));
     }
 }

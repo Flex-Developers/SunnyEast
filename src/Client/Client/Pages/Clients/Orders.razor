@@ -1,0 +1,181 @@
+@page "/orders"
+@using Application.Contract.Enums
+@using Client.Infrastructure.Services.Order
+@using Application.Contract.Order.Responses
+@using Client.Components.Common
+@using Client.Components.Dialogs
+@using Severity = MudBlazor.Severity
+@inject IOrderService OrderService
+@inject NavigationManager Navigation
+@inject IDialogService Dialogs
+@inject AuthenticationStateProvider AuthProvider
+@implements IDisposable  
+
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mx-auto">
+
+    <MudText Typo="Typo.h4" Align="Align.Center"
+             Class="mb-4 font-weight-bold">
+        Мои заказы
+    </MudText>
+
+        <MudTable Items="_orders"
+                  Hover="true" 
+                  Dense="true"
+                  Elevation="10"
+                  Bordered="true"
+                  Class="border rounded-lg"
+                  Filter="FilterFunc">
+
+            <ToolBarContent>
+                <MudTextField @bind-Value="_search"
+                              Placeholder="Поиск по № заказа / магазину…"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Immediate Class="w-100" />
+            </ToolBarContent>
+
+            <HeaderContent>
+                <MudTh Class="nowrap text-center">Номер</MudTh>
+                <MudTh Class="text-center">Магазин</MudTh>
+                <MudTh Class="text-center">Статус</MudTh>
+                <MudTh Class="text-center">Сумма</MudTh>
+                <MudTh Class="text-center" Style="width:300px">Действия</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd DataLabel="Номер" Class="nowrap text-center">@context.OrderNumber</MudTd>
+                <MudTd DataLabel="Магазин">@context.Shop!.Address</MudTd>
+                <MudTd DataLabel="Статус" Class="text-center"><OrderStatusChip Status="@context.Status" /></MudTd>
+                <MudTd DataLabel="Сумма"  Class="text-center">@($"{context.Sum:N2} ₽")</MudTd>
+                <MudTd DataLabel="Действия">
+                    <div class="actions-cell">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary" Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Visibility"
+                               @onclick="@(() => Navigation.NavigateTo($"/orders/{context.Slug}"))">
+                        Подробнее
+                    </MudButton>
+                    @if (context.Status is OrderStatus.Submitted or OrderStatus.InProgress or OrderStatus.Ready)
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                                   @onclick="() => AskCancel(context)">
+                            Отменить
+                        </MudButton>
+                    }
+                    </div>
+                </MudTd>
+            </RowTemplate>
+
+            <NoRecordsContent>
+                @if (string.IsNullOrWhiteSpace(_search))
+                {
+                    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="my-6">
+                        У вас пока нет оформленных заказов.
+                    </MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="my-6">
+                        Ничего не найдено.
+                    </MudText>
+                }
+            </NoRecordsContent>
+
+            <PagerContent>
+                <MudTablePager
+                    PageSizeOptions="new [] {15}"
+                               HorizontalAlignment="HorizontalAlignment.End"
+                               InfoFormat="@_paginationInfoFormat"
+                               HideRowsPerPage="true"
+                               HidePageNumber="false"
+                               HidePagination="false" />
+            </PagerContent>
+        </MudTable>
+</MudContainer>
+
+@code {
+    private readonly List<OrderResponse> _orders = new();
+    private readonly string _paginationInfoFormat = "{first_item}-{last_item} из {all_items}";
+    private string? _search;
+    private bool   _isAuth; 
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state  = await AuthProvider.GetAuthenticationStateAsync();
+        _isAuth = state.User.Identity?.IsAuthenticated == true;
+
+        await RefreshOrders();
+        
+        AuthProvider.AuthenticationStateChanged += OnAuthStateChanged;
+    }
+    
+    private async Task RefreshOrders()
+    {
+        _orders.Clear();
+
+        if (_isAuth)                           
+            _orders.AddRange(await OrderService.GetAsync(string.Empty));
+
+        StateHasChanged();                     
+    }
+    
+    private async void OnAuthStateChanged(Task<AuthenticationState> task)
+    {
+        _isAuth = task.Result.User.Identity?.IsAuthenticated == true;
+
+        await RefreshOrders();
+    }
+
+    private bool FilterFunc(OrderResponse o) =>
+        string.IsNullOrWhiteSpace(_search)
+        || o.OrderNumber.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || o.Shop!.Address.Contains(_search, StringComparison.OrdinalIgnoreCase);
+
+    private async Task CancelOrder(OrderResponse order)
+    {
+        if (await OrderService.CancelOwnAsync(order.Slug))
+            Snackbar.Add($"Заказ {order.OrderNumber} отменён", Severity.Success);
+        else
+            Snackbar.Add($"Не удалось отменить {order.OrderNumber}", Severity.Warning);
+
+        await RefreshOrders();
+    }
+
+    private async Task AskCancel(OrderResponse order)
+    {
+        var dialogParameters = new DialogParameters { ["Content"] = order.OrderNumber };
+        var dialogReference = await Dialogs.ShowAsync<CancelConfirmation>("Отмена заказа", dialogParameters);
+        if (!(await dialogReference.Result)!.Canceled)
+            await CancelOrder(order);
+    }
+    
+    public void Dispose()
+    {
+        AuthProvider.AuthenticationStateChanged -= OnAuthStateChanged;
+    }
+}
+
+<style>
+    .nowrap 
+    { 
+        white-space: nowrap;
+    }
+
+    .actions-cell {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+        gap: 8px;
+        
+    }
+
+    .actions-cell .mud-button-root {
+        width: 100%;
+    }
+
+    @@media (max-width: 600px) {
+        .actions-cell {
+            grid-template-columns:repeat(2, 1fr);
+        }
+    }
+</style>

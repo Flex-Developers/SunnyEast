@@ -1,0 +1,33 @@
+@using Application.Contract.Enums
+
+<MudChip Color="@ChipColor"
+         T="OrderStatus"
+         Variant="Variant.Filled"
+         Size="Size.Medium"
+         Class="text-uppercase">
+    @StatusRu
+</MudChip>
+
+@code {
+    [Parameter, EditorRequired] public OrderStatus Status { get; set; }
+
+    private Color ChipColor => Status switch
+    {
+        OrderStatus.Submitted or OrderStatus.InProgress => Color.Info,
+        OrderStatus.Ready => Color.Warning,
+        OrderStatus.Issued => Color.Success,
+        OrderStatus.Canceled => Color.Error,
+        _ => Color.Default
+    };
+
+    private string StatusRu => Status switch
+    {
+        OrderStatus.Submitted => "Оформлен",
+        OrderStatus.Ready => "Готов",
+        OrderStatus.Issued => "Выдан",
+        OrderStatus.Canceled => "Отменен",
+        OrderStatus.InProgress => "В процессе",
+        _ => Status.ToString()
+    };
+
+}

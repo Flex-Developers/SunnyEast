@@ -30,12 +30,12 @@
         <MudSpacer/>
 
         <MudTextField @bind-Value="SearchTerm"
-                      Placeholder="Поиск товаров"
+                      Label="Поиск товаров"
                       Adornment="Adornment.End"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       Immediate="true"
                       DebounceInterval="300"
-                      Class="search-field"/>
+                      Class="search-field" />
 
     </MudToolBar>
 </MudPaper>
@@ -141,7 +141,6 @@
 @code {
     private List<ProductResponse> _products = new();
     private List<ProductCategoryResponse> _categories = new();
-    private readonly GetProductsQuery _query = new();
     private HashSet<string> _cartKeys = new();
     private string? _searchTerm;
     private List<ProductResponse> _allProducts = new();
@@ -282,7 +281,7 @@
 <style>
 
     .search-field {
-        width: 200px;
+        width: 50px;
         margin-left: auto;
     }
 

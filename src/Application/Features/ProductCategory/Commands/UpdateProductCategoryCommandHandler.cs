@@ -1,6 +1,8 @@
+using System.Text.Json;
 using Application.Common.Exceptions;
 using Application.Common.Interfaces.Contexts;
 using Application.Common.Interfaces.Services;
+using Application.Contract.Product.Responses;
 using Application.Contract.ProductCategory.Commands;
 using AutoMapper;
 using Domain.Entities;
@@ -9,52 +11,51 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.ProductCategory.Commands;
 
-public class UpdateProductCategoryCommandHandler(IApplicationDbContext context, ISlugService slugService, IMapper mapper)
+public class UpdateProductCategoryCommandHandler(IApplicationDbContext context, ISlugService slugService, IMapper mapper, IPriceCalculatorService priceCalculator)
     : IRequestHandler<UpdateProductCategoryCommand, string>
 {
     public async Task<string> Handle(UpdateProductCategoryCommand request, CancellationToken cancellationToken)
     {
-        var old = await context.ProductCategories
+        var oldCategory = await context.ProductCategories
             .FirstOrDefaultAsync(s => s.Slug == request.Slug, cancellationToken);
 
-        if (old is null)
+        if (oldCategory is null)
             throw new NotFoundException($"Категория не найдена {request.Slug}");
         
-        old.Name = request.Name.Trim();
-        old.Slug = slugService.GenerateSlug(request.Name);
+        oldCategory.Name = request.Name.Trim();
+        oldCategory.Slug = slugService.GenerateSlug(request.Name);
+        var oldDiscount = oldCategory.DiscountPercentage;
         
-        mapper.Map(request, old);
+        mapper.Map(request, oldCategory);
 
-        await ApplyDiscount(request, old, cancellationToken);
+        await ApplyDiscountAsync(request, oldCategory, oldDiscount, cancellationToken);
 
         await context.SaveChangesAsync(cancellationToken);
-        return old.Slug;
+        return oldCategory.Slug;
     }
 
-    private async Task ApplyDiscount(UpdateProductCategoryCommand request, Domain.Entities.ProductCategory old, CancellationToken cancellationToken)
+    private async Task ApplyDiscountAsync(UpdateProductCategoryCommand request, Domain.Entities.ProductCategory category, byte? oldDiscount, CancellationToken ct)
     {
-        // If the discount percentage is less than 1 or already matches the old value, exit the method
-        if (request.DiscountPercentage is < 1 || old.DiscountPercentage == request.DiscountPercentage)
+        if (request.DiscountPercentage is < 1 || request.DiscountPercentage == oldDiscount || !request.ApplyDiscountToAllProducts)
             return;
 
-        // Create an initial query to get products by category name
-        IQueryable<Product> productsQuery = context.Products
-            .Include(p => p.ProductCategory)
-            .Where(p => p.ProductCategory!.Name == request.Name);
+        var products = await context.Products
+            .Where(p => p.ProductCategoryId == category.Id)
+            .ToListAsync(ct);
 
-        // If we do not want to apply discount to all products, add a condition to filter
-        if (request.ApplyDiscountToAllProducts is false)
-            productsQuery = productsQuery.Where(p => p.DiscountPercentage == null);
-
-        // Execute the query and get the list of products
-        List<Product> products = await productsQuery.ToListAsync(cancellationToken);
-
-        // Update the discount percentage and calculate the new discounted price for each product
         foreach (var product in products)
         {
-            product.DiscountPercentage = request.DiscountPercentage; // Set the new discount percentage
-            UpdateDiscountPrice(product); // Call method to update the discounted price
-        } 
+            product.DiscountPercentage = request.DiscountPercentage;
+            UpdateDiscountPrice(product);
+
+            var volumes = category.ProductVolumes ?? [];
+
+            var vp = priceCalculator
+                .GetPrices(volumes, product.Price, product.DiscountPercentage)
+                .Select(t => new VolumePrice(t.Volume, t.Price!.Value, null));
+
+            product.VolumePricesJson = JsonSerializer.Serialize(vp);
+        }
     }
 
     private static void UpdateDiscountPrice(Product product)
