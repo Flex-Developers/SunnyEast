@@ -128,10 +128,13 @@
 
     private async Task MoveToArchive(OrderResponse order)
     {
-        await OrderService.ArchiveAsync(order.Slug, true, order.Status);
-        _orders.Remove(order);
-        Snackbar.Add($"Заказ {order.OrderNumber} перемещён в архив", Severity.Success);
-        StateHasChanged();
+        if (await OrderService.ArchiveAsync(order.Slug, order.Status))
+        {
+            Snackbar.Add($"Заказ {order.OrderNumber} перемещён в архив", Severity.Success);
+            await OnInitializedAsync();
+        }
+        else
+            Snackbar.Add($"Не удалось переместить {order.OrderNumber} в архив",Severity.Warning);
     }
 
     private bool FilterFunc(OrderResponse o) =>
@@ -150,17 +153,20 @@
 
     private async Task ChangeStatus(OrderResponse order, OrderStatus status)
     {
-        await OrderService.UpdateStatusAsync(order.Slug, status);
-        order.Status = status;
-        Snackbar.Add($"Заказ {order.OrderNumber} → {ToRu(status)}", Severity.Success);
-        StateHasChanged();
+        if (await OrderService.UpdateStatusAsync(order.Slug, status))
+        {
+            Snackbar.Add($"Заказ {order.OrderNumber} → {ToRu(status)}", Severity.Success);
+            await OnInitializedAsync();
+        }
+        else
+            Snackbar.Add($"Не удалось изменить статус {order.OrderNumber}", Severity.Error);
     }
 
     private async Task AskCancel(OrderResponse order)
     {
-        var prm = new DialogParameters { ["Content"] = order.OrderNumber };
-        var dlg = await Dialogs.ShowAsync<CancelConfirmation>("Отмена заказа", prm);
-        if (!(await dlg.Result)!.Canceled)
+        var dialogParameters = new DialogParameters { ["Content"] = order.OrderNumber };
+        var dialogReference = await Dialogs.ShowAsync<CancelConfirmation>("Отмена заказа", dialogParameters);
+        if (!(await dialogReference.Result)!.Canceled)
             await ChangeStatus(order, OrderStatus.Canceled);
     }
 

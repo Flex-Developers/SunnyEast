@@ -9,6 +9,7 @@
 @inject NavigationManager Navigation
 @inject IDialogService Dialogs
 @inject AuthenticationStateProvider AuthProvider
+@implements IDisposable  
 
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mx-auto">
@@ -103,21 +104,26 @@
         var state  = await AuthProvider.GetAuthenticationStateAsync();
         _isAuth = state.User.Identity?.IsAuthenticated == true;
 
-        if (_isAuth)
+        await RefreshOrders();
+        
+        AuthProvider.AuthenticationStateChanged += OnAuthStateChanged;
+    }
+    
+    private async Task RefreshOrders()
+    {
+        _orders.Clear();
+
+        if (_isAuth)                           
             _orders.AddRange(await OrderService.GetAsync(string.Empty));
 
-        AuthProvider.AuthenticationStateChanged += OnAuthStateChanged;
+        StateHasChanged();                     
     }
     
     private async void OnAuthStateChanged(Task<AuthenticationState> task)
     {
         _isAuth = task.Result.User.Identity?.IsAuthenticated == true;
 
-        _orders.Clear();
-        if (_isAuth)
-            _orders.AddRange(await OrderService.GetAsync(string.Empty));
-
-        StateHasChanged();
+        await RefreshOrders();
     }
 
     private bool FilterFunc(OrderResponse o) =>
@@ -127,11 +133,12 @@
 
     private async Task CancelOrder(OrderResponse order)
     {
-        //TODO: after fixes call OnInitialized()
-        await OrderService.CancelOwnAsync(order.Slug);
-        order.Status = OrderStatus.Canceled;            // локально помечаем
-        Snackbar.Add($"Заказ {order.OrderNumber} отменён", Severity.Success);
-        StateHasChanged();
+        if (await OrderService.CancelOwnAsync(order.Slug))
+            Snackbar.Add($"Заказ {order.OrderNumber} отменён", Severity.Success);
+        else
+            Snackbar.Add($"Не удалось отменить {order.OrderNumber}", Severity.Warning);
+
+        await RefreshOrders();
     }
 
     private async Task AskCancel(OrderResponse order)

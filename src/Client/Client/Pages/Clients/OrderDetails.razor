@@ -174,16 +174,21 @@
     
     private async Task CancelOrder(OrderResponse order)
     {
-        await OrderService.CancelOwnAsync(order.Slug);
-        _order = await OrderService.GetAsyncBySlug(order.Slug);   // перезагружаем
-        Snackbar.Add($"Заказ {order.OrderNumber} отменён", Severity.Success);
+        if (await OrderService.CancelOwnAsync(order.Slug))
+        {
+            _order = await OrderService.GetAsyncBySlug(order.Slug);   
+            Snackbar.Add($"Заказ {order.OrderNumber} отменён", Severity.Success);
+        }
+        else
+            Snackbar.Add($"Не удалось отменить {order.OrderNumber}", Severity.Warning);
+
+        
         StateHasChanged();
     }
     
 }
 
 <style>
-    /* подписи .DataLabel видимы только до 600 px */
     @@media (max-width:600px){
         .mud-table-cell[data-label]::before{
             content:attr(data-label);
