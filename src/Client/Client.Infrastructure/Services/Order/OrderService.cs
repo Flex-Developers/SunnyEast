@@ -1,5 +1,4 @@
 using Application.Contract.Order.Commands;
-using Application.Contract.Order.Queries;
 using Application.Contract.Order.Responses;
 using Application.Contract.Enums;
 using Client.Infrastructure.Services.Cart.Models;
@@ -52,28 +51,26 @@ public class OrderService(IHttpClientService httpClient, ISnackbar snackbar) : I
         return res.Success ? res.Response : null;
     }
 
-    public async Task UpdateStatusAsync(string slug, OrderStatus status)
+    public async Task<bool> UpdateStatusAsync(string slug, OrderStatus status)
     {
         var cmd = new ChangeOrderStatusCommand { Slug = slug, Status = status};
-        await httpClient.PutAsJsonAsync("/api/order/change-status", cmd);
+        return (await httpClient.PutAsJsonAsync("/api/order/change-status", cmd)).Success;
     }
 
-    public async Task CancelOwnAsync(string slug)
+    public async Task<bool> CancelOwnAsync(string slug)
     {
         var res = await httpClient.PutAsync($"/api/order/{Uri.EscapeDataString(slug)}/cancel");
 
-        if (!res.Success)
-            snackbar.Add(httpClient.ExceptionMessage ?? "Не удалось отменить заказ.", Severity.Error);
+        return res.Success;
     }
 
-    public async Task ArchiveAsync(string slug, bool value, OrderStatus status)
+    public async Task<bool> ArchiveAsync(string slug, OrderStatus status)
     {
         var cmd = new ArchiveOrderCommand
         {
             Slug = slug,
             CurrentStatus = status,
-            IsInArchive = value
         };
-        await httpClient.PutAsJsonAsync($"/api/order/{slug}/archive", cmd);
+        return (await httpClient.PutAsJsonAsync($"/api/order/{slug}/archive", cmd)).Success;
     }
 }
