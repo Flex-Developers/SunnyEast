@@ -8,15 +8,20 @@
 @inject IOrderService   OrderService
 @inject NavigationManager Navigation
 
-<MudPaper Class="mx-auto mt-4 pa-4" MaxWidth="1280px">
 
-    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">
-        Архив заказов
-    </MudText>
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-6 mx-auto">
+
+<MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">
+    Архив заказов
+</MudText>
 
     <!-- ▸▸▸  ТАБЛИЦА  ◂◂◂ -->
     <MudTable Items="_orders"
-              Hover Dense Bordered FixedHeader Breakpoint="Breakpoint.Sm"
+              Hover="true" 
+              Dense="true" 
+              Bordered="true" 
+              Elevation="10"
+              Breakpoint="Breakpoint.Sm"
               Filter="FilterFunc"                          
               Class="border rounded-lg">
 
@@ -51,17 +56,45 @@
                 </MudButton>
             </MudTd>
         </RowTemplate>
+        
+        <NoRecordsContent>
+            @if (string.IsNullOrWhiteSpace(_search))
+            {
+                <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="my-6">
+                    В архиве нет заказов
+                </MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="my-6">
+                    Ничего не найдено.
+                </MudText>
+            }
+        </NoRecordsContent>
+        
+        <PagerContent>
+            <MudTablePager
+                PageSizeOptions="new [] {15, 30, 50, 100, int.MaxValue}"
+                HorizontalAlignment="HorizontalAlignment.End"
+                InfoFormat="@_paginationInfoFormat"
+                RowsPerPageString="@_rowsPerPageString"
+                HideRowsPerPage="false"
+                HidePageNumber="false"
+                HidePagination="false" />
+        </PagerContent>
     </MudTable>
-</MudPaper>
+</MudContainer>
 
 @code {
     private List<OrderResponse> _orders = [];
-    private string? _search;                         // ← для поиска
+    private readonly string _paginationInfoFormat = "{first_item}-{last_item} из {all_items}";
+    private readonly string _rowsPerPageString = "Кол-во строк";
+    private string? _search;                         
 
     protected override async Task OnInitializedAsync()
     {
-        _orders = (await OrderService.GetAsync(string.Empty, archived: true))
-                  .OrderByDescending(o => o.CreatedAt)    // новые сверху
+        _orders = (await OrderService.GetAsync(string.Empty, true))
+                  .OrderByDescending(o => o.CreatedAt)  
                   .ToList();
     }
 
@@ -69,5 +102,5 @@
     private bool FilterFunc(OrderResponse o) =>
         string.IsNullOrWhiteSpace(_search)
         || o.OrderNumber.Contains(_search, StringComparison.OrdinalIgnoreCase)
-        || o.Shop!.Slug.Contains(_search, StringComparison.OrdinalIgnoreCase);
+        || o.Shop!.Address.Contains(_search, StringComparison.OrdinalIgnoreCase);
 }

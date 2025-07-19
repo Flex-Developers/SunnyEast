@@ -11,18 +11,19 @@
 @inject AuthenticationStateProvider AuthProvider
 
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="mt-6 mx-auto">
+<MudContainer MaxWidth="MaxWidth.Large" Class="mx-auto">
 
     <MudText Typo="Typo.h4" Align="Align.Center"
              Class="mb-4 font-weight-bold">
         Мои заказы
     </MudText>
 
-    <MudPaper Class="pa-0">
-
         <MudTable Items="_orders"
-                  Dense Hover FixedHeader Elevation="0"
-                  Bordered Class="border rounded-lg"
+                  Hover="true" 
+                  Dense="true"
+                  Elevation="10"
+                  Bordered="true"
+                  Class="border rounded-lg"
                   Filter="FilterFunc">
 
             <ToolBarContent>
@@ -65,16 +66,35 @@
             </RowTemplate>
 
             <NoRecordsContent>
-                <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="my-6">
-                    У вас пока нет оформленных заказов.
-                </MudText>
+                @if (string.IsNullOrWhiteSpace(_search))
+                {
+                    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="my-6">
+                        У вас пока нет оформленных заказов.
+                    </MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="my-6">
+                        Ничего не найдено.
+                    </MudText>
+                }
             </NoRecordsContent>
+
+            <PagerContent>
+                <MudTablePager
+                    PageSizeOptions="new [] {15}"
+                               HorizontalAlignment="HorizontalAlignment.End"
+                               InfoFormat="@_paginationInfoFormat"
+                               HideRowsPerPage="true"
+                               HidePageNumber="false"
+                               HidePagination="false" />
+            </PagerContent>
         </MudTable>
-    </MudPaper>
 </MudContainer>
 
 @code {
     private readonly List<OrderResponse> _orders = new();
+    private readonly string _paginationInfoFormat = "{first_item}-{last_item} из {all_items}";
     private string? _search;
     private bool   _isAuth; 
 
@@ -103,7 +123,7 @@
     private bool FilterFunc(OrderResponse o) =>
         string.IsNullOrWhiteSpace(_search)
         || o.OrderNumber.Contains(_search, StringComparison.OrdinalIgnoreCase)
-        || o.Shop!.Slug.Contains(_search, StringComparison.OrdinalIgnoreCase);
+        || o.Shop!.Address.Contains(_search, StringComparison.OrdinalIgnoreCase);
 
     private async Task CancelOrder(OrderResponse order)
     {
