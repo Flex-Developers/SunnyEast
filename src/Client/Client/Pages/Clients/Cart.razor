@@ -1,6 +1,7 @@
 @page "/cart"
 @using Client.Infrastructure.Services.Cart
 @using Client.Infrastructure.Services.Cart.Models
+@inject AuthenticationStateProvider AuthProvider
 @inject ICartService CartService
 @inject NavigationManager Navigation
 @implements IDisposable
@@ -122,11 +123,25 @@
 
             <MudDivider Class="my-3"/>
 
-            <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                       FullWidth="true" Size="Size.Large"
-                       Disabled="@(_items.Count == 0)" OnClick="@(() => Navigation.NavigateTo("/checkout"))">
-                Перейти к оформлению
-            </MudButton>
+            @if (_isAuth)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           FullWidth="true" Size="Size.Large"
+                           Disabled="@(_items.Count == 0)"
+                           OnClick="@Checkout">
+                    Перейти к оформлению
+                </MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           FullWidth="true" Size="Size.Large"
+                           Disabled="@(_items.Count == 0)"
+                           OnClick="@LoginRedirect">
+                    Авторизуйтесь, чтобы оформить заказ
+                </MudButton>
+            }
+
         </MudPaper>
     }
 
@@ -135,11 +150,26 @@
 @code {
     private List<CartItemDto> _items = new();
     private decimal _total;
+    private bool _isAuth; 
 
     protected override async Task OnInitializedAsync()
     {
         CartService.OnChange += CartChanged;
         await LoadAsync();
+        
+        var state = await AuthProvider.GetAuthenticationStateAsync();
+        _isAuth = state.User.Identity?.IsAuthenticated == true;
+    }
+    
+    private void LoginRedirect()
+    {
+        Navigation.NavigateTo($"/login?returnUrl={Uri.EscapeDataString("/checkout")}");
+    }
+
+
+    private void Checkout()
+    {
+        Navigation.NavigateTo("/checkout");
     }
 
     private async Task ChangeQuantity(CartItemDto item, int delta)
