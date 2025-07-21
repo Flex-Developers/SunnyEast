@@ -8,8 +8,10 @@
         </MudTooltip>
     </AuthorizeView>
 
-    <MudButton Variant="Variant.Text" DisableElevation="true" @onclick="() => Navigation.NavigateTo('/'.ToString())">
-        <MudText Typo="Typo.h5">Солнечный восток</MudText>
+    <MudButton Variant="Variant.Text" Class="brand-btn" @onclick="() => Navigation.NavigateTo('/'.ToString())">
+        <div class="brand-inner">
+            <MudText Typo="Typo.h5">Солнечный восток</MudText>
+        </div>
     </MudButton>
 
     <MudHidden Breakpoint="Breakpoint.SmAndDown">
@@ -110,5 +112,19 @@
         pointer-events: none;    
         box-shadow: none; 
     }
+
+    .brand-btn{
+        padding-right: 10px !important;
+        padding-bottom: 16px !important;
+        min-height:0!important;
+        display:flex; align-items:center;
+    }
+
+    .brand-inner{            
+        display:flex; align-items:center;
+        height:100%;
+       
+    }
+    
 
 </style>
