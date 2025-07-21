@@ -156,7 +156,7 @@ public class HttpClientService(
 
                 //TODO: Maybe should remove or fix this redirection
                 var returnUrl = Uri.EscapeDataString(navigationManager.Uri);
-                navigationManager.NavigateTo($"/account/login?returnUrl={returnUrl}", forceLoad: true);
+                navigationManager.NavigateTo($"/login?returnUrl={returnUrl}");
 
                 return null;   
             }
