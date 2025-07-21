@@ -3,13 +3,15 @@ using Application.Contract.User.Responses;
 using Client.Infrastructure.Auth;
 using Client.Infrastructure.Services.HttpClient;
 using Microsoft.AspNetCore.Components;
+using MudBlazor;
 
 namespace Client.Infrastructure.Services.Auth;
 
 public class AuthService(
     IHttpClientService httpClient,
     NavigationManager navigationManager,
-    CustomAuthStateProvider authStateProvider) : IAuthService
+    CustomAuthStateProvider authStateProvider,
+    ISnackbar snackbar) : IAuthService
 {
     public async Task<bool> LoginAsync(LoginUserCommand command, string? returnUrl = null)
     {
@@ -26,5 +28,6 @@ public class AuthService(
     public async Task LogoutAsync()
     {
         await authStateProvider.MarkUserAsLoggedOut();
+        snackbar.Add("Вы вышли из аккаунта.", Severity.Success);
     }
 }
