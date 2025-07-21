@@ -23,11 +23,13 @@
             <MudLayout Class="d-flex flex-column min-vh-100">
                 <AppBar @bind-IsDarkMode="@_isDarkMode" @bind-DrawerOpen="@_drawerOpen"/>
                 <MudDrawer @bind-Open="_drawerOpen"
+                           Variant="DrawerVariant.Temporary"
+                           Breakpoint="Breakpoint.MdAndDown"
                            Elevation="25"
-                           ClipMode="DrawerClipMode.Always"
-                           Style="top: 64px; z-index: 1;">
+                           Class="admin-drawer">
                     <NavMenu/>
                 </MudDrawer>
+
                 <AdminLayout>
                     <div class="flex-grow-1">
                         @Body

@@ -124,3 +124,7 @@ code {
 .animated-content {
     animation: fadeIn 1.5s ease-in-out;
 }
+
+.admin-drawer {
+    top: 64px;
+}
