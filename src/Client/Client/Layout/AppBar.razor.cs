@@ -12,8 +12,9 @@ public partial class AppBar : IDisposable
 
     public async Task ToggleDarkLightMode()
     {
-        var newState = await ClientPreferences.ToggleDarkModeAsync();
+        var newState = !IsDarkMode;
         await IsDarkModeChanged.InvokeAsync(newState);
+        await ClientPreferences.ToggleDarkModeAsync();
     }
 
     [Parameter] public bool DrawerOpen { get; set; }
@@ -22,8 +23,9 @@ public partial class AppBar : IDisposable
 
     private async Task DrawerToggle()
     {
-        var newState = await ClientPreferences.ToggleDrawerAsync();
+        var newState = !DrawerOpen;
         await DrawerOpenChanged.InvokeAsync(newState);
+        await ClientPreferences.ToggleDrawerAsync();
     }
     
     private int _cartCount;

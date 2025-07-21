@@ -2,11 +2,12 @@
 using System.Security.Claims;
 using Application.Contract.User.Responses;
 using Blazored.LocalStorage;
+using Client.Infrastructure.Services.Cart;
 using Microsoft.AspNetCore.Components.Authorization;
 
 namespace Client.Infrastructure.Auth;
 
-public class CustomAuthStateProvider(ILocalStorageService localStorageService) : AuthenticationStateProvider
+public class CustomAuthStateProvider(ILocalStorageService localStorageService, ICartService cartService) : AuthenticationStateProvider
 {
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
@@ -52,6 +53,7 @@ public class CustomAuthStateProvider(ILocalStorageService localStorageService) :
     public async Task MarkUserAsLoggedOut()
     {
         await localStorageService.RemoveItemAsync("authToken");
+        await cartService.ClearAsync();
         var identity = new ClaimsIdentity();
         var principal = new ClaimsPrincipal(identity);
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(principal)));

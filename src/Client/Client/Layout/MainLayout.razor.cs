@@ -15,17 +15,9 @@ public partial class MainLayout
     [Parameter] public EventCallback OnDarkModeToggle { get; set; }
     private bool _drawerOpen;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender) _isDarkMode = await _mudThemeProvider.GetSystemPreference();
-    }
-
     protected override async Task OnInitializedAsync()
     {
-        _themePreference = await ClientPreferences.GetPreference() as ClientPreference;
-
-        if (_themePreference == null)
-            _themePreference = new ClientPreference();
+        _themePreference = await ClientPreferences.GetPreference() as ClientPreference ?? new ClientPreference();
 
         SetCurrentTheme(_themePreference);
     }
