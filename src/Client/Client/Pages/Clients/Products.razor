@@ -189,16 +189,6 @@
 
     private async Task AddToCart(ProductResponse p)
     {
-        // Проверяем авторизацию пользователя
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        if (!authState.User.Identity?.IsAuthenticated ?? true)
-        {
-            // Если пользователь не авторизован, перенаправляем на страницу входа
-            var returnUrl = System.Web.HttpUtility.UrlEncode(Navigation.Uri);
-            Navigation.NavigateTo($"/login?returnUrl={returnUrl}");
-            return;
-        }
-
         var volumePrice = p.Prices.First(x => x.Volume == p.SelectedVolume);
 
         var dto = new CartItemDto
