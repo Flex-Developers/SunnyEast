@@ -54,7 +54,7 @@
                 </MudTd>
 
                 <MudTd DataLabel="Цена/шт" Class="text-right">
-                    @((context.DiscountPrice ?? context.Price).ToString("N2"))&nbsp;₽
+                    @((context.DiscountPrice ?? context.Price).ToString("N2")) ₽
                 </MudTd>
 
                 <MudTd DataLabel="Кол-во">
@@ -69,7 +69,7 @@
                 </MudTd>
 
                 <MudTd DataLabel="Итого" Class="text-right">
-                    @(((context.DiscountPrice ?? context.Price) * context.Quantity).ToString("N2"))&nbsp;₽
+                    @(((context.DiscountPrice ?? context.Price) * context.Quantity).ToString("N2")) ₽
                 </MudTd>
 
                 <MudTd>
@@ -83,8 +83,7 @@
     <MudPaper Class="p-4 mt-4 checkout-form">
 
         <!-- магазин --------------------------------------------------- -->
-        <MudSelect T="string" Dense Label="Выберите магазин для самовывоза" Class="w-100 mb-3"
-                   @bind-Value="_selectedShop">
+        <MudSelect T="string" Dense="false" Label="Выберите магазин для самовывоза" Class="w-100 mb-3" @bind-Value="_selectedShop">
             @foreach (var s in _shops)
             {
                 <MudSelectItem Value="@s.Slug">@s.Address</MudSelectItem>
@@ -95,23 +94,18 @@
         @if (_currentShop?.Images?.Any() == true)
         {
             <div class="carousel-wrapper mb-6">
-                <MudCarousel TData="string"
+                <MudCarousel T="string"
                              ItemsSource="@_currentShop.Images"
-                             Height="260px"
                              Class="carousel-banner"
                              EnableSwipeGesture="true"
                              AutoCycle="true"
                              ShowArrows="true"
                              ArrowsPosition="Position.Center"
-                             PrevIcon="@Icons.Material.Filled.ChevronLeft"
-                             NextIcon="@Icons.Material.Filled.ChevronRight"
                              BulletsPosition="Position.Bottom"
                              BulletsColor="Color.Dark"
                              Context="img">
                     <ItemTemplate>
-                        <MudImage Src="@img"
-                                  Alt="@_currentShop.Address"
-                                  Class="carousel-image"/>
+                        <MudImage Src="@img" Alt="@_currentShop.Address" Class="carousel-image"/>
                     </ItemTemplate>
                 </MudCarousel>
             </div>
