@@ -1,15 +1,40 @@
 @using Application.Contract.Identity
 @inject Infrastructure.Services.Cart.ICartService CartService
 <MudAppBar Elevation="0">
+
     <AuthorizeView Roles="@ApplicationRoles.Administrator">
         <MudTooltip Text="Меню">
-            <MudIconButton Icon="@Icons.Material.Rounded.Notes" Color="Color.Inherit" Edge="Edge.Start"
-                           OnClick="@(_ => DrawerToggle())"/>
+            <div style="margin-left: -10px; padding-right: 15px">
+                <MudIconButton Icon="@Icons.Material.Rounded.Notes" Color="Color.Inherit" Edge="Edge.Start"
+                               OnClick="@(_ => DrawerToggle())"/>
+            </div>
         </MudTooltip>
     </AuthorizeView>
 
-    <MudButton Variant="Variant.Text" DisableElevation="true" @onclick="() => Navigation.NavigateTo('/'.ToString())">
-        <MudText Typo="Typo.h5">Солнечный восток</MudText>
+    <div style="margin-left: -20px">
+        <AuthorizeView Roles="@($"{ApplicationRoles.Administrator}, {ApplicationRoles.Salesman}")">
+            <NotAuthorized>
+                <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                    <MudMenu Icon="@Icons.Material.Filled.Menu"
+                             Color="Color.Inherit"
+                             AnchorOrigin="Origin.BottomLeft"
+                             TransformOrigin="Origin.TopLeft"
+                             ListClass="mobile-menu">
+
+                        <MudMenuItem OnClick="@(() => Navigation.NavigateTo("/category"))">Категория</MudMenuItem>
+                        <MudMenuItem OnClick="@(() => Navigation.NavigateTo("/products"))">Продукты</MudMenuItem>
+                        <MudMenuItem OnClick="@(() => Navigation.NavigateTo("/about"))">О нас</MudMenuItem>
+                        <MudMenuItem OnClick="@(() => Navigation.NavigateTo("/contact"))">Контакты</MudMenuItem>
+
+                    </MudMenu>
+                </MudHidden>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+    <MudButton Variant="Variant.Text" Class="brand-btn" @onclick="() => Navigation.NavigateTo('/'.ToString())">
+        <div class="brand-inner">
+            <MudText Typo="Typo.h5">Солнечный восток</MudText>
+        </div>
     </MudButton>
 
     <MudHidden Breakpoint="Breakpoint.SmAndDown">
@@ -20,12 +45,13 @@
     </MudHidden>
 
     <MudSpacer/>
-    
-    <MudSpacer />
+
+    <MudSpacer/>
 
     <div class="right-icons" style="display: flex; align-items: center; gap: 12px; margin-right: 8px;">
         <div class="cart-wrapper">
-            <MudIconButton Icon="@Icons.Material.Filled.ShoppingCart" Color="Color.Inherit" OnClick="@(() => Navigation.NavigateTo("/cart"))" />
+            <MudIconButton Icon="@Icons.Material.Filled.ShoppingCart" Color="Color.Inherit"
+                           OnClick="@(() => Navigation.NavigateTo("/cart"))"/>
             @if (_cartCount > 0)
             {
                 <span class="cart-counter">@_cartCount</span>
@@ -33,22 +59,22 @@
         </div>
 
         <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">
-            <DarkModePanel OnIconClicked="ToggleDarkLightMode" />
+            <DarkModePanel OnIconClicked="ToggleDarkLightMode"/>
         </MudHidden>
 
         <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
-            <DarkModePanel OnIconClicked="ToggleDarkLightMode" />
+            <DarkModePanel OnIconClicked="ToggleDarkLightMode"/>
         </MudHidden>
     </div>
 
-    
+
     <MudMenu AnchorOrigin="Origin.BottomRight" LockScroll="true" TransformOrigin="Origin.TopRight">
         <ActivatorContent>
             <MudIconButton Icon="@Icons.Material.Filled.Person" Color="Color.Inherit"/>
         </ActivatorContent>
         <ChildContent>
             <div class="py-2" style="min-width: 220px">
-                <AuthorizeView Roles="@($"{ApplicationRoles.Administrator}, {ApplicationRoles.Salesman}, {ApplicationRoles.Customer}")">
+                <AuthorizeView>
                     <Authorized>
 
                         <MudMenuItem OnClick="@(Profile)">
@@ -96,19 +122,45 @@
 
     .cart-counter {
         position: absolute;
-        top: 0;          
-        right: -2px;        
+        top: 0;
+        right: -2px;
         min-width: 18px;
         height: 18px;
         padding: 0 4px;
-        background: darkgreen;     
+        background: darkgreen;
         color: white;
         border-radius: 50%;
         font-size: 0.70rem;
         line-height: 18px;
         text-align: center;
-        pointer-events: none;    
-        box-shadow: none; 
+        pointer-events: none;
+        box-shadow: none;
     }
+
+    .brand-btn {
+        padding-bottom: 10px !important;
+        min-height: 0 !important;
+        display: flex;
+        align-items: center;
+    }
+
+    .brand-inner {
+        display: flex;
+        align-items: center;
+        height: 100%;
+    }
+
+    .mobile-menu            
+    {          
+        min-width: 220px;  
+    }
+
+    .mobile-menu .mud-menu-item,
+    .mobile-menu .mud-button-root {     
+        padding-left: 24px; 
+        padding-right: 24px;
+    }
+
+
 
 </style>

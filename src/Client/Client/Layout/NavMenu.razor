@@ -2,6 +2,22 @@
 <MudNavMenu>
     <CascadingAuthenticationState>
         <AuthorizeView Roles="@ApplicationRoles.Administrator">
+            <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="ml-4 my-3">
+                    Навигация по сайту
+                </MudText>
+                <MudNavLink Href="/category" Match="NavLinkMatch.All">
+                    Категория
+                </MudNavLink>
+                <MudNavLink Href="/products" Match="NavLinkMatch.All">
+                    Продукты
+                </MudNavLink>
+                <MudNavLink Href="/about" Match="NavLinkMatch.All">
+                    О нас
+                </MudNavLink>
+            </MudHidden>
+
+
             <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="ml-4 my-3">
                 Админка
             </MudText>
