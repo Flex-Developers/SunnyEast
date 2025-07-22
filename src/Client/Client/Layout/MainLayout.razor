@@ -23,7 +23,7 @@
             <MudLayout Class="d-flex flex-column min-vh-100">
                 <AppBar @bind-IsDarkMode="@_isDarkMode" @bind-DrawerOpen="@_drawerOpen"/>
                 <MudDrawer @bind-Open="_drawerOpen"
-                           Variant="DrawerVariant.Temporary"
+                           Variant="DrawerVariant.Persistent"
                            Breakpoint="Breakpoint.MdAndDown"
                            Elevation="25"
                            Class="admin-drawer">
