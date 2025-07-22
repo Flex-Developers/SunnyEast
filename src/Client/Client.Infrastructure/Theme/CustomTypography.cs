@@ -109,7 +109,7 @@ public static class CustomTypography
         },
         Subtitle1 = new Subtitle1
         {
-            FontFamily = new[] { "Co Headline Corp", "sans-serif" },
+            FontFamily = ["Co Headline Corp", "sans-serif"],
             FontSize = "1rem",
             FontWeight = 200,
             LineHeight = 1.57,
@@ -117,7 +117,7 @@ public static class CustomTypography
         },
         Subtitle2 = new Subtitle2
         {
-            FontFamily = new[] { "Co Headline Corp", "sans-serif" },
+            FontFamily = ["Co Headline Corp", "sans-serif"],
             FontSize = ".875rem",
             FontWeight = 200,
             LineHeight = 1.57,
