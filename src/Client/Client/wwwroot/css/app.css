@@ -96,7 +96,7 @@ a, .btn-link {
 }
 
 .valid.modified:not([type=checkbox]) {
-    outline: 1px solid #26b050;
+    outline: 1px solid #019934;
 }
 
 .invalid {
@@ -205,7 +205,7 @@ code {
 
 
 .admin-drawer {
-    top: 64px;
+    top: 54px;
 }
 
 footer a,
