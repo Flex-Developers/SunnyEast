@@ -13,29 +13,34 @@
     </TitleContent>
 
     <DialogContent>
-        
+
         <MudTextField @bind-Value="Command.Name" Label="Название" Required="true" Class="dialog-text-field"/>
 
         <MudTextField @bind-Value="Command.ImageUrl" Label="Ссылка на изображение" AutoGrow="true" FullWidth="true"
                       Clearable="true" Class="dialog-text-field"/>
 
-        <MudNumericField T="byte?" Label="Скидка (%)" @bind-Value="Command.DiscountPercentage" Min="0" Max="100"
-                         Immediate="true" FullWidth="true" Clearable="true"/>
+        @if (Command.Name != "Все продукты")
+        {
+            <MudNumericField T="byte?" Label="Скидка (%)" @bind-Value="Command.DiscountPercentage" Min="0" Max="100"
+                             Immediate="true" FullWidth="true" Clearable="true"/>
 
-        <MudCheckBox @bind-Value="Command.ApplyDiscountToAllProducts"
-                     Label="Изменить также продукты со скидкой"
-                     Color="Color.Secondary"
-                     Class="checkbox-label">
-        </MudCheckBox>
+            <MudCheckBox Style="margin-left: -15px" @bind-Value="Command.ApplyDiscountToAllProducts"
+                         Label="Изменить также продукты со скидкой"
+                         Color="Color.Secondary"
+                         Class="checkbox-label">
+            </MudCheckBox>
 
-        <MudText Typo="Typo.h6" Class="variant-text">Варианты объема продукта:</MudText>
+        
+            <MudText Typo="Typo.h6" Class="variant-text">Варианты объема продукта:</MudText>
 
-        <MudChipSet SelectionMode="SelectionMode.MultiSelection" @bind-SelectedValues="SelectedVolumes" Ripple="true" CheckMark="true">
-            @foreach (var volume in ProductVolumes)
-            {
-                <MudChip Text="@volume" Variant="Variant.Text" Color="Color.Info">@volume</MudChip>
-            }
-        </MudChipSet>
+            <MudChipSet SelectionMode="SelectionMode.MultiSelection" @bind-SelectedValues="SelectedVolumes"
+                        Ripple="true" CheckMark="true">
+                @foreach (var volume in ProductVolumes)
+                {
+                    <MudChip Text="@volume" Variant="Variant.Text" Color="Color.Info">@volume</MudChip>
+                }
+            </MudChipSet>
+        }
 
     </DialogContent>
 
@@ -59,7 +64,7 @@
         "500 мл", "1 Л", "2 Л", "3 Л", "5 Л", "1 шт", "2 шт", "3 шт", "5 шт",
     };
 
-    
+
     protected override void OnParametersSet()
     {
         if (Command.ProductVolumes != null && Command.ProductVolumes.Any())
@@ -82,7 +87,8 @@
                 Snackbar.Add("Можно выбрать максимум 5 объемов.", Severity.Warning);
                 return;
             }
-            if (SelectedVolumes.Count < 4)
+
+            if (SelectedVolumes.Count < 3)
             {
                 Snackbar.Add("Нужно выбрать минимум 3 объема.", Severity.Warning);
                 return;
@@ -118,16 +124,15 @@
         margin-bottom: 16px;
         width: 100%;
     }
-    
+
     .checkbox-label {
-        margin-left: -15px;
         padding-left: -15px;
-        width: 100%; 
+        width: 100%;
         justify-content: flex-start;
     }
-    
+
     .variant-text {
-        text-align: center; 
+        text-align: center;
         padding-top: 2%;
         padding-bottom: 2%
     }
