@@ -20,7 +20,7 @@ public class CreateOrderCommandHandler(
     {
         var userName = currentUserService.GetUserName() ?? throw new ForbiddenException();
 
-        var user = await context.Users.FirstOrDefaultAsync(u => u.Name == userName, cancellationToken)
+        var user = await context.Users.FirstOrDefaultAsync(u => u.UserName == userName, cancellationToken)
                    ?? throw new ForbiddenException();
 
         var shop = await context.Shops.FirstOrDefaultAsync(s => s.Slug == request.ShopSlug, cancellationToken);
