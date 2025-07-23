@@ -1,10 +1,77 @@
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    /*Code I added - Start*/
+    font-family: 'Co Headline Corp', sans-serif;
     height: 100vh;
     max-height: 100vh;
-    /*Code I added - End*/
 }
+
+/*──────────────────  Co HeadlineCorp  ──────────────────*/
+
+/* Light(200‑300) */
+@font-face {
+    font-family: 'Co Headline Corp';
+    src: url('../fonts/Co Headline Light.otf') format('opentype');
+    font-weight: 200 300;
+    font-style: normal;
+    font-display: swap;
+
+    /* скорректированные метрики */
+    ascent-override: 89.5%;
+    descent-override: 10.5%;
+    line-gap-override: 0%;
+}
+
+/* Regular(400) */
+@font-face {
+    font-family: 'Co Headline Corp';
+    src:
+            url('../fonts/CoHeadlineCorp-Regular.woff2') format('woff2'),
+            url('../fonts/CoHeadlineCorp-Regular.woff')  format('woff'),
+            url('../fonts/CoHeadlineCorp-Regular.ttf')   format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+
+    ascent-override: 89.5%;
+    descent-override: 10.5%;
+    line-gap-override: 0%;
+}
+
+/* Bold(700) */
+@font-face {
+    font-family: 'Co Headline Corp';
+    src: url('../fonts/Co Headline Bold.otf') format('opentype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+
+    ascent-override: 89.5%;
+    descent-override: 10.5%;
+    line-gap-override: 0%;
+}
+
+/* глобальный сброс шрифта*/
+:root, html, body, * {
+    font-family: 'Co Headline Corp', sans-serif !important;
+    --bs-body-font-weight: 300;
+}
+
+/* для MudTextField*/
+@font-face{
+    font-family:"Co Headline Light";                     
+    src:url("../fonts/Co Headline Light.otf") format("opentype");
+    font-weight:400; font-style:normal; font-display:swap;
+}
+input.mud-input-root,
+textarea.mud-input-root,
+.mud-input-slot   {      
+    font-family: "Input Sans", sans-serif !important;
+}
+
+input.mud-input-root.mud-input-root-margin-dense,
+textarea.mud-input-root.mud-input-root-margin-dense{
+    font-family: "Input Sans", sans-serif !important;
+}
+
 
 h1:focus {
     outline: none;
@@ -135,4 +202,17 @@ code {
     --blazor-load-percentage:      0;
     --blazor-load-percentage-text: "0 %";
 }
+
+
+.admin-drawer {
+    top: 64px;
+}
+
+footer a,
+.app-footer a,     
+.footer-link{
+    color:inherit !important;     
+}
+
+.footer-link:hover{ text-decoration:underline; }
 
