@@ -41,7 +41,7 @@
             <MudGrid Class="mb-2">
 
                 <MudItem xs="12" sm="6">
-                    <MudText Color="Color.Secondary" Typo="Typo.h5">Магазин:</MudText>
+                    <MudText Color="Color.Info" Typo="Typo.h5">Магазин:</MudText>
                     <MudText Typo="Typo.h6">@_order.Shop?.Address</MudText>
 
                     @if (!string.IsNullOrWhiteSpace(_order.Shop?.Images?.FirstOrDefault()))
@@ -53,7 +53,7 @@
                 </MudItem>
 
                 <MudItem xs="12" sm="6">
-                    <MudText Color="Color.Secondary" Typo="Typo.h5">Создан:</MudText>
+                    <MudText Color="Color.Info" Typo="Typo.h5">Создан:</MudText>
                     <MudText Typo="Typo.h6">@_order.CreatedAt</MudText>
                 </MudItem>
 
@@ -61,7 +61,7 @@
                 @if (!string.IsNullOrWhiteSpace(_order.CustomerComment))
                 {
                     <MudItem xs="12">
-                        <MudText Color="Color.Secondary" Typo="Typo.h5">Комментарий:</MudText>
+                        <MudText Color="Color.Info" Typo="Typo.h5">Комментарий:</MudText>
                         <MudText Typo="Typo.h6">@_order.CustomerComment</MudText>
                     </MudItem>
                 }
