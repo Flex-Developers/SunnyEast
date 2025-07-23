@@ -36,9 +36,7 @@ public class OrderProfile : Profile
                 opt => opt.MapFrom(s => s.Volume))
             .ForMember(d => d.ImageUrl,
                 opt => opt.MapFrom(s =>
-                    (s.Product!.Images != null && s.Product.Images.Length > 0)
-                        ? s.Product.Images[0]
-                        : string.Empty));
+                    (s.Product!.Images != null && s.Product.Images.Length > 0) ? s.Product.Images.First() : string.Empty));
 
         CreateMap<Domain.Entities.ApplicationUser, CustomerResponse>();
         
