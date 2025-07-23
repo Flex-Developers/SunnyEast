@@ -14,6 +14,15 @@ public partial class MainLayout
 
     [Parameter] public EventCallback OnDarkModeToggle { get; set; }
     private bool _drawerOpen;
+    
+    private DrawerVariant _drawerVariant = DrawerVariant.Persistent;
+
+    private void OnBpChanged(Breakpoint bp)
+    {
+        // всё, что уже Md (960px) и уже меньше — мобильный режим
+        _drawerVariant = bp < Breakpoint.Md ? DrawerVariant.Responsive : DrawerVariant.Persistent;   
+        StateHasChanged();
+    }
 
     protected override async Task OnInitializedAsync()
     {
