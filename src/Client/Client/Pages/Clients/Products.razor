@@ -112,7 +112,7 @@
                                            OnClick="@(() => IncreaseQuantity(product))"/>
                         </div>
 
-                        <MudButton Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Small"
+                        <MudButton Color="Color.Info" Variant="Variant.Filled" Size="Size.Small"
                                    Disabled="@IsInCart(product)"
                                    OnClick="@(async () => await AddToCart(product))"
                                    Class="button">
@@ -301,7 +301,7 @@
     }
 
     .product-card:hover {
-        border: 1px solid green;
+        border: 1px solid #019934;
         box-shadow: 0 0 6px rgba(25, 118, 210, 0.3);
     }
 
