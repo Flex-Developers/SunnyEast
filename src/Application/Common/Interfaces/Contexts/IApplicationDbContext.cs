@@ -15,4 +15,5 @@ public interface IApplicationDbContext
     public DbSet<CartItem> CartItems { get; set; }
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     public DbSet<ApplicationUser> Users { get; set; }
+    public DbSet<SiteSetting> SiteSettings { get; set; }
 }

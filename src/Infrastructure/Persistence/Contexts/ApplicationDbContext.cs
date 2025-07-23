@@ -17,4 +17,5 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<CartItem> CartItems { get; set; }
     public DbSet<Shop> Shops { get; set; }
     public DbSet<ShopOrder> ShopOrders { get; set; }
+    public DbSet<SiteSetting> SiteSettings { get; set; }
 }
