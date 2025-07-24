@@ -33,6 +33,8 @@ public static class DependencyInitializer
         services.AddScoped<ApplicationDbContextInitializer>();
         services.AddScoped<ISlugService, SlugService>();
         services.AddScoped<IPriceCalculatorService, PriceCalculatorService>();
+        services.AddSingleton<IDateTimeService, DateTimeService>();
+        services.AddSingleton<IVolumeGroupService, VolumeGroupService>();
         services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(identityOptions =>
             {
                 identityOptions.ClaimsIdentity.RoleClaimType = ClaimTypes.Role;

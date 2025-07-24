@@ -1,5 +1,6 @@
 ﻿@page "/Login"
 @using System.Text.RegularExpressions
+@using System.Web
 @using Application.Contract.User.Commands
 @using Client.Infrastructure.Services.Auth
 @using Severity = MudBlazor.Severity
@@ -39,8 +40,6 @@
 
             </MudCardContent>
 
-            <MudCheckBox @bind-Value="_rememberMe" Label="Запомнить меня" Color="Color.Primary"></MudCheckBox>
-
             <MudCardActions Class="d-flex flex-column align-center gap-2 mt-1">
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth
                            OnClick="@(async () => await Submit())">
@@ -69,10 +68,17 @@
     private bool _isValidPassword = true;
     private bool _rememberMe;
     private string _loginInput;
+    private string? _returnUrl;
     private string _errorMessage = "Почта или телефон не могут быть пустыми.";
     private MudForm _form = null!;
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+    
+    protected override void OnInitialized()
+    {
+        var uri = new Uri(Navigation.Uri);
+        _returnUrl = HttpUtility.ParseQueryString(uri.Query).Get("returnUrl");
+    }
 
     private void NormalizeLoginInput()
     {
@@ -163,7 +169,7 @@
 
         if (_form.IsValid && string.IsNullOrWhiteSpace(_errorMessage) && _isValidPassword)
         {
-            if (await AuthService.LoginAsync(_loginCommand))
+            if (await AuthService.LoginAsync(_loginCommand, _returnUrl))
             {
                 // if success
                 Snackbar.Add("Успешный вход.", Severity.Success);

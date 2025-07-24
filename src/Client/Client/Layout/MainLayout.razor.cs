@@ -14,18 +14,19 @@ public partial class MainLayout
 
     [Parameter] public EventCallback OnDarkModeToggle { get; set; }
     private bool _drawerOpen;
+    
+    private DrawerVariant _drawerVariant = DrawerVariant.Persistent;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private void OnBpChanged(Breakpoint bp)
     {
-        if (firstRender) _isDarkMode = await _mudThemeProvider.GetSystemPreference();
+        // всё, что уже Md (960px) и уже меньше — мобильный режим
+        _drawerVariant = bp < Breakpoint.Md ? DrawerVariant.Responsive : DrawerVariant.Persistent;   
+        StateHasChanged();
     }
 
     protected override async Task OnInitializedAsync()
     {
-        _themePreference = await ClientPreferences.GetPreference() as ClientPreference;
-
-        if (_themePreference == null)
-            _themePreference = new ClientPreference();
+        _themePreference = await ClientPreferences.GetPreference() as ClientPreference ?? new ClientPreference();
 
         SetCurrentTheme(_themePreference);
     }

@@ -8,23 +8,23 @@ public static class ApplicationThemes
     {
         PaletteLight = new PaletteLight
         {
-            Primary = CustomColors.Light.Primary,
-            Secondary = CustomColors.Light.Secondary,
+            Primary = CustomColors.Light.PrimaryGreen,
+            Secondary = CustomColors.Light.SecondaryYellow,
             Background = CustomColors.Light.Background,
             AppbarBackground = CustomColors.Light.AppbarBackground,
             AppbarText = CustomColors.Light.AppbarText,
             DrawerBackground = CustomColors.Light.Background,
             DrawerText = "rgba(0,0,0, 0.7)",
-            Success = CustomColors.Light.Primary,
+            Success = CustomColors.Light.PrimaryGreen,
             TableLines = "#e0e0e029",
             OverlayDark = "hsl(0deg 0% 0% / 75%)"
         },
 
         PaletteDark = new PaletteDark
         {
-            Primary = CustomColors.Dark.Primary,
-            Secondary = CustomColors.Dark.Secondary,
-            Success = CustomColors.Dark.Primary,
+            Primary = CustomColors.Dark.PrimaryGreen,
+            Secondary = CustomColors.Dark.SecondaryYellow,
+            Success = CustomColors.Dark.PrimaryGreen,
             Black = "#27272f",
             Background = CustomColors.Dark.Background,
             BackgroundGray = "#27272f",

@@ -22,13 +22,16 @@
         <Authorized>
             <MudLayout Class="d-flex flex-column min-vh-100">
                 <AppBar @bind-IsDarkMode="@_isDarkMode" @bind-DrawerOpen="@_drawerOpen"/>
-                <MudDrawer @bind-Open="_drawerOpen"
-                           Variant="DrawerVariant.Persistent"
-                           Breakpoint="Breakpoint.MdAndDown"
-                           Elevation="25"
-                           Class="admin-drawer">
-                    <NavMenu/>
-                </MudDrawer>
+                <MudBreakpointProvider OnBreakpointChanged="OnBpChanged">
+                    <MudDrawer @bind-Open="_drawerOpen"
+                               Overlay="false"
+                               Variant="@_drawerVariant"
+                               ClipMode="DrawerClipMode.Always"
+                               Elevation="25"
+                               Class="admin-drawer">
+                        <NavMenu/>
+                    </MudDrawer>
+                </MudBreakpointProvider>
 
                 <AdminLayout>
                     <div class="flex-grow-1">

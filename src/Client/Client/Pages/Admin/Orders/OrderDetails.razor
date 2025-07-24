@@ -1,0 +1,276 @@
+@page "/admin/orders/{Slug}"
+@attribute [Authorize(Roles = "Administrator,Salesman")]
+
+@using Application.Contract.Enums
+@using Application.Contract.Order.Responses
+@using Client.Components.Common
+@using Client.Components.Dialogs
+@using Client.Infrastructure.Services.Order
+@using Microsoft.AspNetCore.Authorization
+@using Severity = MudBlazor.Severity
+
+@inject IOrderService OrderService
+@inject IDialogService Dialogs
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
+
+    @if (_loading)
+    {
+        <MudProgressCircular Size="Size.Large" Class="mx-auto mt-6"/>
+    }
+    else if (_order is null)
+    {
+        <MudAlert Dense Elevation="0" Severity="Severity.Error"
+                  Class="mx-auto mt-6" Style="max-width:400px">
+            Заказ не найден
+        </MudAlert>
+    }
+    else
+    {
+        <MudPaper Class="pa-4">
+
+            <!-- ───── Заголовок ───── -->
+            <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                <MudText Typo="Typo.h4">Заказ №@_order.OrderNumber</MudText>
+                <MudSpacer/>
+                <OrderStatusChip Status="@_order.Status"/>
+            </MudStack>
+
+            <MudDivider Class="mt-3 mb-4"/>
+
+            <!-- ───── Сведения ───── -->
+            <MudGrid Class="mb-2">
+
+                <!-- Магазин + фото + адрес -->
+                <MudItem xs="12" sm="6">
+                    <MudText Color="Color.Info" Typo="Typo.h5">Магазин:</MudText>
+                    <MudText Typo="Typo.h6">@_order.Shop?.Address</MudText>
+
+                    @if (!string.IsNullOrWhiteSpace(_order.Shop?.Images?.FirstOrDefault()))
+                    {
+                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                            <MudImage Src="@_order.Shop!.Images!.First()"
+                                      Alt="shop"
+                                      Width="100" Height="100"
+                                      Class="rounded object-cover"/>
+                        </MudStack>
+                    }
+                </MudItem>
+
+                <!-- Создан -->
+                <MudItem xs="12" sm="6">
+                    <MudText Color="Color.Info" Typo="Typo.h5">Создан:</MudText>
+                    <MudText Typo="Typo.h6">@_order.CreatedAt</MudText>
+                </MudItem>
+
+                <!-- Покупатель -->
+                <MudItem xs="12" sm="6">
+                    <MudText Color="Color.Info" Typo="Typo.h5">Покупатель:</MudText>
+                    <MudText Typo="Typo.h6">@(_order.Customer?.Name ?? "—")</MudText>
+                    <MudText Typo="Typo.h6">@(_order.Customer?.Surname ?? "—")</MudText>
+
+                    @if (_order.Customer is not null &&
+                         (!string.IsNullOrWhiteSpace(_order.Customer.Email) ||
+                          !string.IsNullOrWhiteSpace(_order.Customer.Phone)))
+                    {
+                        <MudText Typo="Typo.h6">
+                            @_order.Customer.Email
+                            @(!string.IsNullOrWhiteSpace(_order.Customer.Phone)
+                                ? $" • {_order.Customer.Phone}"
+                                : string.Empty)
+                        </MudText>
+                    }
+                </MudItem>
+
+                <!-- Комментарий -->
+                <MudItem xs="12" sm="6">
+                    <MudText Color="Color.Secondary" Typo="Typo.h5">Комментарий клиента:</MudText>
+                    <MudText Typo="Typo.h6">@(_order.CustomerComment ?? "—")</MudText>
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-3"/>
+
+            <!-- ───── Таблица товаров ───── -->
+            <MudTable Items="_order.Items" Dense Hover Elevation="0" Breakpoint="Breakpoint.Sm">
+
+                <HeaderContent>
+                    <MudTh/>
+                    <MudTh>Товар</MudTh>
+                    <MudTh>Объём</MudTh>
+                    <MudTh Class="text-right">Кол-во × Цена</MudTh>
+                    <MudTh Class="text-right">Сумма</MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd>
+                        <MudImage Src="@(string.IsNullOrWhiteSpace(context.ImageUrl) ? null : context.ImageUrl)"
+                                  Alt="@context.ProductName"
+                                  Width="60" Height="60"
+                                  Class="rounded object-cover"/>
+                    </MudTd>
+
+                    <MudTd DataLabel="Товар">@context.ProductName</MudTd>
+
+                    <MudTd DataLabel="Объём">
+                        @if (!string.IsNullOrWhiteSpace(context.Volume))
+                        {
+                            <MudChip T="string" Variant="Variant.Outlined" Color="Color.Primary">@context.Volume</MudChip>
+                        }
+                        else
+                        {
+                            <span>—</span>
+                        }
+                    </MudTd>
+
+                    <MudTd DataLabel="Кол-во × Цена" Class="text-right nowrap">
+                        @($"{context.Quantity} × {context.UnitPrice:N2} ₽")
+                    </MudTd>
+
+                    <MudTd DataLabel="Сумма" Class="text-right">
+                        @($"{context.SummaryPrice:N2} ₽")
+                    </MudTd>
+                </RowTemplate>
+
+            </MudTable>
+
+            <MudDivider Class="my-3"/>
+
+            <!-- Итог -->
+            <MudText Typo="Typo.h6">
+                @($"Итого: {_order.Sum:N2} ₽")
+            </MudText>
+
+            @if (_order.CanceledAt is not null)
+            {
+                <MudAlert Dense Severity="Severity.Error" Class="mt-2">
+                    Заказ отменён: @_order.CanceledAt.Value.ToLocalTime()
+                </MudAlert>
+            }
+            else if (_order.ClosedAt is not null)
+            {
+                <MudAlert Dense Severity="Severity.Success" Class="mt-2">
+                    Заказ выдан: @_order.ClosedAt.Value.ToLocalTime()
+                </MudAlert>
+            }
+
+            <!-- ───── Управление статусом + Архив ───── -->
+            @if (_order.Status is OrderStatus.Submitted or OrderStatus.Ready)
+            {
+                <MudDivider Class="my-3"/>
+
+                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+
+                    @if (_order.Status == OrderStatus.Submitted)
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Info" Size="Size.Small"
+                                   @onclick="() => ChangeStatus(_order, OrderStatus.Ready)">
+                            Готов
+                        </MudButton>
+
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                                   @onclick="() => AskCancel(_order)">
+                            Отменить
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small"
+                                   @onclick="() => ChangeStatus(_order, OrderStatus.Issued)">
+                            Выдать
+                        </MudButton>
+
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                                   @onclick="() => AskCancel(_order)">
+                            Отменить
+                        </MudButton>
+                    }
+                </MudStack>
+            }
+            else if ((_order.Status is OrderStatus.Issued or OrderStatus.Canceled) && _order.IsInArchive == false)
+            {
+                <MudDivider Class="my-3"/>
+
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Archive"
+                           @onclick="() => MoveToArchive(_order)">
+                    В архив
+                </MudButton>
+            }
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public string Slug { get; set; } = default!;
+
+    private OrderResponse? _order;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _order = await OrderService.GetAsyncBySlug(Slug);
+        _loading = false;
+    }
+
+    private static string ToRu(OrderStatus s) => s switch
+    {
+        OrderStatus.Submitted => "Оформлен",
+        OrderStatus.Ready => "Готов",
+        OrderStatus.Issued => "Выдан",
+        OrderStatus.Canceled => "Отменён",
+        _ => s.ToString()
+    };
+
+    private async Task ChangeStatus(OrderResponse order, OrderStatus status)
+    {
+        if (await OrderService.UpdateStatusAsync(order.Slug, status))
+        {
+            _order = await OrderService.GetAsyncBySlug(order.Slug);
+            Snackbar.Add($"Заказ {order.OrderNumber} → {ToRu(status)}", Severity.Success);
+        }
+        else 
+            Snackbar.Add($"Не удалось изменить статус {order.OrderNumber}", Severity.Error);
+
+        StateHasChanged();
+    }
+
+    private async Task AskCancel(OrderResponse order)
+    {
+        var dialogParameters = new DialogParameters { ["Content"] = $"{order.OrderNumber}" };
+        var dialog = await Dialogs.ShowAsync<CancelConfirmation>("Отмена заказа", dialogParameters);
+        if (!(await dialog.Result)!.Canceled)
+            await ChangeStatus(order, OrderStatus.Canceled);
+    }
+
+    private async Task MoveToArchive(OrderResponse order)
+    {
+        if (await OrderService.ArchiveAsync(order.Slug, order.Status))
+        {
+            Snackbar.Add($"Заказ {order.OrderNumber} перемещён в архив", Severity.Success);
+            Navigation.NavigateTo("/admin/orders");
+        }
+        else
+            Snackbar.Add($"Не удалось переместить {order.OrderNumber} в архив",Severity.Warning);
+    }
+
+}
+
+<style>
+    @@media (max-width: 600px) {
+        .mud-table-cell[data-label]::before {
+            content: attr(data-label);
+            display: block;
+            font-size: .80rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+    }
+
+    .object-cover { object-fit: cover; }
+
+    @@media (min-width: 601px) {
+        .mud-table-cell[data-label]::before { content: none; }
+    }
+</style>

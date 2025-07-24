@@ -7,6 +7,7 @@
 @using Client.Infrastructure.Services.Category
 @using Client.Infrastructure.Services.Product
 @using Client.Infrastructure.Services.Price
+@using Microsoft.AspNetCore.Components.Authorization
 @using Severity = MudBlazor.Severity
 @inject IProductService ProductService
 @inject NavigationManager Navigation
@@ -15,6 +16,7 @@
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject Client.Infrastructure.Services.Cart.ICartService CartService
 @inject IPriceCalculatorService PriceCalculator
+@inject AuthenticationStateProvider AuthStateProvider
 
 <MudPaper Elevation="25">
     <MudToolBar>
@@ -30,12 +32,12 @@
         <MudSpacer/>
 
         <MudTextField @bind-Value="SearchTerm"
-                      Placeholder="Поиск товаров"
+                      Label="Поиск товаров"
                       Adornment="Adornment.End"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       Immediate="true"
                       DebounceInterval="300"
-                      Class="search-field"/>
+                      Class="search-field" />
 
     </MudToolBar>
 </MudPaper>
@@ -110,7 +112,7 @@
                                            OnClick="@(() => IncreaseQuantity(product))"/>
                         </div>
 
-                        <MudButton Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Small"
+                        <MudButton Color="Color.Info" Variant="Variant.Filled" Size="Size.Small"
                                    Disabled="@IsInCart(product)"
                                    OnClick="@(async () => await AddToCart(product))"
                                    Class="button">
@@ -141,7 +143,6 @@
 @code {
     private List<ProductResponse> _products = new();
     private List<ProductCategoryResponse> _categories = new();
-    private readonly GetProductsQuery _query = new();
     private HashSet<string> _cartKeys = new();
     private string? _searchTerm;
     private List<ProductResponse> _allProducts = new();
@@ -282,7 +283,7 @@
 <style>
 
     .search-field {
-        width: 200px;
+        width: 50px;
         margin-left: auto;
     }
 
@@ -300,7 +301,7 @@
     }
 
     .product-card:hover {
-        border: 1px solid green;
+        border: 1px solid #019934;
         box-shadow: 0 0 6px rgba(25, 118, 210, 0.3);
     }
 

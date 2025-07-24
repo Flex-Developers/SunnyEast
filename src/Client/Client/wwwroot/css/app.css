@@ -96,11 +96,16 @@ a, .btn-link {
 }
 
 .valid.modified:not([type=checkbox]) {
-    outline: 1px solid #26b050;
+    outline: 1px solid #019934;
 }
 
 .invalid {
     outline: 1px solid red;
+}
+
+.mud-table .mud-button.mud-size-small{
+    padding-inline:14px;
+    min-width:92px;          
 }
 
 .validation-message {
@@ -192,8 +197,15 @@ code {
     animation: fadeIn 1.5s ease-in-out;
 }
 
+/* ===== Blazor loading progress default values ===== */
+:root {
+    --blazor-load-percentage:      0;
+    --blazor-load-percentage-text: "0 %";
+}
+
+
 .admin-drawer {
-    top: 64px;
+    top: 54px;
 }
 
 footer a,

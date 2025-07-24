@@ -50,13 +50,13 @@ public class ClientPreferenceManager : IClientPreferenceManager
             }
             else
             {
-                preference.PrimaryColor = CustomColors.Light.Primary;
+                preference.PrimaryColor = CustomColors.Light.PrimaryGreen;
                 await SetPreference(preference);
                 return preference.PrimaryColor;
             }
         }
 
-        return CustomColors.Light.Primary;
+        return CustomColors.Light.PrimaryGreen;
     }
 
     public async Task<bool> IsDrawerOpen()

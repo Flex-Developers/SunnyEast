@@ -1,35 +1,44 @@
 ﻿@using Application.Contract.Identity
 <MudNavMenu>
     <CascadingAuthenticationState>
-        <AuthorizeView Roles="@ApplicationRoles.Administrator">
+        <AuthorizeView Roles="@($"{ApplicationRoles.Administrator}, {ApplicationRoles.Salesman}")">
             <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="ml-4 my-3">
-                    Навигация по сайту
+                <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="ml-4 my-3" >
+                    <MudIcon Icon="@Icons.Material.Filled.Navigation"/> Навигация по сайту
                 </MudText>
-                <MudNavLink Href="/category" Match="NavLinkMatch.All">
+                <MudNavLink Href="/category" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Category">
                     Категория
                 </MudNavLink>
-                <MudNavLink Href="/products" Match="NavLinkMatch.All">
+                <MudNavLink Href="/products" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ShoppingBag">
                     Продукты
                 </MudNavLink>
-                <MudNavLink Href="/about" Match="NavLinkMatch.All">
+                <MudNavLink Href="/about" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Description">
                     О нас
                 </MudNavLink>
+                
+                <MudDivider/>
             </MudHidden>
 
 
             <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="ml-4 my-3">
-                Админка
+                <MudIcon Icon="@Icons.Material.Filled.Security"/> Админка
             </MudText>
-            <MudNavLink Href="/admin/category" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Category">
+            <MudNavLink Href="/admin/category" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.GridView">
                 Категория
             </MudNavLink>
-            <MudNavLink Href="/admin/products" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Toys">
+            <MudNavLink Href="/admin/products" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ShoppingCart">
                 Продукты
             </MudNavLink>
-            <MudNavLink Href="/admin/shops" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Shop">
+            <MudNavLink Href="/admin/orders" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Assignment">
+                Заказы
+            </MudNavLink>
+            <MudNavLink Href="/admin/shops" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Store">
                 Магазины
             </MudNavLink>
+            <MudNavLink Href="/admin/orders/archive" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Archive"> 
+                Давние заказы
+            </MudNavLink>
+
         </AuthorizeView>
     </CascadingAuthenticationState>
 </MudNavMenu>

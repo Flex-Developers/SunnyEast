@@ -1,0 +1,126 @@
+@page "/admin/orders/archive"
+@attribute [Authorize(Roles = "Administrator,Salesman")]
+
+@using Application.Contract.Order.Responses
+@using Client.Components.Common
+@using Client.Infrastructure.Services.Order
+@using Microsoft.AspNetCore.Authorization
+@inject IOrderService OrderService
+@inject NavigationManager Navigation
+
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-6 mx-auto">
+
+    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">
+        Архив заказов
+    </MudText>
+
+    <MudTable Items="_orders"
+              Hover="true"
+              Dense="true"
+              Bordered="true"
+              Elevation="10"
+              Breakpoint="Breakpoint.Sm"
+              Filter="FilterFunc"
+              Class="border rounded-lg">
+
+        <ToolBarContent>
+            <MudTextField @bind-Value="_search"
+                          Placeholder="Поиск по № заказа / магазину…"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate
+                          Class="w-100"/>
+        </ToolBarContent>
+
+        <HeaderContent>
+            <MudTh Class="text-center">Номер заказа</MudTh>
+            <MudTh Class="text-center">Магазин</MudTh>
+            <MudTh Class="text-center">Статус</MudTh>
+            <MudTh Class="text-center">Сумма</MudTh>
+            <MudTh Class="text-center" Style="width:170px">Действия</MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd DataLabel="Номер" Class="text-center">@context.OrderNumber</MudTd>
+            <MudTd DataLabel="Магазин">@context.Shop!.Address</MudTd>
+            <MudTd DataLabel="Статус" Class="text-center">
+                <OrderStatusChip Status="@context.Status"/>
+            </MudTd>
+            <MudTd DataLabel="Сумма" Class="text-center">@($"{context.Sum:N2} ₽")</MudTd>
+            <MudTd DataLabel="Действия">
+                <div class="actions-cell">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary" Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Visibility"
+                               @onclick="@(() => Navigation.NavigateTo($"/admin/orders/{context.Slug}"))">
+                        Подробнее
+                    </MudButton>
+                </div>
+            </MudTd>
+        </RowTemplate>
+
+        <NoRecordsContent>
+            @if (string.IsNullOrWhiteSpace(_search))
+            {
+                <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="my-6">
+                    В архиве нет заказов
+                </MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="my-6">
+                    Ничего не найдено.
+                </MudText>
+            }
+        </NoRecordsContent>
+
+        <PagerContent>
+            <MudTablePager
+                PageSizeOptions="new [] {15, 30, 50, 100, int.MaxValue}"
+                HorizontalAlignment="HorizontalAlignment.End"
+                InfoFormat="@_paginationInfoFormat"
+                RowsPerPageString="@_rowsPerPageString"
+                HideRowsPerPage="false"
+                HidePageNumber="false"
+                HidePagination="false"/>
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private List<OrderResponse> _orders = [];
+    private readonly string _paginationInfoFormat = "{first_item}-{last_item} из {all_items}";
+    private readonly string _rowsPerPageString = "Кол-во строк";
+    private string? _search;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _orders = (await OrderService.GetAsync(string.Empty, true)).ToList();
+    }
+
+    /* ---------- поиск по № и магазину ---------- */
+    private bool FilterFunc(OrderResponse o) =>
+        string.IsNullOrWhiteSpace(_search)
+        || o.OrderNumber.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || o.Shop!.Address.Contains(_search, StringComparison.OrdinalIgnoreCase);
+
+}
+
+<style>
+    .actions-cell {
+        display: grid;
+        grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));
+        gap: 8px;
+    }
+
+    .actions-cell .mud-button-root {
+        width: 100%;
+    }
+
+    @@media (max-width: 600px) {
+        .actions-cell {
+            grid-template-columns:repeat(2, 1fr);
+        }
+    }
+</style>

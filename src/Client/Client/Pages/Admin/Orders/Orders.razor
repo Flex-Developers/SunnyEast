@@ -1,0 +1,195 @@
+@page "/admin/orders"
+@attribute [Authorize(Roles = "Administrator,Salesman")]
+
+@using Application.Contract.Enums
+@using Application.Contract.Order.Responses
+@using Client.Components.Common
+@using Client.Components.Dialogs
+@using Client.Infrastructure.Services.Order
+@using Microsoft.AspNetCore.Authorization
+@using Severity = MudBlazor.Severity
+
+@inject IOrderService OrderService
+@inject ISnackbar Snackbar
+@inject IDialogService Dialogs
+@inject NavigationManager Navigation
+
+<MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">
+    Список заказов
+</MudText>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mx-auto">
+    <MudTable Items="_orders"
+              Hover="true"
+              Dense="true"
+              Bordered="true" 
+              Elevation="10"
+              Breakpoint="Breakpoint.Sm"
+              Filter="FilterFunc"
+              Class="border rounded-lg">
+
+        <ToolBarContent>
+            <MudTextField @bind-Value="_search"
+                          Placeholder="Поиск по № заказа / магазину…"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate Class="w-100"/>
+        </ToolBarContent>
+
+        <HeaderContent>
+            <MudTh class="text-center" SortBy="OrderNumber">Номер заказа</MudTh>
+            <MudTh class="text-center" SortBy="ShopSlug">Магазин</MudTh>
+            <MudTh class="text-center" SortBy="Status">Статус</MudTh>
+            <MudTh class="text-center" SortBy="Sum">Сумма</MudTh>
+            <MudTh class="text-center" style="width:510px">Действия</MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd DataLabel="Номер заказа" Class="text-center">@context.OrderNumber</MudTd>
+            <MudTd DataLabel="Магазин">@context.Shop!.Address</MudTd>
+            <MudTd DataLabel="Статус" Class="text-center">
+                <OrderStatusChip Status="@context.Status"/>
+            </MudTd>
+            <MudTd DataLabel="Сумма" Class="text-center">@($"{context.Sum:N2} ₽")</MudTd>
+
+            <MudTd DataLabel="Действия" >
+                <div class="actions-cell">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Visibility"
+                           @onclick="@(() => Navigation.NavigateTo($"/admin/orders/{context.Slug}"))">
+                    Подробнее
+                </MudButton>
+
+                @switch (context.Status)
+                {
+                    case OrderStatus.Submitted:
+                        <MudButton Variant="Variant.Outlined" Color="Color.Info" Size="Size.Small"
+                                   @onclick="() => ChangeStatus(context, OrderStatus.Ready)">Готов
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                                   @onclick="() => AskCancel(context)">Отменить
+                        </MudButton>
+                        break;
+
+                    case OrderStatus.Ready:
+                        <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small"
+                                   @onclick="() => ChangeStatus(context, OrderStatus.Issued)">Выдать
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                                   @onclick="() => AskCancel(context)">Отменить
+                        </MudButton>
+                        break;
+
+                    case OrderStatus.Issued:
+                    case OrderStatus.Canceled:
+                        <MudButton Variant="Variant.Outlined" Color="Color.Default" Size="Size.Small"
+                                   @onclick="() => MoveToArchive(context)">В архив
+                        </MudButton>
+                        break;
+                }
+                </div>
+            </MudTd>
+        </RowTemplate>
+        
+        <NoRecordsContent>
+            @if (string.IsNullOrWhiteSpace(_search))
+            {
+                <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="my-6">
+                    Пока нет оформленных заказов.
+                </MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="my-6">
+                    Ничего не найдено.
+                </MudText>
+            }
+        </NoRecordsContent>
+        
+        <PagerContent>
+            <MudTablePager
+                PageSizeOptions="new [] {15, 30, 50, 100, int.MaxValue}"
+                HorizontalAlignment="HorizontalAlignment.End"
+                InfoFormat="@_paginationInfoFormat"
+                RowsPerPageString="@_rowsPerPageString"
+                HideRowsPerPage="false"
+                HidePageNumber="false"
+                HidePagination="false" />
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private List<OrderResponse> _orders = [];
+    private readonly string _paginationInfoFormat = "{first_item}-{last_item} из {all_items}";
+    private readonly string _rowsPerPageString = "Кол-во строк";
+    private string? _search;
+
+    protected override async Task OnInitializedAsync()
+        => _orders = (await OrderService.GetAsync(string.Empty)).ToList();
+
+    private async Task MoveToArchive(OrderResponse order)
+    {
+        if (await OrderService.ArchiveAsync(order.Slug, order.Status))
+        {
+            Snackbar.Add($"Заказ {order.OrderNumber} перемещён в архив", Severity.Success);
+            await OnInitializedAsync();
+        }
+        else
+            Snackbar.Add($"Не удалось переместить {order.OrderNumber} в архив",Severity.Warning);
+    }
+
+    private bool FilterFunc(OrderResponse o) =>
+        string.IsNullOrWhiteSpace(_search)
+        || o.OrderNumber.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || o.Shop!.Address.Contains(_search, StringComparison.OrdinalIgnoreCase);
+
+    private static string ToRu(OrderStatus s) => s switch
+    {
+        OrderStatus.Submitted => "Оформлен",
+        OrderStatus.Ready => "Готов",
+        OrderStatus.Issued => "Выдан",
+        OrderStatus.Canceled => "Отменён",
+        _ => s.ToString()
+    };
+
+    private async Task ChangeStatus(OrderResponse order, OrderStatus status)
+    {
+        if (await OrderService.UpdateStatusAsync(order.Slug, status))
+        {
+            Snackbar.Add($"Заказ {order.OrderNumber} → {ToRu(status)}", Severity.Success);
+            await OnInitializedAsync();
+        }
+        else
+            Snackbar.Add($"Не удалось изменить статус {order.OrderNumber}", Severity.Error);
+    }
+
+    private async Task AskCancel(OrderResponse order)
+    {
+        var dialogParameters = new DialogParameters { ["Content"] = order.OrderNumber };
+        var dialogReference = await Dialogs.ShowAsync<CancelConfirmation>("Отмена заказа", dialogParameters);
+        if (!(await dialogReference.Result)!.Canceled)
+            await ChangeStatus(order, OrderStatus.Canceled);
+    }
+
+}
+
+<style>
+    .actions-cell {
+        display: grid;
+        grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));
+        gap: 8px;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .actions-cell .mud-button-root {
+        width: 100%;
+    }
+
+    @@media (max-width: 600px) {
+        .actions-cell {
+            grid-template-columns:repeat(2, 1fr);
+        }
+    }
+</style>

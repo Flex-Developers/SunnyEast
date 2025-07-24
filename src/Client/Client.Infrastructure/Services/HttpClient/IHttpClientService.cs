@@ -8,8 +8,8 @@ public interface IHttpClientService
 
     public Task<ServerResponse> PostAsJsonAsync(string url, object content);
     public Task<ServerResponse<T>> PostAsJsonAsync<T>(string url, object content);
-
-    public Task<ServerResponse> PutAsJsonAsync(string url, object content);
+    public Task<ServerResponse> PutAsync(string url);
+    public Task<ServerResponse> PutAsJsonAsync(string url, object? content);
 
     public Task<ServerResponse> DeleteAsync(string url);
 }

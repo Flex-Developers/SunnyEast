@@ -3,5 +3,5 @@
 public interface ICurrentUserService
 {
     public string? GetUserName();
-    public Guid GetUserId();
+    public string? GetUserRole();
 }

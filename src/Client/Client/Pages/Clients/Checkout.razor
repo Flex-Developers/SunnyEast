@@ -1,0 +1,360 @@
+@page "/checkout"
+@attribute [Authorize]
+
+@using Application.Contract.Shops.Responses
+@using Client.Infrastructure.Services.Cart
+@using Client.Infrastructure.Services.Cart.Models
+@using Client.Infrastructure.Services.Order
+@using Client.Infrastructure.Services.Shop
+@using Microsoft.AspNetCore.Authorization
+@using Severity = MudBlazor.Severity
+
+@inject ICartService CartService
+@inject IOrderService OrderService
+@inject IShopService ShopService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
+
+    <MudText Typo="Typo.h3" Align="Align.Center" Class="mb-4">
+        Оформление заказа
+    </MudText>
+
+    <!-- ---------- товары (как было) -------------------------------- -->
+    <MudPaper Class="p-4">
+
+        <MudTable Items="_items" Hover Dense Elevation="0"
+                  Breakpoint="Breakpoint.Sm"
+                  Class="checkout-table">
+
+            <HeaderContent>
+                <MudTh/>
+                <MudTh>Продукт</MudTh>
+                <MudTh>Объём</MudTh>
+                <MudTh Class="text-right">Цена/шт</MudTh>
+                <MudTh Class="text-center">Кол-во</MudTh>
+                <MudTh Class="text-right">Итого</MudTh>
+                <MudTh/>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd DataLabel="">
+                    <MudImage Src="@context.ImageUrl" Alt="@context.ProductName"
+                              Width="90" Height="90" Class="rounded object-cover"/>
+                </MudTd>
+
+                <MudTd DataLabel="Продукт">
+                    <MudText Typo="Typo.subtitle1" Class="name-ellipsis">@context.ProductName</MudText>
+                </MudTd>
+
+                <MudTd DataLabel="Объём">
+                    <MudChip T="string" Color="Color.Primary"
+                             Variant="Variant.Outlined">@context.SelectedVolume</MudChip>
+                </MudTd>
+
+                <MudTd DataLabel="Цена/шт" Class="text-right">
+                    @((context.DiscountPrice ?? context.Price).ToString("N2")) ₽
+                </MudTd>
+
+                <MudTd DataLabel="Кол-во">
+                    <div class="qty-stack">
+                        <MudIconButton Icon="@Icons.Material.Filled.Remove" Color="Color.Primary"
+                                       Disabled="@(context.Quantity <= 1)"
+                                       OnClick="() => ChangeQty(context,-1)"/>
+                        <MudText Typo="Typo.h6" Class="qty-number">@context.Quantity</MudText>
+                        <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary"
+                                       OnClick="() => ChangeQty(context,1)"/>
+                    </div>
+                </MudTd>
+
+                <MudTd DataLabel="Итого" Class="text-right">
+                    @(((context.DiscountPrice ?? context.Price) * context.Quantity).ToString("N2")) ₽
+                </MudTd>
+
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                                   OnClick="() => RemoveItem(context)"/>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+
+    <MudPaper Class="p-4 mt-4 checkout-form">
+
+        <!-- магазин --------------------------------------------------- -->
+        <MudSelect T="string" Dense="false" Label="Выберите магазин для самовывоза" Class="w-100 mb-3" @bind-Value="_selectedShop">
+            @foreach (var s in _shops)
+            {
+                <MudSelectItem Value="@s.Slug">@s.Address</MudSelectItem>
+            }
+        </MudSelect>
+
+        <!-- карусель -------------------------------------------------- -->
+        @if (_currentShop?.Images?.Any() == true)
+        {
+            <div class="carousel-wrapper mb-6">
+                <MudCarousel T="string"
+                             ItemsSource="@_currentShop.Images"
+                             Class="carousel-banner"
+                             EnableSwipeGesture="true"
+                             AutoCycle="true"
+                             ShowArrows="true"
+                             ArrowsPosition="Position.Center"
+                             BulletsPosition="Position.Bottom"
+                             BulletsColor="Color.Dark"
+                             Context="img">
+                    <ItemTemplate>
+                        <MudImage Src="@img" Alt="@_currentShop.Address" Class="carousel-image"/>
+                    </ItemTemplate>
+                </MudCarousel>
+            </div>
+        }
+
+        <!-- комментарий ----------------------------------------------- -->
+        <MudTextField T="string"
+                      FullWidth="true"
+                      Class="mb-6"
+                      InputType="InputType.Text"
+                      Variant="Variant.Outlined"
+                      Label="Комментарий для сотрудника"
+                      HelperText="Напишите, если есть особые пожелания…"
+                      HelperTextOnFocus="true"
+                      @bind-Value="_comment"/>
+
+        <!-- инфо + сумма ---------------------------------------------- -->
+        <MudAlert Severity="Severity.Info"
+                  Variant="Variant.Outlined"
+                  Dense
+                  Class="mb-6">
+            После оформления сотрудник соберёт заказ в выбранном магазине.
+            Оплата и получение — при самовывозе.
+        </MudAlert>
+
+        <MudText Typo="Typo.h6" Class="mb-3">
+            Итого: @_total ₽
+        </MudText>
+
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   Size="Size.Large"
+                   FullWidth
+                   DisableElevation
+                   Disabled="@(_items.Count == 0 || string.IsNullOrEmpty(_selectedShop))"
+                   OnClick="SubmitOrder">
+            Оформить заказ
+        </MudButton>
+    </MudPaper>
+
+
+</MudContainer>
+
+@code {
+    private readonly List<CartItemDto> _items = [];
+    private readonly List<ShopResponse> _shops = [];
+    private string? _selectedShop;
+    private string? _comment;
+    private decimal _total;
+
+    private ShopResponse? _currentShop => _shops.FirstOrDefault(s => s.Slug == _selectedShop);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _items.AddRange((await CartService.GetCartAsync())?.Orders ?? []);
+
+        if (_items.Count == 0)
+        {
+            Navigation.NavigateTo("/cart");
+            return;
+        }
+        _shops.AddRange(await ShopService.GetShopsAsync());
+        _selectedShop ??= _shops.FirstOrDefault()?.Slug;
+        RecalculateTotal();
+    }
+
+    private void RecalculateTotal() =>
+        _total = _items.Sum(i => i.Quantity * (i.DiscountPrice ?? i.Price));
+
+    private async Task ChangeQty(CartItemDto item, int d)
+    {
+        item.Quantity = Math.Clamp(item.Quantity + d, 1, 99);
+        await CartService.UpdateOrderAsync(item);
+        RecalculateTotal();
+        StateHasChanged();
+    }
+
+    private async Task RemoveItem(CartItemDto item)
+    {
+        await CartService.RemoveOrderAsync(item.ProductSlug, item.SelectedVolume);
+        _items.Remove(item);
+        RecalculateTotal();
+        StateHasChanged();
+    }
+
+    private async Task SubmitOrder()
+    {
+        var created = await OrderService.CreateAsync(_selectedShop!, _items, _comment);
+        if (created is null)
+        {
+            Snackbar.Add("Не удалось оформить заказ.", Severity.Error);
+            return;
+        }
+
+        await CartService.ClearAsync();
+        Snackbar.Add($"Заказ №{created.OrderNumber} оформлен", Severity.Success);
+        Navigation.NavigateTo($"/orders/{created.Slug}");
+    }
+
+}
+
+<style>
+    
+    .checkout-table th,
+    .checkout-table td {
+        font-size: 1.12rem;
+        padding: 14px 10px;
+    }
+
+    .object-cover {
+        object-fit: cover;
+    }
+
+    .name-ellipsis {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .qty-stack {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .qty-stack .mud-icon-button {
+        width: 42px;
+        height: 42px;
+        padding: 0;
+    }
+
+    .qty-stack .mud-icon-button svg {
+        font-size: 22px;
+    }
+
+    .qty-number {
+        width: 34px;
+        text-align: center;
+        font-weight: 500;
+    }
+
+    .checkout-form {
+        max-width: 880px;
+        margin-inline: auto;
+    }
+
+    .carousel-wrapper {
+        max-width: 420px;
+        width: 100%;
+        margin-inline: auto;
+        position: relative; 
+        overflow: visible; 
+        margin-top: 20px;
+            }
+
+    .carousel-banner {
+        width: 100%;
+        height: 260px; 
+    }
+
+    .carousel-banner .mud-carousel-item {
+        width: 100%;
+        height: 100%;
+    }
+
+    .carousel-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; 
+    }
+
+    .carousel-banner .mud-carousel-btn-left,
+    .carousel-banner .mud-carousel-btn-right {
+        position: absolute;
+        top: 50%;
+        translate: 0 -50%;
+        background: rgba(0, 0, 0, .45);
+        color: #fff;
+        border-radius: 50%;
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .carousel-banner .mud-carousel-btn-left {
+        left: -34px;
+    }
+
+    .carousel-banner .mud-carousel-btn-right {
+        right: -34px;
+    }
+
+    @@media (max-width: 600px) {
+
+        .checkout-table th,
+        .checkout-table td {
+            font-size: 1rem;
+            padding: 12px 8px;
+        }
+
+        .qty-stack {
+            gap: 6px;
+        }
+
+        .qty-stack .mud-icon-button {
+            width: 46px;
+            height: 46px;
+        }
+
+        .qty-stack .mud-icon-button svg {
+            font-size: 24px;
+        }
+
+        .qty-number {
+            font-size: 1.05rem;
+        }
+
+        .checkout-form {
+            max-width: none;
+            margin-inline: 0;
+        }
+
+        .carousel-wrapper {
+            max-width: none;
+        }
+
+        .carousel-banner .mud-carousel-btn-left,
+        .carousel-banner .mud-carousel-btn-right {
+            width: 34px;
+            height: 34px;
+        }
+
+        .carousel-banner .mud-carousel-btn-left {
+            left: 8px;
+        }
+
+        .carousel-banner .mud-carousel-btn-right {
+            right: 8px;
+        }
+
+        .carousel-banner {
+            height: 220px;
+        }
+    }
+</style>
+
+
