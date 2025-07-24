@@ -115,7 +115,7 @@
         _orders.Clear();
 
         if (_isAuth)                           
-            _orders.AddRange(await OrderService.GetAsync(string.Empty));
+            _orders.AddRange(await OrderService.GetAllAsync(string.Empty));
 
         StateHasChanged();                     
     }

@@ -35,11 +35,29 @@ public class OrderService(IHttpClientService httpClient, ISnackbar snackbar) : I
     }
 
 
-    public async Task<List<OrderResponse>> GetAsync(string shopSlug, bool archived = false)
+    public async Task<List<OrderResponse>> GetAllAsync(string shopSlug, bool archived = false)
     {
         var url = string.IsNullOrEmpty(shopSlug)
             ? $"/api/order/GetOrders?OnlyArchived={archived.ToString().ToLower()}"
             : $"/api/order/GetOrders?ShopSlug={shopSlug}&OnlyArchived={archived.ToString().ToLower()}";
+
+        var res = await httpClient.GetFromJsonAsync<List<OrderResponse>>(url);
+        return res.Success ? res.Response ?? [] : [];
+    }
+
+    public async Task<List<OrderResponse>> GetCustomerAsync()
+    {
+        var url = "/api/order/customer";
+        var res = await httpClient.GetFromJsonAsync<List<OrderResponse>>(url);
+        return res.Success ? res.Response ?? [] : [];
+    }
+
+    public async Task<List<OrderResponse>> GetSalesmanAsync(string? shopSlug = null, bool archived = false)
+    {
+        var url = $"/api/order/salesman?OnlyArchived={archived.ToString().ToLower()}";
+        
+        if (!string.IsNullOrWhiteSpace(shopSlug))
+            url += $"&ShopSlug={Uri.EscapeDataString(shopSlug)}";
 
         var res = await httpClient.GetFromJsonAsync<List<OrderResponse>>(url);
         return res.Success ? res.Response ?? [] : [];

@@ -126,7 +126,7 @@
     private string? _search;
 
     protected override async Task OnInitializedAsync()
-        => _orders = (await OrderService.GetAsync(string.Empty)).ToList();
+        => _orders = (await OrderService.GetAllAsync(string.Empty)).ToList();
 
     private async Task MoveToArchive(OrderResponse order)
     {

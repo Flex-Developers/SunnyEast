@@ -26,9 +26,26 @@ public class OrderController : ApiControllerBase
         var response = await Mediator.Send(query);
         return Ok(response);
     }
+    
+    [HttpGet(nameof(GetAllOrders))]
+    [Authorize(Roles = ApplicationRoles.Salesman + "," + ApplicationRoles.Administrator)]
+    public async Task<IActionResult> GetAllOrders([FromQuery] GetAllOrdersQuery query)
+    {
+        var response = await Mediator.Send(query);
+        return Ok(response);
+    }
+    
+    [Authorize]
+    [HttpGet("customer")]
+    public async Task<IActionResult> GetCustomerOrders([FromQuery] GetCustomerOrdersQuery query)
+    {
+        var response = await Mediator.Send(query);
+        return Ok(response);
+    }
 
-    [HttpGet(nameof(GetOrders))]
-    public async Task<IActionResult> GetOrders([FromQuery] GetOrdersQuery query)
+    [Authorize(Roles = ApplicationRoles.Salesman + "," + ApplicationRoles.Administrator)]
+    [HttpGet("salesman")]
+    public async Task<IActionResult> GetSalesmanOrders([FromQuery] GetSalesmanOrdersQuery query)
     {
         var response = await Mediator.Send(query);
         return Ok(response);

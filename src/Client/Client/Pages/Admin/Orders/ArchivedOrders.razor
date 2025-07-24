@@ -96,7 +96,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _orders = (await OrderService.GetAsync(string.Empty, true)).ToList();
+        _orders = (await OrderService.GetAllAsync(string.Empty, true)).ToList();
     }
 
     /* ---------- поиск по № и магазину ---------- */

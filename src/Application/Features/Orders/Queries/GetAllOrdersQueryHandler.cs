@@ -10,17 +10,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Orders.Queries;
 
-public sealed class GetOrdersQueryHandler(
+public sealed class GetAllOrdersQueryHandler(
     IApplicationDbContext context,
     IMapper mapper,
     ICurrentUserService currentUserService)
-    : IRequestHandler<GetOrdersQuery, List<OrderResponse>>
+    : IRequestHandler<GetAllOrdersQuery, List<OrderResponse>>
 {
-    public async Task<List<OrderResponse>> Handle(GetOrdersQuery request, CancellationToken cancellationToken)
+    public async Task<List<OrderResponse>> Handle(GetAllOrdersQuery request, CancellationToken cancellationToken)
     {
         var userName = currentUserService.GetUserName();
         var userRole = currentUserService.GetUserRole();
+        
         var user = context.Users.FirstOrDefault(u => u.UserName == userName);
+        
         if (user is null)
             return [];
 
@@ -32,7 +34,7 @@ public sealed class GetOrdersQueryHandler(
 
         if (userRole is not (ApplicationRoles.Administrator or ApplicationRoles.Salesman))
         {
-            orders = orders.Where(f => f.CustomerId == user.Id);
+            orders = orders.Where(order => order.CustomerId == user.Id);
         }
 
         if (!string.IsNullOrWhiteSpace(request.ShopSlug))
