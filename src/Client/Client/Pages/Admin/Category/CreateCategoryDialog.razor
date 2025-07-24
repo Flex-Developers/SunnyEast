@@ -74,7 +74,9 @@
                 return;
             }
 
-            _command.ProductVolumes = SelectedVolumes.ToArray();
+            _command.ProductVolumes = ProductVolumes
+                .Where(v => SelectedVolumes.Contains(v))
+                .ToArray();
             var success = await CategoryService.Post(_command);
             if (success)
             {

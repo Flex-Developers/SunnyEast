@@ -99,7 +99,10 @@
                 return;
             }
 
-            Command.ProductVolumes = SelectedVolumes.ToArray();
+            Command.ProductVolumes = ProductVolumes
+                .Where(v => SelectedVolumes.Contains(v))
+                .ToArray();
+
             var success = await CategoryService.Put(Command);
             if (success)
             {
