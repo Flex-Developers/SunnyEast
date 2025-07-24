@@ -36,9 +36,9 @@ public class OrderController : ApiControllerBase
 
     [HttpPut("change-status")]
     [Authorize(Roles = ApplicationRoles.Salesman + "," + ApplicationRoles.Administrator)]
-    public async Task<IActionResult> ChangeStatus([FromBody] ChangeOrderStatusCommand cmd)
+    public async Task<IActionResult> ChangeStatus([FromBody] ChangeOrderStatusCommand command)
     {
-        await Mediator.Send(cmd);
+        await Mediator.Send(command);
         return NoContent();
     }
 

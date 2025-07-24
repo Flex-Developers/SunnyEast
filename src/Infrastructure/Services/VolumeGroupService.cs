@@ -6,15 +6,15 @@ public class VolumeGroupService : IVolumeGroupService
 {
     public VolumeGroup Detect(string volume)
     {
-        var s = (volume ?? string.Empty).Trim().ToLowerInvariant();
+        var lowerInvariant = (volume ?? string.Empty).Trim().ToLowerInvariant();
 
-        if (s.Contains("шт"))
+        if (lowerInvariant.Contains("шт"))
             return VolumeGroup.Piece;
 
-        if (s.Contains(" кг") || s.EndsWith("кг") || s.Contains(" г") || s.EndsWith("г"))
+        if (lowerInvariant.Contains(" кг") || lowerInvariant.EndsWith("кг") || lowerInvariant.Contains(" г") || lowerInvariant.EndsWith("г"))
             return VolumeGroup.Mass;
 
-        if (s.Contains(" л") || s.EndsWith("л") || s.Contains(" мл") || s.EndsWith("мл"))
+        if (lowerInvariant.Contains(" л") || lowerInvariant.EndsWith("л") || lowerInvariant.Contains(" мл") || lowerInvariant.EndsWith("мл"))
             return VolumeGroup.Liquid;
 
         // по умолчанию считаем штучным
