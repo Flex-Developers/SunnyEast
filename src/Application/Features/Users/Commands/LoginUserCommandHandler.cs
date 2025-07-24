@@ -19,7 +19,7 @@ public class LoginUserCommandHandler(IJwtTokenService jwtTokenService, UserManag
 
         if (string.IsNullOrWhiteSpace(request.Email) == false)
         {
-            user = (await userManager.Users.FirstOrDefaultAsync(u => u.Email == request.Email,cancellationToken))!;
+            user = (await userManager.Users.FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken))!;
             _ = user ?? throw new UnauthorizedAccessException("Почта не найдена.");
         }
         else if (string.IsNullOrWhiteSpace(request.PhoneNumber) == false)
@@ -31,19 +31,23 @@ public class LoginUserCommandHandler(IJwtTokenService jwtTokenService, UserManag
         else
             throw new ValidationException("Ошибка, проверьте введенные данные!");
 
-        
+
         if (await userManager.CheckPasswordAsync(user, request.Password) == false)
             throw new UnauthorizedAccessException("Неправильный пароль!");
 
-        
-        var claims = await userManager.GetClaimsAsync(user);
+
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, user.UserName!),
+        };
+
         var roles = await userManager.GetRolesAsync(user);
-        
+
         foreach (var role in roles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role));
         }
-        
+
         return new JwtTokenResponse
         {
             RefreshToken = jwtTokenService.CreateRefreshToken(claims),

@@ -12,14 +12,8 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor) : ICur
         return httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
     }
 
-    public Guid GetUserId()
+    public string? GetUserRole()
     {
-        var userIdClaim = httpContextAccessor.HttpContext?.User?.Claims
-            .FirstOrDefault(c => c.Type == "UserId");
-
-        if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out Guid userId))
-            return userId;
-
-        throw new NotFoundException("User ID claim not found or not valid");
+        return httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Role)?.Value;
     }
 }
