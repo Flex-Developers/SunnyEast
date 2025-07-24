@@ -2,6 +2,7 @@
 @using Application.Contract.ProductCategory.Commands
 @using Severity = MudBlazor.Severity
 
+@inject ICategoryVolumesValidationService CategoryVolumesValidationService
 @inject ICategoryService CategoryService
 
 <MudDialog Class="category-dialog">
@@ -67,7 +68,12 @@
                 Snackbar.Add("Нужно выбрать минимум 3 объема.", Severity.Warning);
                 return;
             }
-            
+            if (!CategoryVolumesValidationService.VolumesAreFromOneGroup(SelectedVolumes, out var error))
+            {
+                Snackbar.Add(error!, Severity.Warning); 
+                return;
+            }
+
             _command.ProductVolumes = SelectedVolumes.ToArray();
             var success = await CategoryService.Post(_command);
             if (success)

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using Application.Common.Exceptions;
 using Application.Common.Interfaces.Contexts;
@@ -11,21 +12,29 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.ProductCategory.Commands;
 
-public class UpdateProductCategoryCommandHandler(IApplicationDbContext context, ISlugService slugService, IMapper mapper, IPriceCalculatorService priceCalculator)
+public class UpdateProductCategoryCommandHandler(
+    IApplicationDbContext context,
+    ISlugService slugService,
+    IMapper mapper,
+    IPriceCalculatorService priceCalculator,
+    IVolumeGroupService volumeGroupService)
     : IRequestHandler<UpdateProductCategoryCommand, string>
 {
     public async Task<string> Handle(UpdateProductCategoryCommand request, CancellationToken cancellationToken)
     {
+        if (!volumeGroupService.AreFromSameGroup(request.ProductVolumes, out _, out var error)) 
+            throw new ValidationException(error ?? "Некорректные объёмы категории.");
+        
         var oldCategory = await context.ProductCategories
             .FirstOrDefaultAsync(s => s.Slug == request.Slug, cancellationToken);
 
         if (oldCategory is null)
             throw new NotFoundException($"Категория не найдена {request.Slug}");
-        
+
         oldCategory.Name = request.Name.Trim();
         oldCategory.Slug = slugService.GenerateSlug(request.Name);
         var oldDiscount = oldCategory.DiscountPercentage;
-        
+
         mapper.Map(request, oldCategory);
 
         await ApplyDiscountAsync(request, oldCategory, oldDiscount, cancellationToken);
@@ -34,9 +43,11 @@ public class UpdateProductCategoryCommandHandler(IApplicationDbContext context, 
         return oldCategory.Slug;
     }
 
-    private async Task ApplyDiscountAsync(UpdateProductCategoryCommand request, Domain.Entities.ProductCategory category, byte? oldDiscount, CancellationToken ct)
+    private async Task ApplyDiscountAsync(UpdateProductCategoryCommand request,
+        Domain.Entities.ProductCategory category, byte? oldDiscount, CancellationToken ct)
     {
-        if (request.DiscountPercentage is < 1 || request.DiscountPercentage == oldDiscount || !request.ApplyDiscountToAllProducts)
+        if (request.DiscountPercentage is < 1 || request.DiscountPercentage == oldDiscount ||
+            !request.ApplyDiscountToAllProducts)
             return;
 
         var products = await context.Products

@@ -24,7 +24,8 @@ public static class DependencyInitializer
             .AddScoped<IHttpClientService, HttpClientService>()
             .AddScoped<IValidationService, ValidationService>()
             .AddScoped<IShopService, ShopService>()
-            .AddScoped<IOrderService, OrderService>();
+            .AddScoped<IOrderService, OrderService>()
+            .AddScoped<ICategoryVolumesValidationService, CategoryVolumesValidationService>();
 
     }
 }
