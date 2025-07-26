@@ -19,7 +19,7 @@
     @foreach (var shop in ShopsList)
     {
         <MudItem xs="12" sm="6" md="4" lg="2">
-            <MudCard Class="shop-card">
+            <MudCard Elevation="3" Class="shop-card">
                 <MudCarousel Style="height: 250px; border-radius: 10px" ItemsSource="@shop.Images" Context="imgContext" ShowArrows="true" ShowBullets="false" AutoCycle="false" TData="string">
                     <ItemTemplate>
                         <MudCardMedia Image="@imgContext"></MudCardMedia>

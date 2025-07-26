@@ -41,7 +41,7 @@
     @foreach (var product in _products)
     {
         <MudItem xs="12" sm="6" md="4" lg="2">
-            <MudCard Class="product-card">
+            <MudCard Elevation="3" Class="product-card">
                 
                 <MudCarousel Style="height: 250px; border-radius: 10px;" ItemsSource="@product.Images" Context="imgContext" EnableSwipeGesture="true" 
                              BulletsPosition="Position.Bottom" ShowBullets="false" AutoCycle="true" TData="string" BulletsColor="Color.Dark"
