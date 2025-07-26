@@ -6,6 +6,7 @@ using Client.Infrastructure.Services.Order;
 using Client.Infrastructure.Services.Price;
 using Client.Infrastructure.Services.Product;
 using Client.Infrastructure.Services.Shop;
+using Client.Infrastructure.Services.Staff;
 using Client.Infrastructure.Services.Validation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -25,7 +26,8 @@ public static class DependencyInitializer
             .AddScoped<IValidationService, ValidationService>()
             .AddScoped<IShopService, ShopService>()
             .AddScoped<IOrderService, OrderService>()
-            .AddScoped<ICategoryVolumesValidationService, CategoryVolumesValidationService>();
+            .AddScoped<ICategoryVolumesValidationService, CategoryVolumesValidationService>()
+            .AddScoped<IStaffService, StaffService>();
 
     }
 }
