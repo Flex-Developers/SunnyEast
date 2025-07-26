@@ -2,6 +2,7 @@
 using Application.Common;
 using Application.Contract.Identity;
 using Domain.Entities;
+using Domain.Enums;
 using Infrastructure.Persistence.Contexts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -28,22 +29,28 @@ public sealed class ApplicationDbContextInitializer(
 
         // 3) Пользователи и их роли (эксклюзивно — только одна целевая роль)
         var superAdmin = await EnsureUserAsync(
+            phoneNumber: "+7-999-123-45-67",
             email: "superadmin@gmail.com",
             displayName: "Super Admin",
             password: "Admin@123");
         await EnsureUserInRoleAsync(superAdmin, ApplicationRoles.SuperAdmin, exclusive: true);
 
         var admin = await EnsureUserAsync(
+            phoneNumber: "+7-999-123-45-67",
             email: "admin@gmail.com",
-            displayName: "Admin",
+            displayName: "Admin Adminovich",
             password: "Admin@123");
         await EnsureUserInRoleAsync(admin, ApplicationRoles.Administrator, exclusive: true);
 
         var salesman = await EnsureUserAsync(
+            phoneNumber: "+7-999-123-45-67",
             email: "salesman@gmail.com",
-            displayName: "Salesman",
+            displayName: "Salesman Salesmanov",
             password: "SalesMan@123");
         await EnsureUserInRoleAsync(salesman, ApplicationRoles.Salesman, exclusive: true);
+        
+        await EnsureStaffRecordAsync(admin);
+        await EnsureStaffRecordAsync(salesman);
 
         // Пример: при необходимости можно добавить универсальный e-mail claim
         await EnsureEmailClaimAsync(superAdmin);
@@ -91,13 +98,14 @@ public sealed class ApplicationDbContextInitializer(
     /// <summary>
     /// Возвращает существующего пользователя или создаёт нового.
     /// </summary>
-    private async Task<ApplicationUser> EnsureUserAsync(string email, string displayName, string password)
+    private async Task<ApplicationUser> EnsureUserAsync(string email,string phoneNumber, string displayName, string password)
     {
         var user = await userManager.FindByEmailAsync(email);
         if (user != null) return user;
 
         user = new ApplicationUser
         {
+            PhoneNumber = phoneNumber,
             Email = email,
             UserName = email,      // держим UserName = email для простоты логина
             Name = displayName
@@ -144,5 +152,43 @@ public sealed class ApplicationDbContextInitializer(
             var addEmailClaim = await userManager.AddClaimAsync(user, new Claim(ClaimTypes.Email, user.Email));
             addEmailClaim.ThrowInvalidOperationIfError();
         }
+    }
+    
+    private async Task EnsureStaffRecordAsync(ApplicationUser user)
+    {
+        // Определяем staff-роль из Identity-ролей
+        var roles = await userManager.GetRolesAsync(user);
+
+        StaffRole? role = null;
+        if (roles.Contains(ApplicationRoles.Administrator, StringComparer.OrdinalIgnoreCase))
+            role = StaffRole.Administrator;
+        else if (roles.Contains(ApplicationRoles.Salesman, StringComparer.OrdinalIgnoreCase))
+            role = StaffRole.Salesman;
+        // SuperAdmin сознательно НЕ добавляем в Staff. Если нужно — раскомментируй:
+        // else if (roles.Contains(ApplicationRoles.SuperAdmin, StringComparer.OrdinalIgnoreCase))
+        //     role = StaffRole.Administrator;
+
+        if (role is null)
+            return; // у пользователя нет staff-роли — ничего не делаем
+
+        var staff = await db.Staff.FirstOrDefaultAsync(s => s.UserId == user.Id);
+        if (staff is null)
+        {
+            await db.Staff.AddAsync(new Domain.Entities.Staff
+            {
+                UserId    = user.Id,
+                StaffRole = role.Value, // доменный enum
+                IsActive  = true,
+                ShopId    = null
+            });
+        }
+        else
+        {
+            staff.StaffRole = role.Value;
+            staff.IsActive  = true;
+            // ShopId не трогаем
+        }
+
+        await db.SaveChangesAsync();
     }
 }
