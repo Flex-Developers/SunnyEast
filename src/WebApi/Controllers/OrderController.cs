@@ -28,7 +28,7 @@ public class OrderController : ApiControllerBase
     }
     
     [HttpGet(nameof(GetAllOrders))]
-    [Authorize(Roles = ApplicationRoles.Salesman + "," + ApplicationRoles.Administrator)]
+    [Authorize(Roles = ApplicationRoles.SuperAdmin)]
     public async Task<IActionResult> GetAllOrders([FromQuery] GetAllOrdersQuery query)
     {
         var response = await Mediator.Send(query);
@@ -43,7 +43,7 @@ public class OrderController : ApiControllerBase
         return Ok(response);
     }
 
-    [Authorize(Roles = ApplicationRoles.Salesman + "," + ApplicationRoles.Administrator)]
+    [Authorize(Roles = ApplicationRoles.Salesman + "," + ApplicationRoles.Administrator + "," + ApplicationRoles.SuperAdmin)]
     [HttpGet("salesman")]
     public async Task<IActionResult> GetSalesmanOrders([FromQuery] GetSalesmanOrdersQuery query)
     {
@@ -52,7 +52,7 @@ public class OrderController : ApiControllerBase
     }
 
     [HttpPut("change-status")]
-    [Authorize(Roles = ApplicationRoles.Salesman + "," + ApplicationRoles.Administrator)]
+    [Authorize(Roles = ApplicationRoles.Salesman + "," + ApplicationRoles.Administrator + "," + ApplicationRoles.SuperAdmin)]
     public async Task<IActionResult> ChangeStatus([FromBody] ChangeOrderStatusCommand command)
     {
         await Mediator.Send(command);
