@@ -11,7 +11,7 @@ public interface IApplicationDbContext
     public DbSet<Shop> Shops { get; set; }
     public DbSet<IdentityUserClaim<Guid>> UserClaims { get; set; }
     public DbSet<Cart> Carts { get; set; }
-    public DbSet<ShopOrder> ShopsOrders { get; set; }
+    public DbSet<ShopOrder> ShopOrders { get; set; }
     public DbSet<CartItem> CartItems { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
