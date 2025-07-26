@@ -1,10 +1,12 @@
 ﻿@using Application.Contract.Identity
 <MudNavMenu>
     <CascadingAuthenticationState>
-        <AuthorizeView Roles="@($"{ApplicationRoles.Administrator}, {ApplicationRoles.Salesman}")">
+        @* Навигация в мобильной версии для всех сотрудников *@
+        <AuthorizeView Roles="@ApplicationRoles.AllStaffCsv">
             <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="ml-4 my-3" >
-                    <MudIcon Icon="@Icons.Material.Filled.Navigation"/> Навигация по сайту
+                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="ml-4 my-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Navigation"/>
+                    Навигация по сайту
                 </MudText>
                 <MudNavLink Href="/category" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Category">
                     Категория
@@ -15,13 +17,14 @@
                 <MudNavLink Href="/about" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Description">
                     О нас
                 </MudNavLink>
-                
+
                 <MudDivider/>
             </MudHidden>
+        </AuthorizeView>
 
-
-            <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="ml-4 my-3">
-                <MudIcon Icon="@Icons.Material.Filled.Security"/> Админка
+        <AuthorizeView Roles="@ApplicationRoles.SuperAdmin">
+            <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="ml-4 my-3"><MudIcon Icon="@Icons.Material.Filled.Security"/>
+                Панель супер админа
             </MudText>
             <MudNavLink Href="/admin/category" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.GridView">
                 Категория
@@ -32,13 +35,43 @@
             <MudNavLink Href="/admin/orders" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Assignment">
                 Заказы
             </MudNavLink>
+            <MudNavLink Href="/admin/orders/archive" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Archive">
+                Давние заказы
+            </MudNavLink>
             <MudNavLink Href="/admin/shops" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Store">
                 Магазины
             </MudNavLink>
-            <MudNavLink Href="/admin/orders/archive" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Archive"> 
+        </AuthorizeView>
+        
+        <AuthorizeView Roles="@ApplicationRoles.Administrator">
+            <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="ml-4 my-3"><MudIcon Icon="@Icons.Material.Filled.Security"/>
+                Панель админа
+            </MudText>
+            <MudNavLink Href="/admin/category" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.GridView">
+                Категория
+            </MudNavLink>
+            <MudNavLink Href="/admin/products" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ShoppingCart">
+                Продукты
+            </MudNavLink>
+            <MudNavLink Href="/admin/orders" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Assignment">
+                Заказы
+            </MudNavLink>
+            <MudNavLink Href="/admin/orders/archive" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Archive">
                 Давние заказы
             </MudNavLink>
-
         </AuthorizeView>
+        
+        <AuthorizeView Roles="@ApplicationRoles.Salesman">
+            <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="ml-4 my-3"><MudIcon Icon="@Icons.Material.Filled.Store"/>
+                Панель продавца
+            </MudText>
+            <MudNavLink Href="/admin/orders" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Assignment">
+                Заказы
+            </MudNavLink>
+            <MudNavLink Href="/admin/orders/archive" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Archive">
+                Давние заказы
+            </MudNavLink>
+        </AuthorizeView>
+        
     </CascadingAuthenticationState>
 </MudNavMenu>

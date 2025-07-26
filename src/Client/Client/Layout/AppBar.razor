@@ -2,7 +2,7 @@
 @inject Infrastructure.Services.Cart.ICartService CartService
 <MudAppBar Elevation="0">
 
-    <AuthorizeView Roles="@ApplicationRoles.Administrator">
+    <AuthorizeView Roles="@ApplicationRoles.AllStaffCsv">
         <MudTooltip Text="Меню">
             <div style="margin-left: -5px; padding-right: 15px">
                 <MudIconButton Icon="@Icons.Material.Rounded.Notes" Color="Color.Inherit" Edge="Edge.Start"
@@ -11,8 +11,10 @@
         </MudTooltip>
     </AuthorizeView>
 
+    @* Бургер меню для клиентов которое появляется в мобильных экранах *@
     <div style="margin-left: -20px">
-        <AuthorizeView Roles="@($"{ApplicationRoles.Administrator}, {ApplicationRoles.Salesman}")">
+        @* Перечисленные ниже пользователи не будут видеть (это меню для клиентов) *@
+        <AuthorizeView Roles="@ApplicationRoles.AllStaffCsv">
             <NotAuthorized>
                 <MudHidden Breakpoint="Breakpoint.MdAndUp">
                     <MudMenu Icon="@Icons.Material.Filled.Menu"
@@ -31,6 +33,7 @@
             </NotAuthorized>
         </AuthorizeView>
     </div>
+    
     <MudButton Variant="Variant.Text" Class="brand-btn" @onclick="() => Navigation.NavigateTo('/'.ToString())">
         <div class="brand-inner">
             <MudText Typo="Typo.h5">Солнечный восток</MudText>

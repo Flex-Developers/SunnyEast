@@ -38,8 +38,8 @@ public class OrderService(IHttpClientService httpClient, ISnackbar snackbar) : I
     public async Task<List<OrderResponse>> GetAllAsync(string shopSlug, bool archived = false)
     {
         var url = string.IsNullOrEmpty(shopSlug)
-            ? $"/api/order/GetOrders?OnlyArchived={archived.ToString().ToLower()}"
-            : $"/api/order/GetOrders?ShopSlug={shopSlug}&OnlyArchived={archived.ToString().ToLower()}";
+            ? $"/api/order/GetAllOrders?OnlyArchived={archived.ToString().ToLower()}"
+            : $"/api/order/GetAllOrders?ShopSlug={shopSlug}&OnlyArchived={archived.ToString().ToLower()}";
 
         var res = await httpClient.GetFromJsonAsync<List<OrderResponse>>(url);
         return res.Success ? res.Response ?? [] : [];

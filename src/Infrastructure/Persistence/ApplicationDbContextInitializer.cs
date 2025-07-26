@@ -8,83 +8,141 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence;
 
-public class ApplicationDbContextInitializer(
+/// <summary>
+/// Первичная инициализация базы: базовые сущности, роли и тестовые пользователи.
+/// </summary>
+public sealed class ApplicationDbContextInitializer(
     UserManager<ApplicationUser> userManager,
-    RoleManager<IdentityRole<Guid>> roleManager, ApplicationDbContext context)
+    RoleManager<IdentityRole<Guid>> roleManager,
+    ApplicationDbContext db)
 {
+    private const string AllProductsSlug = "AllProducts";
+
     public async Task SeedAsync()
     {
-        if (!await context.ProductCategories.AnyAsync(c => c.Slug == "AllProducts"))
-        {
-            context.ProductCategories.Add(new ProductCategory
-            {
-                Id = Guid.NewGuid(),
-                Name = "Все продукты",
-                Slug = "AllProducts"
-            });
+        // 1) Базовые справочники
+        await EnsureBaseCategoryAsync();
 
-            await context.SaveChangesAsync();
+        // 2) Роли
+        await EnsureRolesAsync();
+
+        // 3) Пользователи и их роли (эксклюзивно — только одна целевая роль)
+        var superAdmin = await EnsureUserAsync(
+            email: "superadmin@gmail.com",
+            displayName: "Super Admin",
+            password: "Admin@123");
+        await EnsureUserInRoleAsync(superAdmin, ApplicationRoles.SuperAdmin, exclusive: true);
+
+        var admin = await EnsureUserAsync(
+            email: "admin@gmail.com",
+            displayName: "Admin",
+            password: "Admin@123");
+        await EnsureUserInRoleAsync(admin, ApplicationRoles.Administrator, exclusive: true);
+
+        var salesman = await EnsureUserAsync(
+            email: "salesman@gmail.com",
+            displayName: "Salesman",
+            password: "SalesMan@123");
+        await EnsureUserInRoleAsync(salesman, ApplicationRoles.Salesman, exclusive: true);
+
+        // Пример: при необходимости можно добавить универсальный e-mail claim
+        await EnsureEmailClaimAsync(superAdmin);
+        await EnsureEmailClaimAsync(admin);
+        await EnsureEmailClaimAsync(salesman);
+    }
+
+    /// <summary>
+    /// Создаёт "Все продукты" при первом запуске.
+    /// </summary>
+    private async Task EnsureBaseCategoryAsync()
+    {
+        var exists = await db.ProductCategories.AnyAsync(c => c.Slug == AllProductsSlug);
+        if (exists) return;
+
+        db.ProductCategories.Add(new ProductCategory
+        {
+            Id = Guid.NewGuid(),
+            Name = "Все продукты",
+            Slug = AllProductsSlug
+        });
+
+        await db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Гарантирует наличие всех используемых ролей.
+    /// </summary>
+    private async Task EnsureRolesAsync()
+    {
+        var roles = new[]
+        {
+            ApplicationRoles.SuperAdmin,
+            ApplicationRoles.Administrator,
+            ApplicationRoles.Salesman
+        };
+
+        foreach (var role in roles)
+        {
+            if (!await roleManager.RoleExistsAsync(role))
+                await roleManager.CreateAsync(new IdentityRole<Guid>(role));
         }
-        
-        // Создание роли администратора, если не существует
-        if (!await roleManager.RoleExistsAsync(ApplicationRoles.Administrator))
-            await roleManager.CreateAsync(new IdentityRole<Guid>(ApplicationRoles.Administrator));
+    }
 
-        // Создание роли продавца, если не существует
-        if (!await roleManager.RoleExistsAsync(ApplicationRoles.Salesman))
-            await roleManager.CreateAsync(new IdentityRole<Guid>(ApplicationRoles.Salesman));
+    /// <summary>
+    /// Возвращает существующего пользователя или создаёт нового.
+    /// </summary>
+    private async Task<ApplicationUser> EnsureUserAsync(string email, string displayName, string password)
+    {
+        var user = await userManager.FindByEmailAsync(email);
+        if (user != null) return user;
 
-        var existingUser = await userManager.FindByEmailAsync("admin@gmail.com");
-        if (existingUser != null && !await userManager.IsInRoleAsync(existingUser, ApplicationRoles.Administrator))
+        user = new ApplicationUser
         {
-            await userManager.AddToRoleAsync(existingUser, ApplicationRoles.Administrator);
-        }
+            Email = email,
+            UserName = email,      // держим UserName = email для простоты логина
+            Name = displayName
+        };
 
-        // Создание администратора, если он не существует
-        var adminUser = await userManager.FindByEmailAsync("admin@gmail.com");
-        if (adminUser == null)
+        var result = await userManager.CreateAsync(user, password);
+        result.ThrowInvalidOperationIfError();
+
+        return user;
+    }
+
+    /// <summary>
+    /// Убеждаемся, что пользователь имеет указанную роль.
+    /// Если exclusive = true — удаляем все остальные роли у пользователя.
+    /// </summary>
+    private async Task EnsureUserInRoleAsync(ApplicationUser user, string requiredRole, bool exclusive)
+    {
+        var currentRoles = await userManager.GetRolesAsync(user);
+
+        if (!currentRoles.Contains(requiredRole, StringComparer.OrdinalIgnoreCase))
+            await userManager.AddToRoleAsync(user, requiredRole);
+
+        if (!exclusive) return;
+
+        var rolesToRemove = currentRoles
+            .Where(r => !string.Equals(r, requiredRole, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        if (rolesToRemove.Length > 0)
+            await userManager.RemoveFromRolesAsync(user, rolesToRemove);
+    }
+
+    /// <summary>
+    /// Добавляет claim с e-mail, если его ещё нет.
+    /// (Не обязателен для работы токенов — просто пример консистентности данных.)
+    /// </summary>
+    private async Task EnsureEmailClaimAsync(ApplicationUser user)
+    {
+        var claims = await userManager.GetClaimsAsync(user);
+        var hasEmailClaim = claims.Any(c => c.Type == ClaimTypes.Email && c.Value == user.Email);
+
+        if (!hasEmailClaim && !string.IsNullOrWhiteSpace(user.Email))
         {
-            adminUser = new ApplicationUser
-            {
-                Email = "admin@gmail.com",
-                UserName = "admin@gmail.com", // UserName теперь можно сделать таким же, как email
-                Name = "Administrator",
-            };
-
-            var result = await userManager.CreateAsync(adminUser, "Admin@123"); // Пароль для администратора
-            result.ThrowInvalidOperationIfError();
-
-            // Добавление claim для email
-            var addClaimResult = await userManager.AddClaimAsync(adminUser,
-                new Claim(ClaimTypes.NameIdentifier, adminUser.Name));
-            addClaimResult.ThrowInvalidOperationIfError();
-
-            // Назначение роли администратора
-            var addToRoleResult = await userManager.AddToRoleAsync(adminUser, ApplicationRoles.Administrator);
-            addToRoleResult.ThrowInvalidOperationIfError();
-        }
-
-        // Создание продавца, если он не существует
-        var salesmanUser = await userManager.FindByEmailAsync("salesman@gmail.com");
-        if (salesmanUser is null)
-        {
-            salesmanUser = new ApplicationUser
-            {
-                Email = "salesman@gmail.com",
-                UserName = "salesman@gmail.com", // UserName теперь можно сделать таким же, как email
-                Name = "Salesman"
-            };
-
-            var result = await userManager.CreateAsync(salesmanUser, "SalesMan@123"); // Пароль для продавца
-            result.ThrowInvalidOperationIfError();
-
-            // Добавление claim для email
-            var addClaimResult = await userManager.AddClaimAsync(salesmanUser,
-                new Claim(ClaimTypes.Email, salesmanUser.Email));
-            addClaimResult.ThrowInvalidOperationIfError();
-
-            // Назначение роли продавца
-            await userManager.AddToRoleAsync(salesmanUser, ApplicationRoles.Salesman);
+            var addEmailClaim = await userManager.AddClaimAsync(user, new Claim(ClaimTypes.Email, user.Email));
+            addEmailClaim.ThrowInvalidOperationIfError();
         }
     }
 }

@@ -7,7 +7,7 @@
 <MudSnackbarProvider/>
 
 <CascadingAuthenticationState>
-    <AuthorizeView Roles="@($"{ApplicationRoles.Administrator}, {ApplicationRoles.Salesman}")">
+    <AuthorizeView Roles="@ApplicationRoles.AllStaffCsv">
         <NotAuthorized>
             <MudLayout Class="d-flex flex-column min-vh-100">
                 <AppBar @bind-IsDarkMode="_isDarkMode" @bind-DrawerOpen="_drawerOpen"/>
