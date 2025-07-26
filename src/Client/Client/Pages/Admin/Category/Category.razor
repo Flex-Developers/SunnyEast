@@ -7,8 +7,8 @@
 @inject ICategoryService CategoryService
 
 
-<div style="position: relative; display: flex; align-items: center; margin-bottom: 20px;">
-    <h3 style="display: inline-block; margin-right: 1px">Категория товаров</h3>
+<div class="main-container">
+    <h3 class="main-text">Категория товаров</h3>
     <MudButton StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled" Color="Color.Success" OnClick="@(async () => await AddAsync())"
                Style="position: absolute; right: 0; bottom: 5px;">
         Добавить
@@ -116,6 +116,17 @@
 }
 
 <style>
+    .main-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .main-text {
+        display: inline-block;
+        margin-right: 1px
+    }
+    
     .dialog-background {
         backdrop-filter: blur(10px);
     }
