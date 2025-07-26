@@ -363,8 +363,8 @@ namespace Infrastructure.Migrations
                     b.Property<Guid?>("ShopId")
                         .HasColumnType("char(36)");
 
-                    b.Property<string>("StaffRole")
-                        .HasColumnType("longtext");
+                    b.Property<int>("StaffRole")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("char(36)");

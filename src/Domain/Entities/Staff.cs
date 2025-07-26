@@ -1,3 +1,5 @@
+using Domain.Enums;
+
 namespace Domain.Entities;
 
 public sealed class Staff : BaseEntity
@@ -9,5 +11,5 @@ public sealed class Staff : BaseEntity
     public Shop? Shop { get; set; }
 
     public bool IsActive { get; set; } = true;
-    public string? StaffRole { get; set; } // Например, "Администратор", "Менеджер", "Кассир" и т.д.
+    public StaffRole StaffRole { get; set; } = StaffRole.None;
 }

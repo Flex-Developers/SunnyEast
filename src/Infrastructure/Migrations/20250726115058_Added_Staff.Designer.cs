@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250726105512_Added_Staff")]
+    [Migration("20250726115058_Added_Staff")]
     partial class Added_Staff
     {
         /// <inheritdoc />
@@ -366,8 +366,8 @@ namespace Infrastructure.Migrations
                     b.Property<Guid?>("ShopId")
                         .HasColumnType("char(36)");
 
-                    b.Property<string>("StaffRole")
-                        .HasColumnType("longtext");
+                    b.Property<int>("StaffRole")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("char(36)");
