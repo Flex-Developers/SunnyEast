@@ -1,0 +1,74 @@
+@using Client.Infrastructure.Services.Staff
+@using Client.Infrastructure.Services.Shop
+@using Application.Contract.Shops.Responses
+@inject IStaffService StaffService
+@inject IShopService ShopService
+
+<MudDialog Class="no-scroll">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Link" Class="mr-2 mb-n1" />
+            Привязать к магазину
+        </MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudSelect T="string"
+                   @bind-Value="_selectedSlug"
+                   Label="Магазин"
+                   Dense="true"
+                   Clearable="true">
+            @foreach (var s in _shops)
+            {
+                <MudSelectItem T="string" Value="@s.Slug">@s.Address</MudSelectItem>
+            }
+        </MudSelect>
+
+        @if (!string.IsNullOrWhiteSpace(CurrentShopSlug))
+        {
+            var currentAddr = _shops.FirstOrDefault(x => x.Slug == CurrentShopSlug)?.Address ?? CurrentShopSlug;
+            <MudText Class="mt-2" Typo="Typo.caption" Color="Color.Info">
+                Текущая привязка: @currentAddr
+            </MudText>
+        }
+    </DialogContent>
+
+
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" OnClick="Cancel">Отмена</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Save" Disabled="@(CurrentShopSlug is null)">Сохранить</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public Guid   UserId { get; set; }
+    [Parameter] public string? CurrentShopSlug { get; set; }
+
+    private List<ShopResponse> _shops = new();
+    private string? _selectedSlug;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _shops = await ShopService.GetShopsAsync();
+        _selectedSlug = CurrentShopSlug; 
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Save()
+    {
+        if (string.IsNullOrWhiteSpace(_selectedSlug)) 
+            return;
+
+        var ok = await StaffService.AssignAsync(UserId, _selectedSlug);
+        MudDialog.Close(DialogResult.Ok(ok));
+    }
+}
+
+<style>
+.no-scroll {
+    overflow-y: hidden; 
+    max-height: none;    
+}
+</style>

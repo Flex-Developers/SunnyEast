@@ -1,0 +1,369 @@
+@page "/admin/staff"
+@using Microsoft.AspNetCore.Authorization
+@using Application.Contract.Identity
+@using Application.Contract.Staff.Enums
+@using Application.Contract.Staff.Responses
+@using Application.Contract.Shops.Responses
+@using Client.Infrastructure.Services.Staff
+@using Client.Infrastructure.Services.Shop
+@using Client.Components.Dialogs
+@using Severity = MudBlazor.Severity
+
+@attribute [Authorize(Roles = ApplicationRoles.SuperAdmin)]
+
+@inject IStaffService StaffService
+@inject IShopService ShopService
+@inject IDialogService Dialogs
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<div class="staff-header">
+    <h3 class="title">Персонал</h3>
+
+    <MudButton StartIcon="@Icons.Material.Filled.Add"
+               Variant="Variant.Filled"
+               Color="Color.Success"
+               OnClick="@(() => Nav.NavigateTo("/admin/staff/new"))"
+               Class="add-button">
+        Добавить сотрудника
+    </MudButton>
+</div>
+
+<MudContainer MaxWidth="MaxWidth.False" Gutters="false" Class="mx-auto">
+
+    <MudGrid Spacing="3" Justify="Justify.FlexStart" Style="margin-top:3px;margin-bottom:50px">
+        @if (_loading)
+        {
+            <MudItem xs="12">
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+            </MudItem>
+        }
+        else if (_staff.Count == 0)
+        {
+            <MudItem xs="12">
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Elevation="0">
+                    Пока нет сотрудников.
+                </MudAlert>
+            </MudItem>
+        }
+        else
+        {
+            @foreach (var staff in _staff)
+            {
+                var img = GetShopImage(staff);
+
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudCard Elevation="3" Class="staff-card">
+
+                        <!-- Обложка (как в продуктах — высотой ~290) -->
+                        @if (!string.IsNullOrWhiteSpace(img))
+                        {
+                            <MudCardMedia Image="@img" Class="cover"/>
+                        }
+                        else
+                        {
+                            <div class="cover cover--placeholder">
+                                <MudIcon Icon="@Icons.Material.Filled.Storefront" Size="Size.Large"/>
+                            </div>
+                        }
+
+                        <MudCardContent Class="content">
+                            <MudText Typo="Typo.h6" Class="name">@DisplayName(staff)</MudText>
+
+                            @if (!string.IsNullOrWhiteSpace(staff.PhoneNumber))
+                            {
+                                <MudText Typo="Typo.body1" Color="Color.Info" Class="muted ellipsis">@staff.PhoneNumber</MudText>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(staff.Email))
+                            {
+                                <MudText Typo="Typo.body1" Color="Color.Info" Class="muted ellipsis">@staff.Email</MudText>
+                            }
+                            else if (!string.IsNullOrWhiteSpace(staff.UserName))
+                            {
+                                <MudText Typo="Typo.body1" Color="Color.Info" Class="muted ellipsis">@staff.UserName</MudText>
+                            }
+
+                            <!-- Чипы -->
+                            <div class="chips">
+                                @if (!string.IsNullOrWhiteSpace(staff.ShopAddress))
+                                {
+                                    <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined" Size="Size.Small" Class="ellipsis">
+                                        @staff.ShopAddress
+                                    </MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Color="Color.Default" Variant="Variant.Outlined" Size="Size.Small">Без магазина</MudChip>
+                                }
+                                
+                                <MudChip T="string" Color="@RoleColor(staff.Role)" Variant="Variant.Filled" Size="Size.Medium"> @RoleTitle(staff.Role)</MudChip>
+                                
+                            </div>
+                        </MudCardContent>
+
+                        <!-- Действия (вниз, как у кнопок «в корзину») -->
+                        <MudCardActions Class="actions">
+                            <div class="right-actions">
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.ManageAccounts"
+                                           OnClick="@(async () => await OpenRoleDialogAsync(staff))">
+                                    Роль
+                                </MudButton>
+
+                                @if (string.IsNullOrWhiteSpace(staff.ShopSlug))
+                                {
+                                    <MudButton Variant="Variant.Outlined"
+                                               Color="Color.Info"
+                                               Size="Size.Small"
+                                               StartIcon="@Icons.Material.Filled.Link"
+                                               OnClick="@(async () => await OpenAssignDialogAsync(staff))">
+                                        Привязать
+                                    </MudButton>
+                                }
+                                else
+                                {
+                                    <MudButton Variant="Variant.Outlined"
+                                               Color="Color.Warning"
+                                               Size="Size.Small"
+                                               StartIcon="@Icons.Material.Filled.LinkOff"
+                                               OnClick="@(async () => await UnassignAsync(staff))">
+                                        Отвязать
+                                    </MudButton>
+                                }
+
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Error"
+                                           Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.Delete"
+                                           OnClick="@(async () => await ConfirmDeleteAsync(staff))">
+                                    Удалить
+                                </MudButton>
+                            </div>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        }
+    </MudGrid>
+
+</MudContainer>
+
+@code {
+    private bool _loading;
+    private List<StaffResponse> _staff = new();
+    private List<ShopResponse> _shops = new();
+    private readonly HashSet<Guid> _busyActive = new(); // кто сейчас переключается
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        _shops = await ShopService.GetShopsAsync();
+        _staff = await StaffService.GetAsync();
+        _loading = false;
+        StateHasChanged();
+    }
+
+    private async Task ConfirmDeleteAsync(StaffResponse row)
+    {
+        var parameters = new DialogParameters<DeleteConfirmation>
+        {
+            { x => x.Name, DisplayName(row) }
+        };
+        var opts = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+        var dlg  = await Dialogs.ShowAsync<DeleteConfirmation>("Удаление сотрудника", parameters, opts);
+        var res  = await dlg.Result;
+
+        if (res.Canceled) return;
+
+        var ok = await StaffService.DeleteAsync(row.UserId);
+        if (ok)
+        {
+            _staff.RemoveAll(x => x.UserId == row.UserId);
+            Snackbar.Add("Сотрудник удалён.", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Не удалось удалить сотрудника.", Severity.Error);
+        }
+
+        StateHasChanged();
+    }
+
+
+    private async Task OpenRoleDialogAsync(StaffResponse row)
+    {
+        var parameters = new DialogParameters<ChangeStaffRoleDialog>
+        {
+            { x => x.UserName, row.UserName },
+            { x => x.UserId, row.UserId },
+            { x => x.CurrentRole, row.Role }
+        };
+        var opts = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dlg = await Dialogs.ShowAsync<ChangeStaffRoleDialog>("Изменить роль", parameters, opts);
+        var res = await dlg.Result;
+        if (res is { Canceled: false })
+        {
+            _staff = await StaffService.GetAsync(); // обновим карточки
+            StateHasChanged();
+        }
+    }
+
+    private async Task OpenAssignDialogAsync(StaffResponse row)
+    {
+        var parameters = new DialogParameters<AssignStaffToShopDialog>
+        {
+            { x => x.UserId, row.UserId },
+            { x => x.CurrentShopSlug, row.ShopSlug ?? string.Empty }
+        };
+        var opts = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dlg = await Dialogs.ShowAsync<AssignStaffToShopDialog>("Привязать к магазину", parameters, opts);
+        var res = await dlg.Result;
+        if (res is { Canceled: false })
+        {
+            _staff = await StaffService.GetAsync();
+            StateHasChanged();
+        }
+    }
+
+    private async Task UnassignAsync(StaffResponse row)
+    {
+        var ok = await StaffService.UnassignAsync(row.UserId);
+        if (ok)
+        {
+            row.ShopId = null;
+            row.ShopSlug = null;
+            row.ShopAddress = null;
+            Snackbar.Add("Привязка к магазину снята.", Severity.Success);
+        }
+        else
+            Snackbar.Add("Не удалось снять привязку.", Severity.Error);
+
+        StateHasChanged();
+    }
+
+    // --- UI helpers ---
+    private string DisplayName(StaffResponse staff)
+        => string.IsNullOrWhiteSpace($"{staff.Name} {staff.Surname}".Trim()) ? staff.UserName : $"{staff.Name} {staff.Surname}";
+
+    private string? GetShopImage(StaffResponse s)
+    {
+        var shop = _shops.FirstOrDefault(x => x.Slug == s.ShopSlug);
+        var img = shop?.Images?.FirstOrDefault(i => !string.IsNullOrWhiteSpace(i));
+        return img;
+    }
+
+    private static Color RoleColor(StaffRole role) => role switch
+    {
+        StaffRole.Administrator => Color.Primary,
+        StaffRole.Salesman => Color.Info,
+        _ => Color.Default
+    };
+
+    private static string RoleTitle(StaffRole role) => role switch
+    {
+        StaffRole.Administrator => "Администратор",
+        StaffRole.Salesman => "Продавец",
+        _ => "Нет"
+    };
+
+}
+
+<style>
+    /* Заголовок */
+    .staff-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 12px 0 10px 0;
+    }
+
+    .title {
+        margin: 0;
+    }
+
+    /* Карточка — максимально близко по стилю к карточкам продуктов */
+    .staff-card {
+        position: relative;
+        border-radius: 10px;
+        max-width: 100%;
+        height: 570px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        transition: box-shadow .3s ease, border .3s ease;
+        border: 1px solid transparent;
+    }
+
+    .staff-card:hover {
+        border: 1px solid #019934; /* зелёный акцент, как в продуктах */
+        box-shadow: 0 0 6px rgba(25, 118, 210, .3);
+    }
+
+    /* Обложка */
+    .cover {
+        height: 290px;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        object-fit: cover;
+    }
+
+    .cover--placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(140deg, rgba(0, 0, 0, .06), rgba(0, 0, 0, .02));
+    }
+
+    /* Контент */
+    .content {
+        padding: 8px 10px 0 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .name {
+        line-height: 1.3;
+    }
+
+    .muted {
+        opacity: .85;
+    }
+
+    .ellipsis {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 2px;
+        margin-left: -5px;
+    }
+
+    /* Кнопки действий внизу карточки */
+    /* Было: justify-content: space-between; — теперь выравниваем вправо */
+    .actions 
+    { 
+        display:flex;
+        justify-content: center;
+        align-items:center; 
+        padding:6px 10px 12px 10px;
+    }
+    .right-actions 
+    { 
+        display:flex;
+        gap:8px;
+        flex-wrap:wrap;
+    }
+
+    /* Кнопка добавления */
+    .add-button {
+    }
+</style>
