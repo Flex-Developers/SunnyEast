@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers;
 
-[Authorize(Roles = ApplicationRoles.Administrator)]
+[Authorize(Roles = ApplicationRoles.SuperAdmin + "," + ApplicationRoles.Administrator)]
 public class ProductCategoryController : ApiControllerBase
 {
     [HttpPost]
