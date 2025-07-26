@@ -100,6 +100,7 @@
                              EnableSwipeGesture="true"
                              AutoCycle="true"
                              ShowArrows="true"
+                             ShowBullets="_currentShop.Images!.Count() > 1"
                              ArrowsPosition="Position.Center"
                              BulletsPosition="Position.Bottom"
                              BulletsColor="Color.Dark"
@@ -151,12 +152,12 @@
 
 @code {
     private readonly List<CartItemDto> _items = [];
-    private readonly List<ShopResponse> _shops = [];
+    private readonly List<ShopVm> _shops = [];
     private string? _selectedShop;
     private string? _comment;
     private decimal _total;
 
-    private ShopResponse? _currentShop => _shops.FirstOrDefault(s => s.Slug == _selectedShop);
+    private ShopVm? _currentShop => _shops.FirstOrDefault(s => s.Slug == _selectedShop);
 
     protected override async Task OnInitializedAsync()
     {
@@ -167,7 +168,7 @@
             Navigation.NavigateTo("/cart");
             return;
         }
-        _shops.AddRange(await ShopService.GetShopsAsync());
+        _shops.AddRange(await ShopService.GetShopsVmAsync());
         _selectedShop ??= _shops.FirstOrDefault()?.Slug;
         RecalculateTotal();
     }

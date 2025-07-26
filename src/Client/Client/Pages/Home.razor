@@ -58,7 +58,11 @@
                 <MudCard Elevation="15" Outlined="false" Class="shop-card">
                     <MudCarousel Style="height: 270px; border-radius: 10px" ItemsSource="@shop.Images"
                                  BulletsColor="Color.Dark"
-                                 Context="imgContext" ShowArrows="true" ShowBullets="true" AutoCycle="true"
+                                 Context="imgContext" 
+                                 EnableSwipeGesture="true" 
+                                 ShowArrows="shop.Images!.Count() > 1" 
+                                 ShowBullets="shop.Images!.Count() > 1"
+                                 AutoCycle="true"
                                  TData="string">
                         <ItemTemplate>
                             <MudCardMedia Image="@imgContext"></MudCardMedia>
@@ -124,14 +128,14 @@
     };
 
     private List<ProductCategoryResponse>? _popularCategories = new();
-    private List<ShopResponse> _shops = new();
+    private List<ShopVm> _shops = new();
 
     protected override async Task OnInitializedAsync()
     {
         _popularCategories = new();
         _popularCategories = ((await CategoryService.Get())!).Take(6).ToList();
 
-        _shops = await ShopService.GetShopsAsync();
+        _shops = await ShopService.GetShopsVmAsync();
         StateHasChanged();
     }
 
