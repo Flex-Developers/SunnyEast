@@ -165,18 +165,27 @@
             _orders = await OrderService.GetSalesmanAsync();
         }
     }
-
-
-
+    
     private async Task MoveToArchive(OrderResponse order)
     {
-        if (await OrderService.ArchiveAsync(order.Slug, order.Status))
+        var confirmed = await Dialogs.ShowMessageBox(
+            "Переместить в архив",
+            (MarkupString)$"Вы хотите переместить «{order.OrderNumber}» в архив?",
+            yesText: "Переместить",
+            cancelText: "Отмена",
+            options: new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true }
+        );
+
+        if (confirmed is true)
         {
-            Snackbar.Add($"Заказ {order.OrderNumber} перемещён в архив", Severity.Success);
-            await RefreshAsync();
+            if (await OrderService.ArchiveAsync(order.Slug, order.Status))
+            {
+                Snackbar.Add($"Заказ {order.OrderNumber} перемещён в архив", Severity.Success);
+                await RefreshAsync();
+            }
+            else
+                Snackbar.Add($"Не удалось переместить {order.OrderNumber} в архив", Severity.Warning);
         }
-        else
-            Snackbar.Add($"Не удалось переместить {order.OrderNumber} в архив", Severity.Warning);
     }
 
     private bool FilterFunc(OrderResponse o) =>
