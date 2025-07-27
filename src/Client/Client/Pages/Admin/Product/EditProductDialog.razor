@@ -1,8 +1,11 @@
-﻿@using Application.Contract.Product.Commands
+﻿@using Application.Contract.Identity
+@using Application.Contract.Product.Commands
 @using Application.Contract.ProductCategory.Responses
 @using Client.Infrastructure.Services.Category
 @using Client.Infrastructure.Services.Price
 @using Client.Infrastructure.Services.Product
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = ApplicationRoles.AllAdmins)]
 @using Severity = MudBlazor.Severity
 @inject ICategoryService CategoryService
 @inject IProductService ProductService

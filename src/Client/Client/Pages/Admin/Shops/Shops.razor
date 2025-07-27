@@ -1,16 +1,19 @@
 ﻿@page "/admin/shops"
+@using Application.Contract.Identity
 @using Application.Contract.Shops.Commands
 @using Application.Contract.Shops.Responses
 @using Application.Contract.Staff.Enums
 @using Client.Components.Dialogs
 @using Severity = MudBlazor.Severity
 @using Client.Infrastructure.Services.Shop
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = ApplicationRoles.SuperAdmin)]
 @inject IShopService ShopService
 @inject IDialogService DialogService
 
 <div style="position: relative; display: flex; align-items: center; margin-bottom: 20px;">
     <h3 style="display: inline-block; margin-right: 20px">Магазины</h3>
-    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick=" async () => await CreateShopAsync()"
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(async () => await CreateShopAsync())"
                Style="position: absolute; right: 0; bottom: 5px;">
         Создать➕
     </MudButton>

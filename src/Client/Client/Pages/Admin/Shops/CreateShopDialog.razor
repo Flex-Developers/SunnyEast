@@ -1,7 +1,9 @@
-﻿@using Application.Contract.Shops.Commands
+﻿@using Application.Contract.Identity
+@using Application.Contract.Shops.Commands
 @using Severity = MudBlazor.Severity
 @using Client.Infrastructure.Services.Shop
-@using MudBlazor
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = ApplicationRoles.SuperAdmin)]
 @inject IShopService ShopService
 <MudForm Model="_command" @ref="_form">
     <MudDialog Class="create-dialog">

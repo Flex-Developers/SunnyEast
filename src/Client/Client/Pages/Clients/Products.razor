@@ -6,8 +6,6 @@
 @using Client.Infrastructure.Services.Cart.Models
 @using Client.Infrastructure.Services.Category
 @using Client.Infrastructure.Services.Product
-@using Client.Infrastructure.Services.Price
-@using Microsoft.AspNetCore.Components.Authorization
 @using Severity = MudBlazor.Severity
 @inject IProductService ProductService
 @inject NavigationManager Navigation
@@ -15,8 +13,7 @@
 @inject IDialogService DialogService
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject Client.Infrastructure.Services.Cart.ICartService CartService
-@inject IPriceCalculatorService PriceCalculator
-@inject AuthenticationStateProvider AuthStateProvider
+
 
 <MudPaper Elevation="25">
     <MudToolBar>

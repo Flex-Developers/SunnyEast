@@ -1,5 +1,7 @@
+@using Application.Contract.Identity
 @using Application.Contract.Staff.Enums
-@using MudBlazor
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = ApplicationRoles.SuperAdmin)]
 @using Client.Infrastructure.Services.Staff
 @using Severity = MudBlazor.Severity
 @inject IStaffService StaffService

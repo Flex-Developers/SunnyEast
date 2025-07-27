@@ -1,6 +1,7 @@
 @page "/admin/orders/archive"
-@attribute [Authorize(Roles = "Administrator,Salesman")]
+@attribute [Authorize(Roles = ApplicationRoles.SuperAdmin)]
 
+@using Application.Contract.Identity
 @using Application.Contract.Order.Responses
 @using Client.Components.Common
 @using Client.Infrastructure.Services.Order

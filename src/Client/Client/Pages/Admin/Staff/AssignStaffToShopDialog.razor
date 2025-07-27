@@ -1,6 +1,9 @@
+@using Application.Contract.Identity
 @using Client.Infrastructure.Services.Staff
 @using Client.Infrastructure.Services.Shop
 @using Application.Contract.Shops.Responses
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = ApplicationRoles.SuperAdmin)]
 @inject IStaffService StaffService
 @inject IShopService ShopService
 

@@ -8,4 +8,5 @@ public static class ApplicationRoles
     public const string Customer = nameof(Customer);
     
     public const string AllStaffCsv = $"{SuperAdmin}, {Administrator}, {Salesman}";
+    public const string AllAdmins = $"{SuperAdmin}, {Administrator}";
 }

@@ -1,9 +1,12 @@
 ﻿@page "/admin/products"
+@using Application.Contract.Identity
 @using Application.Contract.Product.Commands
 @using Application.Contract.Product.Queries
 @using Application.Contract.Product.Responses
 @using Application.Contract.ProductCategory.Responses
 @using Client.Components.Dialogs
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = ApplicationRoles.AllAdmins)]
 @using Client.Infrastructure.Services.Category
 @using Client.Infrastructure.Services.Product
 @inject IProductService ProductService

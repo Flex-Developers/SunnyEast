@@ -1,8 +1,11 @@
 ﻿@page "/admin/category"
+@using Application.Contract.Identity
 @using Application.Contract.ProductCategory.Responses
 @using Client.Components.Dialogs
 @using Client.Infrastructure.Services.Category
 @using Application.Contract.ProductCategory.Commands
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = ApplicationRoles.AllAdmins)]
 @inject IDialogService DialogService
 @inject ICategoryService CategoryService
 
