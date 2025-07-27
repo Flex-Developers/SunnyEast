@@ -7,12 +7,15 @@
 @using Client.Components.Common
 @using Client.Components.Dialogs
 @using Client.Infrastructure.Services.Order
+@using Client.Infrastructure.Realtime
 @using Microsoft.AspNetCore.Authorization
 @using Severity = MudBlazor.Severity
 
 @inject IOrderService OrderService
 @inject IDialogService Dialogs
 @inject ISnackbar Snackbar
+@inject IOrderRealtimeService Realtime
+@implements IDisposable
 
 <MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
 
@@ -213,6 +216,7 @@
     {
         _order = await OrderService.GetAsyncBySlug(Slug);
         _loading = false;
+        Realtime.OnOrderStatusChanged += OnStatusChanged;
     }
 
     private static string ToRu(OrderStatus s) => s switch
@@ -256,6 +260,19 @@
             Snackbar.Add($"Не удалось переместить {order.OrderNumber} в архив",Severity.Warning);
     }
 
+    private void OnStatusChanged(OrderResponse order)
+    {
+        if (_order?.Slug == order.Slug)
+        {
+            _order = order;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        Realtime.OnOrderStatusChanged -= OnStatusChanged;
+    }
 }
 
 <style>

@@ -4,12 +4,14 @@ using Infrastructure.Persistence;
 using Infrastructure.Persistence.Contexts;
 using Microsoft.EntityFrameworkCore;
 using WebApi;
+using WebApi.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddWebApi();
+
 var app = builder.Build();
 
 app.UseCors(s => s.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin().Build());
@@ -39,6 +41,8 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+app.MapHub<OrderHub>("/hubs/orders");
 
 app.MapControllers();
 

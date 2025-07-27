@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using Application.Contract.Order;
+using WebApi.Services;
 using Microsoft.OpenApi.Models;
 using WebApi.Filters;
 
@@ -41,5 +43,7 @@ public static class DependencyInitializer
             });
         });
         services.AddHttpContextAccessor();
+        services.AddSignalR();
+        services.AddScoped<IOrderRealtimeNotifier, OrderRealtimeNotifier>();
     }
 }
