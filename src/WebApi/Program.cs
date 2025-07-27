@@ -12,9 +12,20 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddWebApi();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Client",
+        p => p
+            .WithOrigins("http://localhost:5289") // адрес вашего Blazor WASM клиента
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials()); // нужно для SignalR с токеном
+});
+
 var app = builder.Build();
 
-app.UseCors(s => s.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin().Build());
+
+
 
 using (var scope = app.Services.CreateScope())
 {
@@ -35,16 +46,19 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseRouting();
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
+
+app.UseCors("Client");
 
 app.UseAuthentication();
 
 app.UseAuthorization();
 
-app.MapHub<OrderHub>("/hubs/orders");
-
 app.MapControllers();
+
+app.MapHub<OrderHub>("/hubs/orders");
 
 app.Run();
 

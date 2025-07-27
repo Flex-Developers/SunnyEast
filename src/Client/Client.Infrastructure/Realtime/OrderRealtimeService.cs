@@ -17,8 +17,16 @@ public class OrderRealtimeService(ILocalStorageService storage, IConfiguration c
 
     public async Task StartAsync()
     {
-        if (_connection is not null)
+        // если уже подключены — ничего не делаем
+        if (_connection is { State: HubConnectionState.Connected })
             return;
+
+        // если соединение существует, но отключено — просто стартуем
+        if (_connection is not null)
+        {
+            try { await _connection.StartAsync(); } catch { /* ignore */ }
+            return;
+        }
 
         var baseUrl = config[Config.ApiBaseUrl];
         var url = new Uri(new Uri(baseUrl!), "/hubs/orders");
@@ -35,9 +43,9 @@ public class OrderRealtimeService(ILocalStorageService storage, IConfiguration c
             .WithAutomaticReconnect()
             .Build();
 
-        _connection.On<OrderResponse>("OrderCreated", o => OnOrderCreated?.Invoke(o));
+        _connection.On<OrderResponse>("OrderCreated",       o => OnOrderCreated?.Invoke(o));
         _connection.On<OrderResponse>("OrderStatusChanged", o => OnOrderStatusChanged?.Invoke(o));
-        _connection.On<OrderResponse>("OrderArchived", o => OnOrderArchived?.Invoke(o));
+        _connection.On<OrderResponse>("OrderArchived",      o => OnOrderArchived?.Invoke(o));
 
         try
         {
@@ -45,19 +53,26 @@ public class OrderRealtimeService(ILocalStorageService storage, IConfiguration c
         }
         catch
         {
-            // ignore
+            // игнорируем — при следующем изменении auth или при автопереподключении стартуем снова
         }
     }
 
     public async Task StopAsync()
     {
-        if (_connection is not null)
+        if (_connection is null)
+            return;
+
+        try
         {
             await _connection.StopAsync();
             await _connection.DisposeAsync();
+        }
+        finally
+        {
             _connection = null;
         }
     }
+
 
     public async ValueTask DisposeAsync() => await StopAsync();
 }
