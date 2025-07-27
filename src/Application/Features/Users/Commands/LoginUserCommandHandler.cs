@@ -39,6 +39,7 @@ public class LoginUserCommandHandler(IJwtTokenService jwtTokenService, UserManag
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.UserName!),
+            new(ClaimTypes.Name, user.Name ?? string.Empty)
         };
 
         var roles = await userManager.GetRolesAsync(user);

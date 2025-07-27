@@ -1,4 +1,5 @@
-﻿using Client.Infrastructure.Services.Auth;
+﻿using Client.Infrastructure.Services.Account;
+using Client.Infrastructure.Services.Auth;
 using Client.Infrastructure.Services.Category;
 using Client.Infrastructure.Services.HttpClient;
 using Client.Infrastructure.Services.Cart;
@@ -29,7 +30,8 @@ public static class DependencyInitializer
             .AddScoped<IOrderService, OrderService>()
             .AddScoped<ICategoryVolumesValidationService, CategoryVolumesValidationService>()
             .AddScoped<IStaffService, StaffService>()
-            .AddScoped<IUserService, UserService>();
+            .AddScoped<IUserService, UserService>()
+            .AddScoped<IAccountService, AccountService>();
 
     }
 }

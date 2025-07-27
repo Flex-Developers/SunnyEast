@@ -1,0 +1,339 @@
+@page "/account"
+@attribute [Authorize]
+
+@using Application.Contract.Account.Commands
+@using Application.Contract.Account.Responses
+@using Client.Infrastructure.Services.Account
+@using Client.Infrastructure.Auth
+@using Client.Infrastructure.Services.Validation
+@using MudBlazor
+@using System.Text.RegularExpressions
+@using Microsoft.AspNetCore.Authorization
+@using Severity = MudBlazor.Severity
+
+@inject IAccountService AccountService
+@inject CustomAuthStateProvider AuthState
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject IValidationService ValidationService
+
+<MudBreakpointProvider OnBreakpointChanged="@(bp => _isMobile = bp < Breakpoint.Md)" />
+
+@if (_loading)
+{
+    <MudProgressCircular Class="ma-4" Indeterminate="true" Size="Size.Large" />
+}
+else if (_me is null)
+{
+    <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+        Не удалось загрузить профиль. Пожалуйста, войдите снова.
+    </MudAlert>
+}
+else
+{
+    <MudGrid Class="mt-2">
+        <MudItem xs="12" md="3">
+            @if (!_isMobile)
+            {
+                <MudPaper Class="pa-3">
+                    <MudStack Spacing="2">
+                        <MudAvatar Size="Size.Large">@GetInitials(_me.Name, _me.Surname)</MudAvatar>
+                        <MudText Typo="Typo.h6">@_me.Name @_me.Surname</MudText>
+                        <MudText Typo="Typo.body2" Class="text-secondary">@_me.UserName</MudText>
+                        <MudDivider Class="my-1" />
+                        <MudText Typo="Typo.caption">Роли</MudText>
+                        <MudChipSet T="string[]">
+                            @foreach (var r in _me.Roles)
+                                { <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined">@r</MudChip> }
+                        </MudChipSet>
+                        <MudDivider Class="my-1" />
+                        <MudText Typo="Typo.caption">E‑mail: @_me.Email</MudText>
+                        <MudText Typo="Typo.caption">Телефон: @_me.Phone</MudText>
+                        <MudText Typo="Typo.caption">Дата регистрации: @_me.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</MudText>
+                    </MudStack>
+                </MudPaper>
+            }
+        </MudItem>
+
+        <MudItem xs="12" md="9">
+            <MudTabs Rounded="true" Elevation="1" @bind-ActivePanelIndex="_tab">
+                <MudTabPanel Text="Профиль">
+                    <MudStack Spacing="3" Class="pa-3">
+                        <!-- Персональные данные -->
+                        <MudPaper Class="pa-3">
+                            <MudText Typo="Typo.h6">Персональные данные</MudText>
+                            <MudForm @ref="_profileForm" Model="_profile" Validation="@ProfileValidate" ValidationDelay="0">
+                                <MudTextField @bind-Value="_profile.Name"    For="()=>_profile.Name"    Label="Имя"     Variant="Variant.Outlined" Immediate="true" />
+                                <MudTextField @bind-Value="_profile.Surname" For="()=>_profile.Surname" Label="Фамилия" Variant="Variant.Outlined" Immediate="true" />
+                                <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="_savingProfile" Loading="_savingProfile" OnClick="@SaveProfile">
+                                    Сохранить
+                                </MudButton>
+                            </MudForm>
+                        </MudPaper>
+
+                        <!-- E-mail -->
+                        <MudPaper Class="pa-3">
+                            <MudText Typo="Typo.h6">Изменить e‑mail</MudText>
+                            <MudForm @ref="_emailForm" Model="_email" Validation="@EmailValidate" ValidationDelay="0">
+                                <MudTextField @bind-Value="_email.NewEmail" For="()=>_email.NewEmail" Label="Новый e‑mail" Variant="Variant.Outlined" Immediate="true" />
+                                <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="_savingEmail" Loading="_savingEmail" OnClick="@SaveEmail">
+                                    Сохранить
+                                </MudButton>
+                            </MudForm>
+                        </MudPaper>
+
+                        <!-- Телефон -->
+                        <MudPaper Class="pa-3">
+                            <MudText Typo="Typo.h6">Изменить телефон</MudText>
+                            <MudForm @ref="_phoneForm" Model="_phone" Validation="@PhoneValidate" ValidationDelay="0">
+                                <MudTextField T="string" @bind-Value="_phone" For="()=>_phone" Label="Новый телефон"
+                                              Variant="Variant.Outlined" Immediate="true"
+                                              Mask="@(new PatternMask("000-000-00-00"))"
+                                              Adornment="Adornment.Start" AdornmentText="+7" />
+                                <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="_savingPhone" Loading="_savingPhone" OnClick="@SavePhone">
+                                    Сохранить
+                                </MudButton>
+                            </MudForm>
+                        </MudPaper>
+
+                        <!-- Аватар -->
+                        <MudPaper Class="pa-3">
+                            <MudText Typo="Typo.h6">Аватар</MudText>
+                            <MudAlert Severity="Severity.Info">Скоро появится. (Заглушка)</MudAlert>
+                        </MudPaper>
+                    </MudStack>
+                </MudTabPanel>
+
+                <MudTabPanel Text="Безопасность">
+                    <MudStack Spacing="3" Class="pa-3">
+                        <MudPaper Class="pa-3">
+                            <MudText Typo="Typo.h6">Смена пароля</MudText>
+                            <MudForm @ref="_pwdForm" Model="_pwd" Validation="@PasswordValidate" ValidationDelay="0">
+                                <MudTextField @bind-Value="_pwd.CurrentPassword" For="()=>_pwd.CurrentPassword" Label="Текущий пароль" Variant="Variant.Outlined" InputType="InputType.Password" Immediate="true" />
+                                <MudTextField @bind-Value="_pwd.NewPassword"     For="()=>_pwd.NewPassword"     Label="Новый пароль"   Variant="Variant.Outlined" InputType="InputType.Password" Immediate="true" />
+                                <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="_savingPwd" Loading="_savingPwd" OnClick="@SavePassword">
+                                    Сменить пароль
+                                </MudButton>
+                                <MudText Typo="Typo.caption" Class="mt-2">
+                                    Требования: минимум 8 символов, цифра, строчная и заглавная буквы.
+                                </MudText>
+                            </MudForm>
+                        </MudPaper>
+
+                        <MudPaper Class="pa-3">
+                            <MudText Typo="Typo.h6">Сессии</MudText>
+                            <MudButton Color="Color.Error" Variant="Variant.Outlined" Disabled="_logoutAllLoading" Loading="_logoutAllLoading" OnClick="@ConfirmLogoutAll">
+                                Выйти из всех устройств
+                            </MudButton>
+                        </MudPaper>
+                    </MudStack>
+                </MudTabPanel>
+
+                <MudTabPanel Text="Настройки">
+                    <MudStack Spacing="3" Class="pa-3">
+                        <MudPaper Class="pa-3">
+                            <MudText Typo="Typo.h6">Двухфакторная аутентификация</MudText>
+                            <MudAlert Severity="Severity.Info">Скоро.</MudAlert>
+                        </MudPaper>
+                        <MudPaper Class="pa-3">
+                            <MudText Typo="Typo.h6">История входов</MudText>
+                            <MudAlert Severity="Severity.Info">Появится после включения аудита.</MudAlert>
+                        </MudPaper>
+                    </MudStack>
+                </MudTabPanel>
+            </MudTabs>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    private bool _loading = true;
+    private bool _isMobile = false;
+    private int _tab;
+
+    private MyAccountResponse? _me;
+
+    // Модели
+    private UpdateProfileCommand _profile = new() { Name = "", Surname = "" };
+    private ChangeEmailCommand _email = new() { NewEmail = "" };
+    private ChangePasswordCommand _pwd = new() { CurrentPassword = "", NewPassword = "" };
+    private string _phone = ""; // маска: 000-000-00-00
+
+    // Формы
+    private MudForm _profileForm = null!;
+    private MudForm _emailForm = null!;
+    private MudForm _phoneForm = null!;
+    private MudForm _pwdForm = null!;
+
+    // Состояния
+    private bool _savingProfile, _savingEmail, _savingPhone, _savingPwd, _logoutAllLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var me = await AccountService.GetAsync();
+        if (me is null)
+        {
+            Nav.NavigateTo($"/login?returnUrl={Uri.EscapeDataString("/account")}");
+            return;
+        }
+
+        _me = me;
+        _profile.Name = me.Name;
+        _profile.Surname = me.Surname;
+        _phone = (me.Phone ?? "").Replace("+7-", ""); // показываем без +7-
+
+        _loading = false;
+    }
+
+    // --- Делегаты валидации (единый тип для MudForm) ---
+
+    private Func<object, string, Task<IEnumerable<string>>> ProfileValidate => async (model, prop) =>
+    {
+        var m = (UpdateProfileCommand)model;
+        var errs = new List<string>();
+        string? val = prop == nameof(UpdateProfileCommand.Name) ? m.Name : m.Surname;
+
+        if (string.IsNullOrWhiteSpace(val)) errs.Add("Обязательное поле.");
+        else if (val.Length < 2 || val.Length > 50) errs.Add("Длина от 2 до 50 символов.");
+        else if (!Regex.IsMatch(val, @"^[a-zA-Zа-яА-ЯёЁ\-'\s]+$")) errs.Add("Допустимы только буквы и дефис.");
+
+        return errs;
+    };
+
+    private Func<object, string, Task<IEnumerable<string>>> EmailValidate => async (model, prop) =>
+    {
+        var m = (ChangeEmailCommand)model;
+        var err = ValidationService.ValidateEmail(m.NewEmail ?? "");
+        return string.IsNullOrWhiteSpace(err) ? Array.Empty<string>() : new[] { err };
+    };
+
+    private Func<object, string, Task<IEnumerable<string>>> PhoneValidate => async (model, prop) =>
+    {
+        var digits = Regex.Replace(_phone ?? "", @"\D", "");
+        try { ValidationService.ValidatePhoneNumber(digits); return Array.Empty<string>(); }
+        catch (System.ComponentModel.DataAnnotations.ValidationException ex) { return new[] { ex.Message }; }
+    };
+
+    private Func<object, string, Task<IEnumerable<string>>> PasswordValidate => async (model, prop) =>
+    {
+        var m = (ChangePasswordCommand)model;
+        var errs = new List<string>();
+
+        if (prop == nameof(ChangePasswordCommand.CurrentPassword))
+        {
+            if (string.IsNullOrWhiteSpace(m.CurrentPassword)) errs.Add("Текущий пароль обязателен.");
+            return errs;
+        }
+
+        // Новый пароль
+        try { ValidationService.ValidatePassword(m.NewPassword ?? ""); }
+        catch (System.ComponentModel.DataAnnotations.ValidationException ex) { errs.Add(ex.Message); }
+
+        return errs;
+    };
+
+    // --- Обработчики ---
+
+    private async Task SaveProfile()
+    {
+        _savingProfile = true;
+        try
+        {
+            await _profileForm.Validate();
+            if (!_profileForm.IsValid) { Snackbar.Add("Проверьте корректность имени/фамилии.", Severity.Warning); return; }
+
+            var ok = await AccountService.UpdateProfileAsync(_profile);
+            if (ok)
+            {
+                await AccountService.RefreshTokenAsync();
+                _me = await AccountService.GetAsync();
+                Snackbar.Add("Сохранено.", Severity.Success);
+            }
+            else Snackbar.Add("Ошибка при сохранении.", Severity.Error);
+        }
+        finally { _savingProfile = false; }
+    }
+
+    private async Task SaveEmail()
+    {
+        _savingEmail = true;
+        try
+        {
+            await _emailForm.Validate();
+            if (!_emailForm.IsValid) { Snackbar.Add("Введите корректный e‑mail.", Severity.Warning); return; }
+
+            var ok = await AccountService.ChangeEmailAsync(_email);
+            if (ok)
+            {
+                await AccountService.RefreshTokenAsync();
+                _me = await AccountService.GetAsync();
+                Snackbar.Add("E‑mail изменён.", Severity.Success);
+            }
+            else Snackbar.Add("E‑mail уже занят или ошибка сервера.", Severity.Error);
+        }
+        finally { _savingEmail = false; }
+    }
+
+    private async Task SavePhone()
+    {
+        _savingPhone = true;
+        try
+        {
+            await _phoneForm.Validate();
+            if (!_phoneForm.IsValid) { Snackbar.Add("Телефон должен быть в формате +7-XXX-XXX-XX-XX.", Severity.Warning); return; }
+
+            var ok = await AccountService.ChangePhoneAsync(new ChangePhoneCommand { NewPhone = $"+7-{_phone}" });
+            if (ok)
+            {
+                await AccountService.RefreshTokenAsync();
+                _me = await AccountService.GetAsync();
+                Snackbar.Add("Телефон изменён.", Severity.Success);
+            }
+            else Snackbar.Add("Телефон уже занят или ошибка сервера.", Severity.Error);
+        }
+        finally { _savingPhone = false; }
+    }
+
+    private async Task SavePassword()
+    {
+        _savingPwd = true;
+        try
+        {
+            await _pwdForm.Validate();
+            if (!_pwdForm.IsValid) { Snackbar.Add("Проверьте пароль.", Severity.Warning); return; }
+
+            var ok = await AccountService.ChangePasswordAsync(_pwd);
+            if (ok) Snackbar.Add("Пароль изменён. Другие сессии завершены.", Severity.Success);
+            else Snackbar.Add("Неверный текущий пароль или ошибка.", Severity.Error);
+
+            _pwd = new ChangePasswordCommand { CurrentPassword = "", NewPassword = "" };
+        }
+        finally { _savingPwd = false; }
+    }
+
+    private async Task ConfirmLogoutAll()
+    {
+        var ok = await DialogService.ShowMessageBox("Подтверждение", "Вы действительно хотите завершить все остальные сессии?",
+                                                    yesText: "Да", cancelText: "Отмена");
+        if (ok == true)
+        {
+            _logoutAllLoading = true;
+            try
+            {
+                if (await AccountService.LogoutAllAsync())
+                    Snackbar.Add("Другие сессии завершены.", Severity.Success);
+                else
+                    Snackbar.Add("Ошибка при завершении сессий.", Severity.Error);
+            }
+            finally { _logoutAllLoading = false; }
+        }
+    }
+
+    private static string GetInitials(string name, string surname)
+    {
+        var n = string.IsNullOrWhiteSpace(name) ? "" : name.Trim()[0].ToString().ToUpper();
+        var s = string.IsNullOrWhiteSpace(surname) ? "" : surname.Trim()[0].ToString().ToUpper();
+        return (n + s).PadRight(2, '•');
+    }
+}
