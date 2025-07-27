@@ -2,12 +2,18 @@ using Application.Common.Exceptions;
 using Application.Common.Interfaces.Contexts;
 using Application.Contract.Enums;
 using Application.Contract.Order.Commands;
+using Application.Contract.Order.Responses;
+using AutoMapper;
 using MediatR;
+using Application.Contract.Realtime;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Orders.Commands;
 
-public sealed class ChangeOrderStatusCommandHandler(IApplicationDbContext context)
+public sealed class ChangeOrderStatusCommandHandler(
+    IApplicationDbContext context,
+    IMapper mapper,
+    IOrderRealtimeNotifier realtimeNotifier)
     : IRequestHandler<ChangeOrderStatusCommand, Unit>
 {
     public async Task<Unit> Handle(ChangeOrderStatusCommand req, CancellationToken ct)
@@ -31,6 +37,9 @@ public sealed class ChangeOrderStatusCommandHandler(IApplicationDbContext contex
                 i.Status = (Domain.Enums.OrderStatus)req.Status;
 
         await context.SaveChangesAsync(ct);
+
+        var response = mapper.Map<OrderResponse>(order);
+        await realtimeNotifier.OrderStatusChanged(response);
         return Unit.Value;
     }
 }

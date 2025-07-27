@@ -5,9 +5,11 @@
 @using Application.Contract.Order.Responses
 @using Client.Components.Common
 @using Client.Infrastructure.Services.Order
+@using Client.Infrastructure.Realtime
 @using Microsoft.AspNetCore.Authorization
 @inject IOrderService OrderService
 @inject NavigationManager Navigation
+@inject IOrderRealtimeService RealtimeService
 
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-6 mx-auto">
@@ -98,6 +100,21 @@
     protected override async Task OnInitializedAsync()
     {
         _orders = (await OrderService.GetAllAsync(string.Empty, true)).ToList();
+        RealtimeService.OnOrderArchived += HandleArchived;
+    }
+
+    private void HandleArchived(OrderResponse order)
+    {
+        if (string.IsNullOrWhiteSpace(_search) || FilterFunc(order))
+        {
+            _orders.Insert(0, order);
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        RealtimeService.OnOrderArchived -= HandleArchived;
     }
 
     /* ---------- поиск по № и магазину ---------- */

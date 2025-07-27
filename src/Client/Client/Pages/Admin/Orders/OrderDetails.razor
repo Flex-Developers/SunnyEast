@@ -7,12 +7,14 @@
 @using Client.Components.Common
 @using Client.Components.Dialogs
 @using Client.Infrastructure.Services.Order
+@using Client.Infrastructure.Realtime
 @using Microsoft.AspNetCore.Authorization
 @using Severity = MudBlazor.Severity
 
 @inject IOrderService OrderService
 @inject IDialogService Dialogs
 @inject ISnackbar Snackbar
+@inject IOrderRealtimeService RealtimeService
 
 <MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
 
@@ -212,6 +214,7 @@
     protected override async Task OnInitializedAsync()
     {
         _order = await OrderService.GetAsyncBySlug(Slug);
+        RealtimeService.OnOrderStatusChanged += HandleStatusChanged;
         _loading = false;
     }
 
@@ -254,6 +257,20 @@
         }
         else
             Snackbar.Add($"Не удалось переместить {order.OrderNumber} в архив",Severity.Warning);
+    }
+
+    private void HandleStatusChanged(OrderResponse order)
+    {
+        if (_order is not null && _order.Slug == order.Slug)
+        {
+            _order = order;
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        RealtimeService.OnOrderStatusChanged -= HandleStatusChanged;
     }
 
 }

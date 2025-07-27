@@ -7,6 +7,7 @@ namespace Application.Contract.Order.Responses;
 public class OrderResponse
 {
     public required string Slug { get; set; }
+    public string? ShopSlug { get; set; }
     public ShopVm? Shop { get; set; }
     public string OrderNumber { get; set; } = default!;
     public OrderStatus Status { get; set; }

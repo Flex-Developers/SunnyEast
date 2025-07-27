@@ -16,6 +16,8 @@ public class OrderProfile : Profile
         CreateMap<Domain.Entities.Order, OrderResponse>()
             .ForMember(d => d.Customer,
                 opt => opt.MapFrom(s => s.Customer))
+            .ForMember(d => d.ShopSlug,
+                opt => opt.MapFrom(s => s.ShopSlug))
             .ForMember(d => d.Sum,
                 opt => opt.MapFrom(s => s.OrderItems!.Sum(i => i.SummaryPrice)))
             .ForMember(d => d.Customer,

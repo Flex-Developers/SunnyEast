@@ -25,3 +25,15 @@
         </NotFound>
     </Router>
 </CascadingAuthenticationState>
+
+@code {
+    [Inject] private Client.Infrastructure.Realtime.IOrderRealtimeService RealtimeService { get; set; } = default!;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await RealtimeService.StartAsync();
+        }
+    }
+}

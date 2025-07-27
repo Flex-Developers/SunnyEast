@@ -4,7 +4,9 @@ using Application.Common.Interfaces.Services;
 using Application.Contract.Order.Commands;
 using Application.Contract.Order.Responses;
 using Domain.Enums;
+using AutoMapper;
 using MediatR;
+using Application.Contract.Realtime;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Orders.Commands;
@@ -13,7 +15,9 @@ public class CreateOrderCommandHandler(
     IApplicationDbContext context,
     ISlugService slugService,
     ICurrentUserService currentUserService,
-    IDateTimeService dateTimeService)
+    IDateTimeService dateTimeService,
+    IMapper mapper,
+    IOrderRealtimeNotifier realtimeNotifier)
     : IRequestHandler<CreateOrderCommand, CreateOrderResponse>
 {
     public async Task<CreateOrderResponse> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
@@ -63,6 +67,10 @@ public class CreateOrderCommandHandler(
 
         await context.Orders.AddAsync(order, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
+
+        var response = mapper.Map<OrderResponse>(order);
+        await realtimeNotifier.OrderCreated(response);
+
         return new CreateOrderResponse
         {
             Slug = order.Slug,

@@ -10,6 +10,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddWebApi();
+builder.Services.AddSignalR();
+builder.Services.AddScoped<Application.Contract.Realtime.IOrderRealtimeNotifier, WebApi.Services.OrderRealtimeNotifier>();
 var app = builder.Build();
 
 app.UseCors(s => s.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin().Build());
@@ -41,6 +43,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<WebApi.Hubs.OrderHub>("/hubs/orders");
 
 app.Run();
 

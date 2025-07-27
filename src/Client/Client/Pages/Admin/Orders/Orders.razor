@@ -8,6 +8,7 @@
 @using Client.Components.Common
 @using Client.Components.Dialogs
 @using Client.Infrastructure.Services.Order
+@using Client.Infrastructure.Realtime
 @using Microsoft.AspNetCore.Authorization
 @using Severity = MudBlazor.Severity
 
@@ -16,6 +17,7 @@
 @inject IDialogService Dialogs
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthProvider
+@inject IOrderRealtimeService RealtimeService
 
 <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">
     @Heading
@@ -144,9 +146,13 @@
     {
         var state = await AuthProvider.GetAuthenticationStateAsync();
         _isSuperAdmin = state.User.IsInRole(ApplicationRoles.SuperAdmin)
-                        || state.User.Claims.Any(c => (c.Type == "role" || c.Type == ClaimTypes.Role) 
+                        || state.User.Claims.Any(c => (c.Type == "role" || c.Type == ClaimTypes.Role)
                                                       && c.Value == ApplicationRoles.SuperAdmin);
-        
+
+        RealtimeService.OnOrderCreated += HandleOrderCreated;
+        RealtimeService.OnOrderStatusChanged += HandleStatusChanged;
+        RealtimeService.OnOrderArchived += HandleArchived;
+
         await RefreshAsync();
     }
 
@@ -222,6 +228,39 @@
             await ChangeStatus(order, OrderStatus.Canceled);
     }
 
+    private void HandleOrderCreated(OrderResponse order)
+    {
+        if (string.IsNullOrWhiteSpace(_search) || FilterFunc(order))
+            _orders.Insert(0, order);
+        StateHasChanged();
+    }
+
+    private void HandleStatusChanged(OrderResponse order)
+    {
+        var idx = _orders.FindIndex(o => o.Slug == order.Slug);
+        if (idx >= 0)
+            _orders[idx] = order;
+        else if (string.IsNullOrWhiteSpace(_search) || FilterFunc(order))
+            _orders.Insert(0, order);
+        StateHasChanged();
+    }
+
+    private void HandleArchived(OrderResponse order)
+    {
+        var idx = _orders.FindIndex(o => o.Slug == order.Slug);
+        if (idx >= 0)
+        {
+            _orders.RemoveAt(idx);
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        RealtimeService.OnOrderCreated -= HandleOrderCreated;
+        RealtimeService.OnOrderStatusChanged -= HandleStatusChanged;
+        RealtimeService.OnOrderArchived -= HandleArchived;
+    }
 }
 
 <style>
