@@ -67,7 +67,7 @@ public sealed class ChangeUserRoleCommandHandler(
                 staff.IsActive = false;
             }
         }
-
+        await userManager.UpdateSecurityStampAsync(user);
         await context.SaveChangesAsync(ct);
         return Unit.Value;
     }
