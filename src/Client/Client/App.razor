@@ -1,31 +1,26 @@
-﻿@using Application.Contract.Identity
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Application.Contract.Identity
+@using Client.Components.Common  
+
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
-            <AuthorizeView Roles="@ApplicationRoles.Administrator">
-                <Authorized>
-                    <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)"/>
-                </Authorized>
-                <NotAuthorized>
-                    @if (routeData.PageType.ToString().Contains("/Admin/", StringComparison.OrdinalIgnoreCase))
-                    {
-                        <LayoutView Layout="@typeof(MainLayout)">
-                            <p role="alert">Страница не доступна</p>
-                        </LayoutView>
-                    }
-                    else
-                    {
-                        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)"/>
-                    }
-                </NotAuthorized>
-            </AuthorizeView>
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <Authorizing>
+                    <MudProgressCircular Class="mx-auto mt-6" />
+                </Authorizing>
 
-            <FocusOnNavigate RouteData="@routeData" Selector="h1"/>
+                <NotAuthorized>
+                    <AccessGuard />   
+                </NotAuthorized>
+            </AuthorizeRouteView>
+
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
         </Found>
+
         <NotFound>
-            <PageTitle>Страница не найдена</PageTitle>
             <LayoutView Layout="@typeof(MainLayout)">
-                <p role="alert">Страница не найдена</p>
+                <MudText Typo="Typo.h4" Align="Align.Center" Class="mt-6">Страница не найдена</MudText>
             </LayoutView>
         </NotFound>
     </Router>
