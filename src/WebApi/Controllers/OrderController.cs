@@ -75,8 +75,6 @@ public class OrderController : ApiControllerBase
         return NoContent();
     }
 
-
-
     [HttpPut("{slug}/archive")]
     [Authorize(Roles = ApplicationRoles.AllStaffCsv)]
     public async Task<IActionResult> Archive([FromBody] ArchiveOrderCommand command)

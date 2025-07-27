@@ -1,7 +1,8 @@
 @page "/admin/orders/{Slug}"
-@attribute [Authorize(Roles = "Administrator,Salesman")]
+@attribute [Authorize(Roles = ApplicationRoles.AllStaffCsv)]
 
 @using Application.Contract.Enums
+@using Application.Contract.Identity
 @using Application.Contract.Order.Responses
 @using Client.Components.Common
 @using Client.Components.Dialogs

@@ -152,11 +152,21 @@
 
     private async Task RefreshAsync()
     {
-        if (UserId.HasValue && _isSuperAdmin)
-            _orders = await OrderService.GetAllByUserAsync(UserId.Value);
+        if (_isSuperAdmin)
+        {
+            if (UserId.HasValue)
+                _orders = await OrderService.GetAllByUserAsync(UserId.Value);
+            else
+                _orders = await OrderService.GetAllAsync(string.Empty);
+        }
         else
-            _orders = (await OrderService.GetAllAsync(string.Empty)).ToList();
+        {
+            // Администратор/продавец: только заказы магазинов, где они состоят в Staff
+            _orders = await OrderService.GetSalesmanAsync();
+        }
     }
+
+
 
     private async Task MoveToArchive(OrderResponse order)
     {
