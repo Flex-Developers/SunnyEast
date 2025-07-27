@@ -1,0 +1,24 @@
+@page "/forbidden"
+@inject NavigationManager Nav
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mx-auto mt-8">
+    <MudPaper Elevation="10" Class="pa-6">
+        <MudText Typo="Typo.h3" Align="Align.Center">Упс! Доступ запрещён</MudText>
+        <MudText Align="Align.Center" Class="mt-2">
+            У вас нет прав для просмотра этой страницы.
+        </MudText>
+        <MudStack Row Justify="Justify.Center" Spacing="2" Class="mt-4">
+            <MudButton Variant="Variant.Outlined" OnClick="@(()=>Nav.NavigateTo("/"))">На главную</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@GoLogin">Войти</MudButton>
+        </MudStack>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [SupplyParameterFromQuery] public string? returnUrl { get; set; }
+    void GoLogin()
+    {
+        var target = string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl!;
+        Nav.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(target)}");
+    }
+}
