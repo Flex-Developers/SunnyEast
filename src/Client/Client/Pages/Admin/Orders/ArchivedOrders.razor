@@ -8,6 +8,7 @@
 @using Microsoft.AspNetCore.Authorization
 @inject IOrderService OrderService
 @inject NavigationManager Navigation
+@inject Client.Infrastructure.Realtime.OrderRealtimeService Realtime
 
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-6 mx-auto">
@@ -89,6 +90,7 @@
     </MudTable>
 </MudContainer>
 
+@implements IDisposable
 @code {
     private List<OrderResponse> _orders = [];
     private readonly string _paginationInfoFormat = "{first_item}-{last_item} из {all_items}";
@@ -98,6 +100,8 @@
     protected override async Task OnInitializedAsync()
     {
         _orders = (await OrderService.GetAllAsync(string.Empty, true)).ToList();
+        await Realtime.StartAsync();
+        Realtime.OnOrderArchived += HandleArchived;
     }
 
     /* ---------- поиск по № и магазину ---------- */
@@ -106,6 +110,17 @@
         || o.OrderNumber.Contains(_search, StringComparison.OrdinalIgnoreCase)
         || o.Shop!.Address.Contains(_search, StringComparison.OrdinalIgnoreCase);
 
+    private async void HandleArchived(string slug)
+    {
+        // reload or append
+        _orders = (await OrderService.GetAllAsync(string.Empty, true)).ToList();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Realtime.OnOrderArchived -= HandleArchived;
+    }
 }
 
 <style>

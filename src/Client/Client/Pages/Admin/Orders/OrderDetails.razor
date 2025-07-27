@@ -13,6 +13,7 @@
 @inject IOrderService OrderService
 @inject IDialogService Dialogs
 @inject ISnackbar Snackbar
+@inject Client.Infrastructure.Realtime.OrderRealtimeService Realtime
 
 <MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
 
@@ -203,6 +204,7 @@
     }
 </MudContainer>
 
+@implements IDisposable
 @code {
     [Parameter] public string Slug { get; set; } = default!;
 
@@ -213,6 +215,8 @@
     {
         _order = await OrderService.GetAsyncBySlug(Slug);
         _loading = false;
+        await Realtime.StartAsync();
+        Realtime.OnOrderStatusChanged += HandleStatusChanged;
     }
 
     private static string ToRu(OrderStatus s) => s switch
@@ -256,6 +260,20 @@
             Snackbar.Add($"Не удалось переместить {order.OrderNumber} в архив",Severity.Warning);
     }
 
+    private void HandleStatusChanged(string slug, OrderStatus status, DateTime? closedAt, DateTime? canceledAt)
+    {
+        if (_order is null || _order.Slug != slug) return;
+        _order.Status = status;
+        _order.ClosedAt = closedAt;
+        _order.CanceledAt = canceledAt;
+        Snackbar.Add($"Статус изменён: {ToRu(status)}", Severity.Info);
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Realtime.OnOrderStatusChanged -= HandleStatusChanged;
+    }
 }
 
 <style>

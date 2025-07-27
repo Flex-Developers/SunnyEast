@@ -4,10 +4,14 @@ using Application.Contract.Enums;
 using Application.Contract.Order.Commands;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
+using WebApi.Hubs;
 
 namespace Application.Features.Orders.Commands;
 
-public sealed class ChangeOrderStatusCommandHandler(IApplicationDbContext context)
+public sealed class ChangeOrderStatusCommandHandler(
+    IApplicationDbContext context,
+    IHubContext<OrderHub, IOrderClient> hub)
     : IRequestHandler<ChangeOrderStatusCommand, Unit>
 {
     public async Task<Unit> Handle(ChangeOrderStatusCommand req, CancellationToken ct)
@@ -31,6 +35,19 @@ public sealed class ChangeOrderStatusCommandHandler(IApplicationDbContext contex
                 i.Status = (Domain.Enums.OrderStatus)req.Status;
 
         await context.SaveChangesAsync(ct);
+
+        var shopId = order.ShopId;
+        var customerId = order.CustomerId;
+
+        await hub.Clients.Group(OrderHub.ShopGroup(shopId))
+            .OrderStatusChanged(order.Slug, req.Status, order.ClosedAt, order.CanceledAt);
+
+        await hub.Clients.Group(OrderHub.SuperAdminsGroup)
+            .OrderStatusChanged(order.Slug, req.Status, order.ClosedAt, order.CanceledAt);
+
+        await hub.Clients.Group(OrderHub.CustomerGroup(customerId))
+            .OrderStatusChanged(order.Slug, req.Status, order.ClosedAt, order.CanceledAt);
+
         return Unit.Value;
     }
 }

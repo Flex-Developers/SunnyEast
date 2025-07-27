@@ -3,7 +3,10 @@ using Application.Common.Interfaces.Contexts;
 using Application.Common.Interfaces.Services;
 using Application.Contract.Order.Commands;
 using Application.Contract.Order.Responses;
+using AutoMapper;
 using Domain.Enums;
+using Microsoft.AspNetCore.SignalR;
+using WebApi.Hubs;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +16,9 @@ public class CreateOrderCommandHandler(
     IApplicationDbContext context,
     ISlugService slugService,
     ICurrentUserService currentUserService,
-    IDateTimeService dateTimeService)
+    IDateTimeService dateTimeService,
+    IMapper mapper,
+    IHubContext<OrderHub, IOrderClient> hub)
     : IRequestHandler<CreateOrderCommand, CreateOrderResponse>
 {
     public async Task<CreateOrderResponse> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
@@ -63,6 +68,18 @@ public class CreateOrderCommandHandler(
 
         await context.Orders.AddAsync(order, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
+
+        var ord = await context.Orders
+            .Include(o => o.Customer)
+            .Include(o => o.Shop)
+            .Include(o => o.OrderItems)
+            .Where(o => o.Id == order.Id)
+            .Select(o => mapper.Map<Application.Contract.Order.Responses.OrderResponse>(o))
+            .FirstAsync(cancellationToken);
+
+        await hub.Clients.Group(OrderHub.ShopGroup(order.ShopId)).OrderCreated(ord);
+        await hub.Clients.Group(OrderHub.SuperAdminsGroup).OrderCreated(ord);
+
         return new CreateOrderResponse
         {
             Slug = order.Slug,

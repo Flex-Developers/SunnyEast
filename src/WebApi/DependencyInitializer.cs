@@ -41,5 +41,6 @@ public static class DependencyInitializer
             });
         });
         services.AddHttpContextAccessor();
+        services.AddSignalR();
     }
 }

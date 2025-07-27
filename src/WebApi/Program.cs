@@ -41,6 +41,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<WebApi.Hubs.OrderHub>("/hubs/orders");
 
 app.Run();
 

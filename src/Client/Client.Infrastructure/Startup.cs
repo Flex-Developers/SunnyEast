@@ -45,7 +45,8 @@ public static class Startup
             })
             .Services
             .AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient(SunnyEastClientName))
-            .AddSunnyEastApiServices();
+            .AddSunnyEastApiServices()
+            .AddSingleton<Client.Infrastructure.Realtime.OrderRealtimeService>();
 
     private static void RegisterPermissionClaims(AuthorizationOptions options)
     {

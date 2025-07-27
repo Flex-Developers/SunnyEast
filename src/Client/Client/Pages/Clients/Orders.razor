@@ -9,6 +9,7 @@
 @inject NavigationManager Navigation
 @inject IDialogService Dialogs
 @inject AuthenticationStateProvider AuthProvider
+@inject Client.Infrastructure.Realtime.OrderRealtimeService Realtime
 @implements IDisposable  
 
 
@@ -106,7 +107,10 @@
         _isAuth = state.User.Identity?.IsAuthenticated == true;
 
         await RefreshOrders();
-        
+
+        await Realtime.StartAsync();
+        Realtime.OnOrderStatusChanged += HandleStatusChanged;
+
         AuthProvider.AuthenticationStateChanged += OnAuthStateChanged;
     }
     
@@ -150,10 +154,21 @@
         if (!(await dialogReference.Result)!.Canceled)
             await CancelOrder(order);
     }
-    
+
+    private void HandleStatusChanged(string slug, OrderStatus status, DateTime? closedAt, DateTime? canceledAt)
+    {
+        var it = _orders.FirstOrDefault(x => x.Slug == slug);
+        if (it is null) return;
+        it.Status = status;
+        it.ClosedAt = closedAt;
+        it.CanceledAt = canceledAt;
+        InvokeAsync(StateHasChanged);
+    }
+
     public void Dispose()
     {
         AuthProvider.AuthenticationStateChanged -= OnAuthStateChanged;
+        Realtime.OnOrderStatusChanged -= HandleStatusChanged;
     }
 }
 

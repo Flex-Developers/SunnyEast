@@ -10,6 +10,7 @@
 @inject IOrderService      OrderService
 @inject NavigationManager  Navigation
 @inject IDialogService Dialogs
+@inject Client.Infrastructure.Realtime.OrderRealtimeService Realtime
 
 <MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
 
@@ -152,6 +153,7 @@
     }
 </MudContainer>
 
+@implements IDisposable
 @code {
     [Parameter] public string Slug { get; set; } = default!;
 
@@ -162,6 +164,8 @@
     {
         _order = await OrderService.GetAsyncBySlug(Slug);
         _loading = false;
+        await Realtime.StartAsync();
+        Realtime.OnOrderStatusChanged += HandleStatusChanged;
     }
     
     private async Task AskCancel(OrderResponse order)
@@ -182,10 +186,23 @@
         else
             Snackbar.Add($"Не удалось отменить {order.OrderNumber}", Severity.Warning);
 
-        
+
         StateHasChanged();
     }
-    
+
+    private void HandleStatusChanged(string slug, OrderStatus status, DateTime? closedAt, DateTime? canceledAt)
+    {
+        if (_order is null || _order.Slug != slug) return;
+        _order.Status = status;
+        _order.ClosedAt = closedAt;
+        _order.CanceledAt = canceledAt;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Realtime.OnOrderStatusChanged -= HandleStatusChanged;
+    }
 }
 
 <style>
