@@ -10,40 +10,27 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Orders.Queries;
 
-public sealed class GetAllOrdersQueryHandler(
-    IApplicationDbContext context,
-    IMapper mapper,
-    ICurrentUserService currentUserService)
+public sealed class GetAllOrdersQueryHandler(IApplicationDbContext context, IMapper mapper)
     : IRequestHandler<GetAllOrdersQuery, List<OrderResponse>>
 {
-    public async Task<List<OrderResponse>> Handle(GetAllOrdersQuery request, CancellationToken cancellationToken)
+    public async Task<List<OrderResponse>> Handle(GetAllOrdersQuery request, CancellationToken ct)
     {
-        var userName = currentUserService.GetUserName();
-        var userRole = currentUserService.GetUserRole();
-        
-        var user = context.Users.FirstOrDefault(u => u.UserName == userName);
-        
-        if (user is null)
-            return [];
-
         var orders = context.Orders
-            .Include(o => o.Customer) // нужны данные клиента
-            .Include(o => o.OrderItems) // чтобы корректно посчитать Sum
+            .Include(o => o.Customer)
+            .Include(o => o.OrderItems)
             .Include(o => o.Shop)
             .AsQueryable();
-
-        if (userRole is not (ApplicationRoles.Administrator or ApplicationRoles.Salesman))
-        {
-            orders = orders.Where(order => order.CustomerId == user.Id);
-        }
 
         if (!string.IsNullOrWhiteSpace(request.ShopSlug))
             orders = orders.Where(o => o.ShopSlug == request.ShopSlug);
 
-        orders = request.OnlyArchived ? orders.Where(o => o.IsInArchive) : orders.Where(o => !o.IsInArchive);
+        orders = request.OnlyArchived
+            ? orders.Where(o => o.IsInArchive)
+            : orders.Where(o => !o.IsInArchive);
 
-        return await orders.ProjectTo<OrderResponse>(mapper.ConfigurationProvider)
+        return await orders
             .OrderByDescending(o => o.CreatedAt)
-            .ToListAsync(cancellationToken);
+            .ProjectTo<OrderResponse>(mapper.ConfigurationProvider)
+            .ToListAsync(ct);
     }
 }
