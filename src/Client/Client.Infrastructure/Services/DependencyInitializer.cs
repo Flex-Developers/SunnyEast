@@ -31,7 +31,7 @@ public static class DependencyInitializer
             .AddScoped<ICategoryVolumesValidationService, CategoryVolumesValidationService>()
             .AddScoped<IStaffService, StaffService>()
             .AddScoped<IUserService, UserService>()
-            .AddSingleton<IOrderRealtimeService, OrderRealtimeService>();
+            .AddScoped<IOrderRealtimeService, OrderRealtimeService>();
 
     }
 }
