@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WebApi.Hubs;
 
-[Authorize]
+
 public interface IOrderClient
 {
     Task OrderCreated(OrderResponse order);
@@ -16,6 +16,7 @@ public interface IOrderClient
     Task OrderArchived(OrderResponse order);
 }
 
+[Authorize]
 public class OrderHub(ApplicationDbContext context) : Hub<IOrderClient>
 {
     public override async Task OnConnectedAsync()
