@@ -45,7 +45,7 @@
 
             <RowTemplate>
                 <MudTd DataLabel="Номер" Class="nowrap text-center">@context.OrderNumber</MudTd>
-                <MudTd DataLabel="Магазин">@context.Shop!.Address</MudTd>
+                <MudTd DataLabel="Магазин">@(context.Shop?.Address ?? "—")</MudTd>
                 <MudTd DataLabel="Статус" Class="text-center"><OrderStatusChip Status="@context.Status" /></MudTd>
                 <MudTd DataLabel="Сумма"  Class="text-center">@($"{context.Sum:N2} ₽")</MudTd>
                 <MudTd DataLabel="Действия">
@@ -130,7 +130,8 @@
     private bool FilterFunc(OrderResponse o) =>
         string.IsNullOrWhiteSpace(_search)
         || o.OrderNumber.Contains(_search, StringComparison.OrdinalIgnoreCase)
-        || o.Shop!.Address.Contains(_search, StringComparison.OrdinalIgnoreCase);
+        || (o.Shop?.Address?.Contains(_search, StringComparison.OrdinalIgnoreCase) ?? false);
+
 
     private async Task CancelOrder(OrderResponse order)
     {

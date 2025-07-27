@@ -26,6 +26,12 @@ public sealed class StaffService(IHttpClientService http) : IStaffService
         var res = await http.GetFromJsonAsync<List<StaffResponse>>(url);
         return res.Success ? res.Response ?? [] : [];
     }
+    
+    public async Task<bool> HireAsync(Guid userId)
+    {
+        var res = await http.PostAsJsonAsync($"/api/staff/hire", new { UserId = userId });
+        return res.Success;
+    }
 
     public async Task<StaffResponse?> GetByUserIdAsync(Guid userId)
     {

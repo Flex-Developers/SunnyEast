@@ -27,6 +27,14 @@ public class OrderController : ApiControllerBase
         return Ok(response);
     }
     
+    [HttpGet("by-user/{userId:guid}")]
+    [Authorize(Roles = ApplicationRoles.SuperAdmin)]
+    public async Task<ActionResult<List<OrderResponse>>> GetByUser(Guid userId)
+    {
+        var list = await Mediator.Send(new GetOrdersByUserQuery { UserId = userId });
+        return Ok(list);
+    }
+    
     [HttpGet(nameof(GetAllOrders))]
     [Authorize(Roles = ApplicationRoles.SuperAdmin)]
     public async Task<IActionResult> GetAllOrders([FromQuery] GetAllOrdersQuery query)
@@ -43,7 +51,7 @@ public class OrderController : ApiControllerBase
         return Ok(response);
     }
 
-    [Authorize(Roles = ApplicationRoles.Salesman + "," + ApplicationRoles.Administrator + "," + ApplicationRoles.SuperAdmin)]
+    [Authorize(Roles = ApplicationRoles.AllStaffCsv)]
     [HttpGet("salesman")]
     public async Task<IActionResult> GetSalesmanOrders([FromQuery] GetSalesmanOrdersQuery query)
     {
@@ -52,7 +60,7 @@ public class OrderController : ApiControllerBase
     }
 
     [HttpPut("change-status")]
-    [Authorize(Roles = ApplicationRoles.Salesman + "," + ApplicationRoles.Administrator + "," + ApplicationRoles.SuperAdmin)]
+    [Authorize(Roles = ApplicationRoles.AllStaffCsv)]
     public async Task<IActionResult> ChangeStatus([FromBody] ChangeOrderStatusCommand command)
     {
         await Mediator.Send(command);
@@ -70,6 +78,7 @@ public class OrderController : ApiControllerBase
 
 
     [HttpPut("{slug}/archive")]
+    [Authorize(Roles = ApplicationRoles.AllStaffCsv)]
     public async Task<IActionResult> Archive([FromBody] ArchiveOrderCommand command)
     {
         await Mediator.Send(command);

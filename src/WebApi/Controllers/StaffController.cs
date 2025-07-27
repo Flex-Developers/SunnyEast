@@ -23,6 +23,13 @@ public sealed class StaffController : ApiControllerBase
     {
         return Ok(await Mediator.Send(new GetStaffByUserIdQuery { UserId = userId }));
     }
+    
+    [HttpPost("hire")]
+    public async Task<IActionResult> Hire([FromBody] HireUserAsStaffCommand command)
+    {
+        await Mediator.Send(command);
+        return NoContent();
+    }
 
     [HttpPut("role")]
     public async Task<IActionResult> ChangeRole([FromBody] ChangeUserRoleCommand command)

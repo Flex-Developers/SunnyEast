@@ -44,6 +44,12 @@ public class OrderService(IHttpClientService httpClient, ISnackbar snackbar) : I
         var res = await httpClient.GetFromJsonAsync<List<OrderResponse>>(url);
         return res.Success ? res.Response ?? [] : [];
     }
+    
+    public async Task<List<OrderResponse>> GetAllByUserAsync(Guid userId)
+    {
+        var res = await httpClient.GetFromJsonAsync<List<OrderResponse>>($"/api/order/by-user/{userId}");
+        return res.Success ? (res.Response ?? []) : [];
+    }
 
     public async Task<List<OrderResponse>> GetCustomerAsync()
     {
