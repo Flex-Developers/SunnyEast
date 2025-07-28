@@ -15,11 +15,8 @@ public interface IAccountService
     Task<bool> ChangePhoneAsync(ChangePhoneCommand request);
 
     Task<bool> ChangePasswordAsync(ChangePasswordCommand request);
-
-    // Task<bool> LogoutAllAsync();
     
     Task<bool> DeleteAccountAsync();
-
 
     // Вспомогательно для «тихого» обновления клейм после успешных операций
     Task<JwtTokenResponse?> RefreshTokenAsync();

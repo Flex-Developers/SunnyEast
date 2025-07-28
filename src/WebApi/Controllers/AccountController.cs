@@ -60,11 +60,4 @@ public sealed class AccountController : ApiControllerBase
         await Mediator.Send(new DeleteMyAccountCommand());
         return NoContent();
     }
-
-    // [HttpPost("logout-all")]
-    // public async Task<IActionResult> LogoutAll()
-    // {
-    //     await Mediator.Send(new LogoutAllCommand());
-    //     return NoContent();
-    // }
 }

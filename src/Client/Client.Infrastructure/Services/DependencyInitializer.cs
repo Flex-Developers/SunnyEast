@@ -11,6 +11,7 @@ using Client.Infrastructure.Services.Staff;
 using Client.Infrastructure.Services.User;
 using Client.Infrastructure.Services.Validation;
 using Client.Infrastructure;
+using Client.Infrastructure.Realtime;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Client.Infrastructure.Services;
@@ -33,7 +34,6 @@ public static class DependencyInitializer
             .AddScoped<IStaffService, StaffService>()
             .AddScoped<IUserService, UserService>()
             .AddScoped<IOrderRealtimeService, OrderRealtimeService>()
-            
             .AddScoped<IAccountService, AccountService>();
 
     }

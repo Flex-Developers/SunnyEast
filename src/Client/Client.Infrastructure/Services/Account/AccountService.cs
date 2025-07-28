@@ -63,11 +63,4 @@ public sealed class AccountService(IHttpClientService http, CustomAuthStateProvi
         await auth.MarkUserAsAuthenticated(res.Response!);
         return res.Response;
     }
-    
-    
-    // public async Task<bool> LogoutAllAsync()
-    // {
-    //     var res = await http.PostAsJsonAsync("/api/account/logout-all", new { });
-    //     return res.Success;
-    // }
 }
