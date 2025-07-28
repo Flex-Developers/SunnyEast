@@ -3,6 +3,7 @@
 
 @using Client.Infrastructure.Services.Account
 @using Client.Infrastructure.Auth
+@using Client.Infrastructure.Services.Auth
 @using Client.Infrastructure.Services.Validation
 @inject IJSRuntime JS
 @using Microsoft.AspNetCore.Authorization
@@ -11,6 +12,7 @@
 @inject IAccountService AccountService
 @inject CustomAuthStateProvider AuthState
 @inject NavigationManager Nav
+@inject IAuthService AuthService
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject IValidationService ValidationService
@@ -29,7 +31,7 @@ else if (_me is null)
 }
 else
 {
-    <MudContainer Gutters="false" MaxWidth="MaxWidth.Small">
+    <MudContainer Gutters="false" MaxWidth="MaxWidth.Small" Style="margin-top: 30px">
         <MudPaper Class="pa-4 mb-3 account-summary" Elevation="5">
             <MudStack Spacing="2">
                 <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
@@ -251,13 +253,40 @@ else
                     </MudPaper>
 
                     <MudPaper Class="pa-3" Elevation="5">
-                        <MudText Typo="Typo.h6">Сессии</MudText>
-                        <MudButton Color="Color.Error" Variant="Variant.Outlined" Disabled="_logoutAllLoading"
-                                   Loading="_logoutAllLoading" OnClick="@ConfirmLogoutAll"
-                                   StartIcon="@Icons.Material.Filled.Logout">
-                            Выйти из всех устройств
-                        </MudButton>
+                        <MudStack AlignItems="AlignItems.Center" Spacing="2">
+                            <MudText Typo="Typo.h6" Align="Align.Center">Сессии</MudText>
+
+                            <MudStack Row Justify="Justify.Center" Spacing="2">
+                                <MudButton Color="Color.Error"
+                                           Variant="Variant.Outlined"
+                                           Disabled="_logoutAllLoading"
+                                           OnClick="@ConfirmLogoutAll"
+                                           StartIcon="@Icons.Material.Filled.Logout">
+                                    Выйти на всех устройствах
+                                </MudButton>
+
+                                <MudButton Color="Color.Secondary"
+                                           Variant="Variant.Outlined"
+                                           Disabled="_logoutSelfLoading"
+                                           OnClick="@LogoutThisDevice"
+                                           StartIcon="@Icons.Material.Filled.Logout">
+                                    Выйти из аккаунта
+                                </MudButton>
+                            </MudStack>
+
+                            <MudDivider Class="my-1" />
+
+                            <MudButton Color="Color.Error"
+                                       Variant="Variant.Filled"
+                                       FullWidth="true"
+                                       StartIcon="@Icons.Material.Filled.DeleteForever"
+                                       Disabled="_deletingAccount"
+                                       OnClick="@ConfirmDeleteAccount">
+                                Удалить аккаунт
+                            </MudButton>
+                        </MudStack>
                     </MudPaper>
+
                 </MudStack>
             </MudTabPanel>
 

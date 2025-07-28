@@ -25,9 +25,13 @@ public class AuthService(
         return loginResponse.Success;
     }
 
-    public async Task LogoutAsync()
+    public async Task LogoutAsync(bool navigateToHome = false)
     {
         await authStateProvider.MarkUserAsLoggedOut();
+        
+        if (navigateToHome)
+            navigationManager.NavigateTo("/");
+        
         snackbar.Add("Вы вышли из аккаунта.", Severity.Success);
     }
 }

@@ -56,6 +56,13 @@ public sealed class AccountService(
         var res = await http.PostAsJsonAsync("/api/account/logout-all", new { });
         return res.Success;
     }
+    
+    public async Task<bool> DeleteAccountAsync()
+    {
+        var res = await http.DeleteAsync("/api/account");
+        return res.Success;
+    }
+
 
     public async Task<JwtTokenResponse?> RefreshTokenAsync()
     {

@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Application.Contract.Account.Commands;
 using Application.Contract.Account.Responses;
+using Client.Infrastructure.Auth;
 using Microsoft.JSInterop;
 using MudBlazor;
 
@@ -36,6 +37,9 @@ public partial class Account
     private MudForm _emailForm = null!;
     private MudForm _phoneForm = null!;
     private MudForm _pwdForm = null!;
+    
+    private bool _logoutSelfLoading;
+    private bool _deletingAccount;
 
     // Состояния
     private bool _savingProfile, _savingEmail, _savingPhone, _savingPwd, _logoutAllLoading;
@@ -58,6 +62,54 @@ public partial class Account
         _phone = (me.Phone ?? "").Replace("+7-", ""); // показываем без +7-
 
         _loading = false;
+    }
+    
+    // выйти ТОЛЬКО на этом устройстве (клиентский логаут)
+    private async Task LogoutThisDevice()
+    {
+        _logoutSelfLoading = true;
+        try
+        {
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+            await DialogService.ShowAsync<Components.Dialogs.Logout>("Выход", options);
+        }
+        finally
+        {
+            _logoutSelfLoading = false;
+        }
+    }
+
+    // подтвердить и удалить аккаунт (сервер -> удалить пользователя, клиент -> разлогиниться)
+    private async Task ConfirmDeleteAccount()
+    {
+        var ok = await DialogService.ShowMessageBox(
+            "Удалить аккаунт?",
+            "Это действие необратимо. Будут удалены ваши данные и завершены все сессии.",
+            yesText: "Удалить",
+            cancelText: "Отмена");
+
+        if (ok == true)
+        {
+            _deletingAccount = true;
+            try
+            {
+                var deleted = await AccountService.DeleteAccountAsync();
+                if (deleted)
+                {
+                    await AuthState.MarkUserAsLoggedOut();
+                    Snackbar.Add("Аккаунт удалён.", Severity.Success);
+                    Nav.NavigateTo("/", true);
+                }
+                else
+                {
+                    Snackbar.Add("Не удалось удалить аккаунт.", Severity.Error);
+                }
+            }
+            finally
+            {
+                _deletingAccount = false;
+            }
+        }
     }
 
     private async Task CopyToClipboard(string? value)

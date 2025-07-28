@@ -1,7 +1,6 @@
 using Application.Contract.Account.Commands;
 using Application.Contract.Account.Responses;
 using Application.Contract.User.Responses;
-using Microsoft.AspNetCore.Components.Forms;
 
 namespace Client.Infrastructure.Services.Account;
 
@@ -18,6 +17,9 @@ public interface IAccountService
     Task<bool> ChangePasswordAsync(ChangePasswordCommand request);
 
     Task<bool> LogoutAllAsync();
+    
+    Task<bool> DeleteAccountAsync();
+
 
     // Вспомогательно для «тихого» обновления клейм после успешных операций
     Task<JwtTokenResponse?> RefreshTokenAsync();

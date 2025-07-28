@@ -7,7 +7,7 @@ using WebApi.Filters;
 namespace WebApi.Controllers;
 
 [Authorize]
-[CustomExceptionsFilter] // уже используется в проекте
+[CustomExceptionsFilter] 
 public sealed class AccountController : ApiControllerBase
 {
     [HttpGet("me")]
@@ -59,13 +59,12 @@ public sealed class AccountController : ApiControllerBase
         var token = await Mediator.Send(new GetMyJwtQuery());
         return Ok(token);
     }
-
-    // (Опционально) Аватар — заглушка (реализацию хранения можно добавить позже)
-    [HttpPost("avatar")]
-    [DisableRequestSizeLimit]
-    public IActionResult UploadAvatar()
+    
+    [HttpDelete]
+    public async Task<IActionResult> DeleteAccount()
     {
-        // TODO: реализовать сохранение в wwwroot/avatars и записать путь в БД (поле AvatarUrl)
-        return StatusCode(StatusCodes.Status501NotImplemented, "Загрузка аватара будет доступна позже.");
+        await Mediator.Send(new DeleteMyAccountCommand());
+        return NoContent();
     }
+
 }
