@@ -10,6 +10,7 @@ using Client.Infrastructure.Services.Shop;
 using Client.Infrastructure.Services.Staff;
 using Client.Infrastructure.Services.User;
 using Client.Infrastructure.Services.Validation;
+using Client.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Client.Infrastructure.Services;
@@ -30,6 +31,8 @@ public static class DependencyInitializer
             .AddScoped<IOrderService, OrderService>()
             .AddScoped<ICategoryVolumesValidationService, CategoryVolumesValidationService>()
             .AddScoped<IStaffService, StaffService>()
+            .AddScoped<IUserService, UserService>()
+            .AddScoped<IOrderRealtimeService, OrderRealtimeService>()
             .AddScoped<IUserService, UserService>()
             .AddScoped<IAccountService, AccountService>();
 

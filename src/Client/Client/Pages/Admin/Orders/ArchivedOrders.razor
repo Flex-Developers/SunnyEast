@@ -5,9 +5,12 @@
 @using Application.Contract.Order.Responses
 @using Client.Components.Common
 @using Client.Infrastructure.Services.Order
+@using Client.Infrastructure.Realtime
 @using Microsoft.AspNetCore.Authorization
 @inject IOrderService OrderService
 @inject NavigationManager Navigation
+@inject IOrderRealtimeService Realtime
+@implements IDisposable
 
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-6 mx-auto">
@@ -98,6 +101,7 @@
     protected override async Task OnInitializedAsync()
     {
         _orders = (await OrderService.GetAllAsync(string.Empty, true)).ToList();
+        Realtime.OnOrderArchived += HandleArchived;
     }
 
     /* ---------- поиск по № и магазину ---------- */
@@ -106,6 +110,19 @@
         || o.OrderNumber.Contains(_search, StringComparison.OrdinalIgnoreCase)
         || o.Shop!.Address.Contains(_search, StringComparison.OrdinalIgnoreCase);
 
+    private void HandleArchived(OrderResponse order)
+    {
+        if (FilterFunc(order))
+        {
+            _orders.Insert(0, order);
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        Realtime.OnOrderArchived -= HandleArchived;
+    }
 }
 
 <style>

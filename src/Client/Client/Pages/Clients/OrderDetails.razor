@@ -6,12 +6,13 @@
 @using Client.Components.Dialogs
 @using Client.Infrastructure.Services.Order
 @using Microsoft.AspNetCore.Authorization
+@inject Infrastructure.Realtime.IOrderRealtimeService Realtime
 @using Severity = MudBlazor.Severity
 @inject IOrderService      OrderService
-@inject NavigationManager  Navigation
 @inject IDialogService Dialogs
+@implements IDisposable
 
-<MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
 
     @if (_loading)
     {
@@ -160,8 +161,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _order = await OrderService.GetAsyncBySlug(Slug);
+        _order   = await OrderService.GetAsyncBySlug(Slug);
         _loading = false;
+
+        Realtime.OnOrderStatusChanged += OnStatusChanged;
     }
     
     private async Task AskCancel(OrderResponse order)
@@ -184,6 +187,20 @@
 
         
         StateHasChanged();
+    }
+    
+    private void OnStatusChanged(OrderResponse order)
+    {
+        if (_order?.Slug == order.Slug)
+        {
+            _order = order;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+    
+    public void Dispose()
+    {
+        Realtime.OnOrderStatusChanged -= OnStatusChanged;
     }
     
 }

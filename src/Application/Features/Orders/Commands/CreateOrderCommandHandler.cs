@@ -4,6 +4,8 @@ using Application.Common.Interfaces.Services;
 using Application.Contract.Order.Commands;
 using Application.Contract.Order.Responses;
 using Domain.Enums;
+using AutoMapper;
+using Application.Contract.Order;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +15,9 @@ public class CreateOrderCommandHandler(
     IApplicationDbContext context,
     ISlugService slugService,
     ICurrentUserService currentUserService,
-    IDateTimeService dateTimeService)
+    IDateTimeService dateTimeService,
+    IMapper mapper,
+    IOrderRealtimeNotifier notifier)
     : IRequestHandler<CreateOrderCommand, CreateOrderResponse>
 {
     public async Task<CreateOrderResponse> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
@@ -63,6 +67,19 @@ public class CreateOrderCommandHandler(
 
         await context.Orders.AddAsync(order, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
+
+        var saved = await context.Orders
+            .Include(o => o.Customer)
+            .Include(o => o.Shop)
+            .Include(o => o.OrderItems!).ThenInclude(i => i.Product)
+            .FirstAsync(o => o.Slug == order.Slug, cancellationToken);
+
+        var response = mapper.Map<OrderResponse>(saved);
+        response.Items = mapper.Map<List<OrderItemResponse>>(saved.OrderItems!);
+        response.Sum = response.Items.Sum(i => i.SummaryPrice);
+
+        await notifier.OrderCreated(response);
+
         return new CreateOrderResponse
         {
             Slug = order.Slug,
