@@ -11,6 +11,11 @@ public partial class Account
      private bool _loading = true;
     private bool _isMobile = false;
     private int _tab;
+    
+    private bool _showCurrentPwd;
+    private bool _showNewPwd;
+    private bool _showConfirmPwd;
+
 
     private string _pwdConfirm = "";
     private string? _pwdConfirmError;

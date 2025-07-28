@@ -202,19 +202,41 @@ else
                     <MudPaper Class="pa-3" Elevation="5">
                         <MudText Typo="Typo.h6">Смена пароля</MudText>
                         <MudForm @ref="_pwdForm" Model="_pwd" Validation="@PasswordValidate" ValidationDelay="0">
-                            <MudTextField @bind-Value="_pwd.CurrentPassword" For="()=>_pwd.CurrentPassword"
-                                          Label="Текущий пароль" Variant="Variant.Outlined"
-                                          InputType="InputType.Password" Immediate="true"/>
-                            <MudTextField @bind-Value="_pwd.NewPassword" For="()=>_pwd.NewPassword" Label="Новый пароль"
-                                          Variant="Variant.Outlined" InputType="InputType.Password" Immediate="true"/>
+                            <MudTextField @bind-Value="_pwd.CurrentPassword"
+                                          For="()=>_pwd.CurrentPassword"
+                                          Label="Текущий пароль"
+                                          Variant="Variant.Outlined"
+                                          Immediate="true"
+                                          InputType="@(_showCurrentPwd ? InputType.Text : InputType.Password)"
+                                          Adornment="Adornment.End"
+                                          AdornmentIcon="@(_showCurrentPwd ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                                          OnAdornmentClick="@(()=> _showCurrentPwd = !_showCurrentPwd)"
+                                          AdornmentAriaLabel="Показать/скрыть текущий пароль" />
+
+                            <MudTextField @bind-Value="_pwd.NewPassword"
+                                          For="()=>_pwd.NewPassword"
+                                          Label="Новый пароль"
+                                          Variant="Variant.Outlined"
+                                          Immediate="true"
+                                          InputType="@(_showNewPwd ? InputType.Text : InputType.Password)"
+                                          Adornment="Adornment.End"
+                                          AdornmentIcon="@(_showNewPwd ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                                          OnAdornmentClick="@(()=> _showNewPwd = !_showNewPwd)"
+                                          AdornmentAriaLabel="Показать/скрыть новый пароль" />
+
                             <MudTextField @bind-Value="_pwdConfirm"
+                                          For="() => _pwdConfirm"
                                           Label="Подтвердите новый пароль"
                                           Variant="Variant.Outlined"
-                                          InputType="InputType.Password"
-                                          For="() => _pwdConfirm"
                                           Immediate="true"
+                                          InputType="@(_showConfirmPwd ? InputType.Text : InputType.Password)"
+                                          Adornment="Adornment.End"
+                                          AdornmentIcon="@(_showConfirmPwd ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                                          OnAdornmentClick="@(()=> _showConfirmPwd = !_showConfirmPwd)"
+                                          AdornmentAriaLabel="Показать/скрыть подтверждение"
                                           Error="@(!string.IsNullOrWhiteSpace(_pwdConfirmError))"
-                                          ErrorText="@_pwdConfirmError"/>
+                                          ErrorText="@_pwdConfirmError" />
+
 
                             <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="_savingPwd"
                                        Loading="_savingPwd" OnClick="@SavePassword"
