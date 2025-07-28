@@ -36,7 +36,7 @@ else
         <MudPaper Class="pa-4 mb-3 account-summary" Elevation="5">
             <MudStack Spacing="2">
                 <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
-                    <MudIcon Icon="@Icons.Material.Filled.AccountCircle" Size="Size.Medium"/>
+                    <MudIcon Icon="@Icons.Material.Filled.AccountCircle" Size="Size.Large"/>
                     <MudText Typo="Typo.h5">@_me.Name @_me.Surname</MudText>
                 </MudStack>
 
@@ -72,13 +72,14 @@ else
             </MudStack>
         </MudPaper>
 
-
         <!-- Вкладки (шире и по краям вровень с верхним MudPaper) -->
         <MudTabs Class="account-tabs"
                  Rounded="true"
                  Elevation="5"
+                 Centered="true"
                  Outlined="true"
-                 Stretch="true"
+                 SliderAnimation="true"
+                 
                  AlwaysShowScrollButtons="false"
                  @bind-ActivePanelIndex="_tab">
 
@@ -200,7 +201,7 @@ else
             </MudTabPanel>
 
             <MudTabPanel Text="Безопасность">
-                <MudStack Spacing="3" Class="pa-3">
+                <MudStack Spacing="3" Style="padding-top: 10px">
                     <MudPaper Class="pa-3" Elevation="5">
                         <MudText Typo="Typo.h6">Смена пароля</MudText>
                         <MudForm @ref="_pwdForm" Model="_pwd" Validation="@PasswordValidate" ValidationDelay="0">
@@ -242,7 +243,7 @@ else
             </MudTabPanel>
 
             <MudTabPanel Text="Настройки">
-                <MudStack Spacing="3" Class="pa-3">
+                <MudStack Spacing="3" Style="padding-top: 10px">
                     <MudPaper Class="pa-3" Elevation="5">
                         <MudText Typo="Typo.h6">Двухфакторная аутентификация</MudText>
                         <MudAlert Severity="Severity.Info">Скоро.</MudAlert>
