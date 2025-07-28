@@ -33,7 +33,7 @@ public static class DependencyInitializer
             .AddScoped<IStaffService, StaffService>()
             .AddScoped<IUserService, UserService>()
             .AddScoped<IOrderRealtimeService, OrderRealtimeService>()
-            .AddScoped<IUserService, UserService>()
+            
             .AddScoped<IAccountService, AccountService>();
 
     }
