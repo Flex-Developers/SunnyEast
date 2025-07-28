@@ -1,4 +1,3 @@
-using Application.Common;
 using Application.Common.Exceptions;
 using Application.Common.Interfaces.Contexts;
 using Application.Common.Interfaces.Services;
@@ -8,7 +7,7 @@ using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace Application.Account.Commands;
+namespace Application.Features.Account.Commands;
 
 public sealed class ChangeMyEmailCommandHandler(
     IApplicationDbContext db,

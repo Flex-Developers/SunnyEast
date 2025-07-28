@@ -8,7 +8,7 @@ using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace Application.Account.Commands;
+namespace Application.Features.Account.Commands;
 
 public sealed class ChangeMyPhoneCommandHandler(
     IApplicationDbContext db,

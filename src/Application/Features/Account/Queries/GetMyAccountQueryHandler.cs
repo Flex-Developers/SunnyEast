@@ -8,7 +8,7 @@ using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace Application.Account.Queries;
+namespace Application.Features.Account.Queries;
 
 public sealed class GetMyAccountQueryHandler(
     IApplicationDbContext db,
