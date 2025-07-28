@@ -1,5 +1,4 @@
 ﻿@using Client.Infrastructure.Services.Auth
-@using Severity = MudBlazor.Severity
 @inject IAuthService AuthService
 <MudDialog>
     <TitleContent>
@@ -25,8 +24,7 @@
 
     async Task Submit()
     {
-        await AuthService.LogoutAsync();
-        Navigation.NavigateTo("/");
+        await AuthService.LogoutAsync(true);
         MudDialog.Close(DialogResult.Ok(true));
     }
 

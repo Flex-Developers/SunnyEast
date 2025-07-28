@@ -1,0 +1,355 @@
+@page "/account"
+@attribute [Authorize]
+
+@using Client.Infrastructure.Services.Account
+@using Client.Infrastructure.Auth
+@using Client.Infrastructure.Services.Auth
+@using Client.Infrastructure.Services.Validation
+@inject IJSRuntime JS
+@using Microsoft.AspNetCore.Authorization
+@using Severity = MudBlazor.Severity
+
+@inject IAccountService AccountService
+@inject CustomAuthStateProvider AuthState
+@inject NavigationManager Nav
+@inject IAuthService AuthService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject IValidationService ValidationService
+
+<MudBreakpointProvider OnBreakpointChanged="@(bp => _isMobile = bp < Breakpoint.Md)"/>
+
+@if (_loading)
+{
+    <MudProgressCircular Class="ma-4" Indeterminate="true" Size="Size.Large"/>
+}
+else if (_me is null)
+{
+    <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+        Не удалось загрузить профиль. Пожалуйста, войдите снова.
+    </MudAlert>
+}
+else
+{
+    <MudContainer Gutters="false" MaxWidth="MaxWidth.Small" Style="margin-top: 30px">
+        <MudPaper Class="pa-4 mb-3 account-summary" Elevation="5">
+            <MudStack Spacing="2">
+                <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountCircle" Size="Size.Large"/>
+                    <MudText Typo="Typo.h5">@_me.Name @_me.Surname</MudText>
+                </MudStack>
+
+                <MudDivider Class="my-1"/>
+
+                <MudStack Spacing="1">
+                    <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
+                        <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small"/>
+                        <MudText Typo="Typo.body1">E‑mail: @_me.Email</MudText>
+                        <MudSpacer/>
+                        <MudTooltip Text="Скопировать e‑mail">
+                            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small"
+                                           OnClick="@(() => CopyToClipboard(_me.Email))"/>
+                        </MudTooltip>
+                    </MudStack>
+
+                    <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
+                        <MudIcon Icon="@Icons.Material.Filled.Phone" Size="Size.Small"/>
+                        <MudText Typo="Typo.body1">Телефон: @_me.Phone</MudText>
+                        <MudSpacer/>
+                        <MudTooltip Text="Скопировать номер">
+                            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small"
+                                           OnClick="@(() => CopyToClipboard(_me.Phone))"/>
+                        </MudTooltip>
+                    </MudStack>
+
+                    <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
+                        <MudIcon Icon="@Icons.Material.Filled.Event" Size="Size.Small"/>
+                        <MudText Typo="Typo.body1">Дата
+                            регистрации: @_me.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</MudText>
+                    </MudStack>
+                </MudStack>
+            </MudStack>
+        </MudPaper>
+
+        <!-- Вкладки (шире и по краям вровень с верхним MudPaper) -->
+        <MudTabs Class="account-tabs"
+                 Rounded="true"
+                 Elevation="5"
+                 Centered="true"
+                 Outlined="true"
+                 SliderAnimation="true"
+                 
+                 AlwaysShowScrollButtons="false"
+                 @bind-ActivePanelIndex="_tab">
+
+            <MudTabPanel Text="Профиль">
+                <MudStack Spacing="3" Style="padding-top: 10px">
+                    <!-- Персональные данные -->
+                    <MudPaper Class="pa-3" Elevation="5">
+                        <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                            <MudText Typo="Typo.h6">Персональные данные</MudText>
+                            @if (!_editProfile)
+                            {
+                                <MudButton Color="Color.Info" Variant="Variant.Outlined"
+                                           StartIcon="@Icons.Material.Filled.Edit"
+                                           OnClick="() => _editProfile = true">
+                                    Изменить
+                                </MudButton>
+                            }
+                        </MudStack>
+
+                        <MudForm @ref="_profileForm" Model="_profile" Validation="@ProfileValidate" ValidationDelay="0">
+                            <MudTextField @bind-Value="_profile.Name" For="()=>_profile.Name" Label="Имя"
+                                          Variant="Variant.Outlined" Immediate="true" Disabled="@(!_editProfile)"/>
+                            <MudTextField @bind-Value="_profile.Surname" For="()=>_profile.Surname" Label="Фамилия"
+                                          Variant="Variant.Outlined" Immediate="true" Disabled="@(!_editProfile)"/>
+
+                            @if (_editProfile)
+                            {
+                                <MudStack Row Spacing="1" Justify="Justify.FlexEnd">
+                                    <MudButton Color="Color.Info" Variant="Variant.Outlined"
+                                               StartIcon="@Icons.Material.Filled.Close"
+                                               OnClick="@CancelProfileEdit">
+                                        Отмена
+                                    </MudButton>
+                                    <MudButton Color="Color.Success" Variant="Variant.Filled"
+                                               Disabled="_savingProfile" Loading="_savingProfile"
+                                               StartIcon="@Icons.Material.Filled.Save"
+                                               OnClick="@SaveProfile">
+                                        Сохранить
+                                    </MudButton>
+                                </MudStack>
+                            }
+                        </MudForm>
+                    </MudPaper>
+
+                    <!-- E-mail -->
+                    <MudPaper Class="pa-3" Elevation="5">
+                        <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                            <MudText Typo="Typo.h6">Изменить e‑mail</MudText>
+                            @if (!_editEmail)
+                            {
+                                <MudButton Color="Color.Info" Variant="Variant.Outlined"
+                                           StartIcon="@Icons.Material.Filled.Edit"
+                                           OnClick="() => _editEmail = true">
+                                    Изменить
+                                </MudButton>
+                            }
+                        </MudStack>
+
+                        <MudForm @ref="_emailForm" Model="_email" Validation="@EmailValidate" ValidationDelay="0">
+                            <MudTextField @bind-Value="_email.NewEmail" For="()=>_email.NewEmail" Label="Новый e‑mail"
+                                          Variant="Variant.Outlined" Immediate="true" Disabled="@(!_editEmail)"/>
+                            @if (_editEmail)
+                            {
+                                <MudStack Row Spacing="1" Justify="Justify.FlexEnd">
+                                    <MudButton Color="Color.Info" Variant="Variant.Outlined"
+                                               StartIcon="@Icons.Material.Filled.Close"
+                                               OnClick="@CancelEmailEdit">
+                                        Отмена
+                                    </MudButton>
+                                    <MudButton Color="Color.Success" Variant="Variant.Filled"
+                                               Disabled="_savingEmail" Loading="_savingEmail"
+                                               StartIcon="@Icons.Material.Filled.Save"
+                                               OnClick="@SaveEmail">
+                                        Сохранить
+                                    </MudButton>
+                                </MudStack>
+                            }
+                        </MudForm>
+                    </MudPaper>
+
+                    <!-- Телефон -->
+                    <MudPaper Class="pa-3" Elevation="5">
+                        <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                            <MudText Typo="Typo.h6">Изменить телефон</MudText>
+                            @if (!_editPhone)
+                            {
+                                <MudButton Color="Color.Info" Variant="Variant.Outlined"
+                                           StartIcon="@Icons.Material.Filled.Edit"
+                                           OnClick="() => _editPhone = true">
+                                    Изменить
+                                </MudButton>
+                            }
+                        </MudStack>
+
+                        <MudForm @ref="_phoneForm" Model="_phone" Validation="@PhoneValidate" ValidationDelay="0">
+                            <MudTextField T="string" @bind-Value="_phone" For="()=>_phone" Label="Новый телефон"
+                                          Variant="Variant.Outlined" Immediate="true" Disabled="@(!_editPhone)"
+                                          Mask="@(new PatternMask("000-000-00-00"))"
+                                          Adornment="Adornment.Start" AdornmentText="+7"/>
+                            @if (_editPhone)
+                            {
+                                <MudStack Row Spacing="1" Justify="Justify.FlexEnd">
+                                    <MudButton Color="Color.Info" Variant="Variant.Outlined"
+                                               StartIcon="@Icons.Material.Filled.Close"
+                                               OnClick="@CancelPhoneEdit">
+                                        Отмена
+                                    </MudButton>
+                                    <MudButton Color="Color.Success" Variant="Variant.Filled"
+                                               Disabled="_savingPhone" Loading="_savingPhone"
+                                               StartIcon="@Icons.Material.Filled.Save"
+                                               OnClick="@SavePhone">
+                                        Сохранить
+                                    </MudButton>
+                                </MudStack>
+                            }
+                        </MudForm>
+                    </MudPaper>
+                </MudStack>
+            </MudTabPanel>
+
+            <MudTabPanel Text="Безопасность">
+                <MudStack Spacing="3" Style="padding-top: 10px">
+                    <MudPaper Class="pa-3" Elevation="5">
+                        <MudText Typo="Typo.h6">Смена пароля</MudText>
+                        <MudForm @ref="_pwdForm" Model="_pwd" Validation="@PasswordValidate" ValidationDelay="0">
+                            <MudTextField @bind-Value="_pwd.CurrentPassword"
+                                          For="()=>_pwd.CurrentPassword"
+                                          Label="Текущий пароль"
+                                          Variant="Variant.Outlined"
+                                          Immediate="true"
+                                          InputType="@(_showCurrentPwd ? InputType.Text : InputType.Password)"
+                                          Adornment="Adornment.End"
+                                          AdornmentIcon="@(_showCurrentPwd ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                                          OnAdornmentClick="@(()=> _showCurrentPwd = !_showCurrentPwd)"
+                                          AdornmentAriaLabel="Показать/скрыть текущий пароль" />
+
+                            <MudTextField @bind-Value="_pwd.NewPassword"
+                                          For="()=>_pwd.NewPassword"
+                                          Label="Новый пароль"
+                                          Variant="Variant.Outlined"
+                                          Immediate="true"
+                                          InputType="@(_showNewPwd ? InputType.Text : InputType.Password)"
+                                          Adornment="Adornment.End"
+                                          AdornmentIcon="@(_showNewPwd ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                                          OnAdornmentClick="@(()=> _showNewPwd = !_showNewPwd)"
+                                          AdornmentAriaLabel="Показать/скрыть новый пароль" />
+
+                            <MudTextField @bind-Value="_pwdConfirm"
+                                          For="() => _pwdConfirm"
+                                          Label="Подтвердите новый пароль"
+                                          Variant="Variant.Outlined"
+                                          Immediate="true"
+                                          InputType="@(_showConfirmPwd ? InputType.Text : InputType.Password)"
+                                          Adornment="Adornment.End"
+                                          AdornmentIcon="@(_showConfirmPwd ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                                          OnAdornmentClick="@(()=> _showConfirmPwd = !_showConfirmPwd)"
+                                          AdornmentAriaLabel="Показать/скрыть подтверждение"
+                                          Error="@(!string.IsNullOrWhiteSpace(_pwdConfirmError))"
+                                          ErrorText="@_pwdConfirmError" />
+
+
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="_savingPwd"
+                                       Loading="_savingPwd" OnClick="@SavePassword"
+                                       StartIcon="@Icons.Material.Filled.Password"
+                                       Style="margin-top: 10px">
+                                Сменить пароль
+                            </MudButton>
+                            <MudText Typo="Typo.caption" Class="mt-2">
+                                Требования: минимум 8 символов, цифра, строчная и заглавная буквы.
+                            </MudText>
+                        </MudForm>
+                    </MudPaper>
+
+                    <MudPaper Class="pa-3" Elevation="5">
+                        <MudStack AlignItems="AlignItems.Center" Spacing="2">
+                            <MudText Typo="Typo.h6" Align="Align.Center">Сессии</MudText>
+
+                            <!-- две колонки по 50% на sm+, в столбик на мобилках -->
+                            <MudGrid Class="w-100">
+                                <MudItem xs="12" sm="6" Class="minw0">
+                                    <MudButton Color="Color.Error"
+                                               Variant="Variant.Filled"
+                                               Size="Size.Medium"
+                                               FullWidth="true"
+                                               StartIcon="@Icons.Material.Filled.DeleteForever"
+                                               Disabled="_deletingAccount"
+                                               OnClick="@ConfirmDeleteAccount">
+                                        Удалить аккаунт
+                                    </MudButton>
+                                </MudItem>
+
+                                <MudItem xs="12" sm="6" Class="minw0">
+                                    <MudButton Color="Color.Info"
+                                               Variant="Variant.Outlined"
+                                               Size="Size.Medium"
+                                               FullWidth="true"
+                                               StartIcon="@Icons.Material.Filled.Logout"
+                                               Disabled="_logoutSelfLoading"
+                                               OnClick="@LogoutThisDevice">
+                                        Выйти из аккаунта
+                                    </MudButton>
+                                </MudItem>
+                            </MudGrid>
+                        </MudStack>
+                    </MudPaper>
+
+
+                </MudStack>
+            </MudTabPanel>
+
+            <MudTabPanel Text="Настройки">
+                <MudStack Spacing="3" Style="padding-top: 10px">
+                    <MudPaper Class="pa-3" Elevation="5">
+                        <MudText Typo="Typo.h6">Двухфакторная аутентификация</MudText>
+                        <MudAlert Severity="Severity.Info">Скоро.</MudAlert>
+                    </MudPaper>
+                    <MudPaper Class="pa-3">
+                        <MudText Typo="Typo.h6">История входов</MudText>
+                        <MudAlert Severity="Severity.Info">Появится после включения аудита.</MudAlert>
+                    </MudPaper>
+                </MudStack>
+            </MudTabPanel>
+        </MudTabs>
+    </MudContainer>
+}
+
+<style>
+    /* Сводка: делаем чуть крупнее и аккуратнее отступы */
+    .account-summary .mud-typography-h4 {
+        line-height: 1.2;
+    }
+
+    .minw0 { min-width: 0; }
+
+    .account-summary .mud-typography-body1 {
+        opacity: .9;
+    }
+
+    /* Визуально выравниваем ширину шапки и вкладок */
+    .account-summary,
+    .account-tabs {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Убираем горизонтальные паддинги у тулбара и панелей вкладок */
+    .account-tabs .mud-tabs-toolbar,
+    .account-tabs .mud-tabs-panels {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    /* На всякий случай убираем внешние отступы у корня вкладок */
+    .account-tabs {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    /* Если движок всё равно рисует стрелки — скрываем */
+    .account-tabs .mud-tabs-scrollbutton {
+        display: none !important;
+    }
+
+    /* На десктопе — чуть шире и равномерно растягиваем заголовки */
+    @@media (min-width: 960px) {
+        .account-tabs .mud-tabs-toolbar {
+            justify-content: space-between;
+        }
+
+        .account-tabs .mud-tab {
+            min-width: 180px;
+        }
+    }
+</style>

@@ -1,4 +1,5 @@
-﻿using Client.Infrastructure.Services.Auth;
+﻿using Client.Infrastructure.Services.Account;
+using Client.Infrastructure.Services.Auth;
 using Client.Infrastructure.Services.Category;
 using Client.Infrastructure.Services.HttpClient;
 using Client.Infrastructure.Services.Cart;
@@ -9,6 +10,7 @@ using Client.Infrastructure.Services.Shop;
 using Client.Infrastructure.Services.Staff;
 using Client.Infrastructure.Services.User;
 using Client.Infrastructure.Services.Validation;
+using Client.Infrastructure;
 using Client.Infrastructure.Realtime;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -31,7 +33,8 @@ public static class DependencyInitializer
             .AddScoped<ICategoryVolumesValidationService, CategoryVolumesValidationService>()
             .AddScoped<IStaffService, StaffService>()
             .AddScoped<IUserService, UserService>()
-            .AddScoped<IOrderRealtimeService, OrderRealtimeService>();
+            .AddScoped<IOrderRealtimeService, OrderRealtimeService>()
+            .AddScoped<IAccountService, AccountService>();
 
     }
 }

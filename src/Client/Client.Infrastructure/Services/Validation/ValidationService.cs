@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 
 namespace Client.Infrastructure.Services.Validation;
 
@@ -8,7 +9,7 @@ public class ValidationService : IValidationService
     {
         if (!string.IsNullOrWhiteSpace(email) && (!email.Contains("@") || !email.Contains(".")))
             return "Почта должна содержать символ '@' и домен.";
-        
+
         return null;
     }
 
@@ -25,7 +26,7 @@ public class ValidationService : IValidationService
 
         if (!password.Any(c => char.IsLetter(c) && char.IsUpper(c)))
             throw new ValidationException("Пароль должен содержать хотя бы одну заглавную букву.");
-        
+
         if (!password.Any(c => char.IsLetter(c) && char.IsLower(c)))
             throw new ValidationException("Пароль должен содержать хотя бы одну строчную букву.");
 
@@ -49,5 +50,34 @@ public class ValidationService : IValidationService
 
         if (name.Any(c => !char.IsLetter(c) && c != ' ') || surname.Any(c => !char.IsLetter(c) && c != ' '))
             throw new ValidationException("Имя и фамилия могут содержать только буквы и пробелы.");
+    }
+
+    public string? ValidateFirstName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return "Имя обязательно.";
+
+        if (name.Length < 2 || name.Length > 50)
+            return "Длина имени должна быть от 2 до 50 символов.";
+
+        if (!Regex.IsMatch(name, @"^[a-zA-Zа-яА-ЯёЁ]+$"))
+            return "Имя может содержать только буквы.";
+
+        return null;
+    }
+
+    public string? ValidateLastName(string surname, bool allowEmpty = false)
+    {
+        if (string.IsNullOrWhiteSpace(surname))
+            return allowEmpty ? null : "Фамилия обязательна.";
+
+        if (surname.Length < 2 || surname.Length > 50)
+            return "Длина фамилии должна быть от 2 до 50 символов.";
+
+        if (!Regex.IsMatch(surname, @"^[a-zA-Zа-яА-ЯёЁ]+$"))
+            return "Фамилия может содержать только буквы.";
+
+        return null;
+
     }
 }
