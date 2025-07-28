@@ -8,6 +8,7 @@
 @using Client.Components.Common
 @using Client.Components.Dialogs
 @using Client.Infrastructure.Services.Order
+@using Client.Infrastructure.Realtime
 @using Microsoft.AspNetCore.Authorization
 @using Severity = MudBlazor.Severity
 
@@ -16,6 +17,8 @@
 @inject IDialogService Dialogs
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthProvider
+@inject IOrderRealtimeService Realtime
+@implements IDisposable
 
 <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">
     @Heading
@@ -144,9 +147,13 @@
     {
         var state = await AuthProvider.GetAuthenticationStateAsync();
         _isSuperAdmin = state.User.IsInRole(ApplicationRoles.SuperAdmin)
-                        || state.User.Claims.Any(c => (c.Type == "role" || c.Type == ClaimTypes.Role) 
+                        || state.User.Claims.Any(c => (c.Type == "role" || c.Type == ClaimTypes.Role)
                                                       && c.Value == ApplicationRoles.SuperAdmin);
-        
+
+        Realtime.OnOrderCreated += HandleCreated;
+        Realtime.OnOrderStatusChanged += HandleStatusChanged;
+        Realtime.OnOrderArchived += HandleArchived;
+
         await RefreshAsync();
     }
 
@@ -220,6 +227,45 @@
         var dialogReference = await Dialogs.ShowAsync<CancelConfirmation>("Отмена заказа", dialogParameters);
         if (!(await dialogReference.Result)!.Canceled)
             await ChangeStatus(order, OrderStatus.Canceled);
+    }
+
+
+    private void HandleCreated(OrderResponse order)
+    {
+        if (FilterFunc(order))
+        {
+            _orders.Insert(0, order);
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleStatusChanged(OrderResponse order)
+    {
+        var existing = _orders.FirstOrDefault(o => o.Slug == order.Slug);
+        if (existing is not null)
+        {
+            existing.Status = order.Status;
+            existing.CanceledAt = order.CanceledAt;
+            existing.ClosedAt = order.ClosedAt;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleArchived(OrderResponse order)
+    {
+        var existing = _orders.FirstOrDefault(o => o.Slug == order.Slug);
+        if (existing is not null)
+        {
+            _orders.Remove(existing);
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        Realtime.OnOrderCreated -= HandleCreated;
+        Realtime.OnOrderStatusChanged -= HandleStatusChanged;
+        Realtime.OnOrderArchived -= HandleArchived;
     }
 
 }

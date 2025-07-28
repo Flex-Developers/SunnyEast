@@ -2,6 +2,7 @@
 using Application.Contract.User.Responses;
 using Client.Infrastructure.Auth;
 using Client.Infrastructure.Services.HttpClient;
+using Client.Infrastructure.Realtime;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
@@ -11,6 +12,7 @@ public class AuthService(
     IHttpClientService httpClient,
     NavigationManager navigationManager,
     CustomAuthStateProvider authStateProvider,
+    IOrderRealtimeService realtime,
     ISnackbar snackbar) : IAuthService
 {
     public async Task<bool> LoginAsync(LoginUserCommand command, string? returnUrl = null)
@@ -19,6 +21,11 @@ public class AuthService(
         if (loginResponse.Success)
         {
             await authStateProvider.MarkUserAsAuthenticated(loginResponse.Response!);
+            
+            // перезапустить SignalR уже с токеном
+            await realtime.StopAsync();
+            await realtime.StartAsync();
+            
             navigationManager.NavigateTo(string.IsNullOrEmpty(returnUrl) ? "/" : returnUrl);
         }
 
@@ -28,6 +35,7 @@ public class AuthService(
     public async Task LogoutAsync()
     {
         await authStateProvider.MarkUserAsLoggedOut();
+        await realtime.StopAsync();
         snackbar.Add("Вы вышли из аккаунта.", Severity.Success);
     }
 }
