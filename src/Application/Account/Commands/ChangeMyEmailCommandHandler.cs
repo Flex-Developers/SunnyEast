@@ -24,19 +24,27 @@ public sealed class ChangeMyEmailCommandHandler(
         if (string.IsNullOrWhiteSpace(userName))
             throw new UnauthorizedAccessException("Пользователь не распознан.");
 
-        var normalized = request.NewEmail.Trim();
+        var user = await db.Users.FirstAsync(u => u.UserName == userName, ct);
+
+        var newEmail = (request.NewEmail ?? string.Empty).Trim();
+
+        // если e‑mail не меняется – просто выходим
+        if (string.Equals(user.Email ?? string.Empty, newEmail, StringComparison.OrdinalIgnoreCase))
+            return Unit.Value;
+
         var exists = await db.Users.AsNoTracking()
-            .AnyAsync(u => u.Email != null && u.Email.ToLower() == normalized.ToLower(), ct);
+            .AnyAsync(u => u.Id != user.Id &&
+                           u.Email != null &&
+                           u.Email.ToLower() == newEmail.ToLower(), ct);
 
         if (exists)
             throw new ExistException("Почта уже занята.");
 
-        var user = await userManager.Users.FirstAsync(u => u.UserName == userName, ct);
-        var setEmailRes = await userManager.SetEmailAsync(user, normalized);
-        setEmailRes.ThrowBadRequestIfError();
+        user.Email = newEmail;
+        user.NormalizedEmail = newEmail.ToUpperInvariant();
+        // Выход из остальных сессий
+        user.SecurityStamp = Guid.NewGuid().ToString();
 
-        // TODO(прод): здесь должен быть процесс подтверждения e‑mail кодом.
-        await userManager.UpdateSecurityStampAsync(user); // Выход со всех устройств, как и требовали.
         await db.SaveChangesAsync(ct);
         return Unit.Value;
     }

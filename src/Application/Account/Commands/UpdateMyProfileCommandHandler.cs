@@ -23,7 +23,8 @@ public sealed class UpdateMyProfileCommandHandler(
         if (string.IsNullOrWhiteSpace(userName))
             throw new UnauthorizedAccessException("Пользователь не распознан.");
 
-        var user = await userManager.Users.FirstOrDefaultAsync(u => u.UserName == userName, ct)
+        // ВАЖНО: грузим и сохраняем через один и тот же DbContext
+        var user = await db.Users.FirstOrDefaultAsync(u => u.UserName == userName, ct)
                    ?? throw new NotFoundException("Пользователь не найден.");
 
         user.Name = request.Name.Trim();

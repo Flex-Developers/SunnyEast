@@ -24,14 +24,14 @@ public sealed class ChangeMyPasswordCommandHandler(
         if (string.IsNullOrWhiteSpace(userName))
             throw new UnauthorizedAccessException("Пользователь не распознан.");
 
-        var user = await userManager.Users.FirstOrDefaultAsync(u => u.UserName == userName, ct)
+        // Держим все операции в рамках UserManager (без db.SaveChanges)
+        var user = await userManager.FindByNameAsync(userName)
                    ?? throw new NotFoundException("Пользователь не найден.");
 
         var res = await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
         res.ThrowBadRequestIfError();
 
-        await userManager.UpdateSecurityStampAsync(user); // Обязательно для завершения сессий на других устройствах.
-        await db.SaveChangesAsync(ct);
+        await userManager.UpdateSecurityStampAsync(user);
         return Unit.Value;
     }
 }

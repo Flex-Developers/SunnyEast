@@ -1,16 +1,14 @@
+using Application.Common;
 using Application.Common.Exceptions;
-using Application.Common.Interfaces.Contexts;
 using Application.Common.Interfaces.Services;
 using Application.Contract.Account.Commands;
 using Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace Application.Account.Commands;
 
 public sealed class LogoutAllCommandHandler(
-    IApplicationDbContext db,
     UserManager<ApplicationUser> userManager,
     ICurrentUserService currentUser)
     : IRequestHandler<LogoutAllCommand, Unit>
@@ -23,11 +21,12 @@ public sealed class LogoutAllCommandHandler(
         if (string.IsNullOrWhiteSpace(userName))
             throw new UnauthorizedAccessException("Пользователь не распознан.");
 
-        var user = await userManager.Users.FirstOrDefaultAsync(u => u.UserName == userName, ct)
+        var user = await userManager.FindByNameAsync(userName)
                    ?? throw new NotFoundException("Пользователь не найден.");
 
-        await userManager.UpdateSecurityStampAsync(user);
-        await db.SaveChangesAsync(ct);
+        var res = await userManager.UpdateSecurityStampAsync(user);
+        res.ThrowBadRequestIfError();
+
         return Unit.Value;
     }
 }

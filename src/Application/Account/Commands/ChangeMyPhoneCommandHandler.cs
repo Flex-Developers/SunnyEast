@@ -24,18 +24,26 @@ public sealed class ChangeMyPhoneCommandHandler(
         if (string.IsNullOrWhiteSpace(userName))
             throw new UnauthorizedAccessException("Пользователь не распознан.");
 
+        var user = await db.Users.FirstAsync(u => u.UserName == userName, ct);
+
         var normalized = Normalize(request.NewPhone);
+
+        // если номер не меняется – просто выходим
+        if (string.Equals(user.PhoneNumber ?? string.Empty, normalized, StringComparison.Ordinal))
+            return Unit.Value;
+
         var exists = await db.Users.AsNoTracking()
-            .AnyAsync(u => u.PhoneNumber != null && u.PhoneNumber == normalized, ct);
+            .AnyAsync(u => u.Id != user.Id &&
+                           u.PhoneNumber != null &&
+                           u.PhoneNumber == normalized, ct);
 
         if (exists)
             throw new ExistException("Номер телефона уже занят.");
 
-        var user = await userManager.Users.FirstAsync(u => u.UserName == userName, ct);
         user.PhoneNumber = normalized;
+        // Выход из остальных сессий
+        user.SecurityStamp = Guid.NewGuid().ToString();
 
-        // TODO(прод): здесь — отправка и подтверждение кода по телефону.
-        await userManager.UpdateSecurityStampAsync(user); // Выход со всех устройств.
         await db.SaveChangesAsync(ct);
         return Unit.Value;
     }
