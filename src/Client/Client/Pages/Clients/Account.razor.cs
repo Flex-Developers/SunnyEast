@@ -42,7 +42,7 @@ public partial class Account
     private bool _deletingAccount;
 
     // Состояния
-    private bool _savingProfile, _savingEmail, _savingPhone, _savingPwd, _logoutAllLoading;
+    private bool _savingProfile, _savingEmail, _savingPhone, _savingPwd;
 
     protected override async Task OnInitializedAsync()
     {
@@ -152,11 +152,11 @@ public partial class Account
         try
         {
             ValidationService.ValidatePhoneNumber(digits);
-            return Array.Empty<string>();
+            return [];
         }
         catch (System.ComponentModel.DataAnnotations.ValidationException ex)
         {
-            return new[] { ex.Message };
+            return [ex.Message];
         }
     };
 
@@ -330,26 +330,5 @@ public partial class Account
     {
         _phone = (_me?.Phone ?? "").Replace("+7-", "");
         _editPhone = false;
-    }
-
-    private async Task ConfirmLogoutAll()
-    {
-        var ok = await DialogService.ShowMessageBox("Подтверждение", "Вы действительно хотите завершить все остальные сессии?",
-            yesText: "Да", cancelText: "Отмена");
-        if (ok == true)
-        {
-            _logoutAllLoading = true;
-            try
-            {
-                if (await AccountService.LogoutAllAsync())
-                    Snackbar.Add("Другие сессии завершены.", Severity.Success);
-                else
-                    Snackbar.Add("Ошибка при завершении сессий.", Severity.Error);
-            }
-            finally
-            {
-                _logoutAllLoading = false;
-            }
-        }
     }
 }

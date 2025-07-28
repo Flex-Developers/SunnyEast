@@ -16,7 +16,7 @@ public interface IAccountService
 
     Task<bool> ChangePasswordAsync(ChangePasswordCommand request);
 
-    Task<bool> LogoutAllAsync();
+    // Task<bool> LogoutAllAsync();
     
     Task<bool> DeleteAccountAsync();
 

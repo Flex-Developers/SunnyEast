@@ -9,10 +9,7 @@ using MudBlazor;
 
 namespace Client.Infrastructure.Services.Account;
 
-public sealed class AccountService(
-    IHttpClientService http,
-    CustomAuthStateProvider auth,
-    ISnackbar snackbar) : IAccountService
+public sealed class AccountService(IHttpClientService http, CustomAuthStateProvider auth, ISnackbar snackbar) : IAccountService
 {
     public async Task<MyAccountResponse?> GetAsync()
     {
@@ -50,19 +47,12 @@ public sealed class AccountService(
         var res = await http.PutAsJsonAsync("/api/account/password", request);
         return res.Success;
     }
-
-    public async Task<bool> LogoutAllAsync()
-    {
-        var res = await http.PostAsJsonAsync("/api/account/logout-all", new { });
-        return res.Success;
-    }
     
     public async Task<bool> DeleteAccountAsync()
     {
         var res = await http.DeleteAsync("/api/account");
         return res.Success;
     }
-
 
     public async Task<JwtTokenResponse?> RefreshTokenAsync()
     {
@@ -73,4 +63,11 @@ public sealed class AccountService(
         await auth.MarkUserAsAuthenticated(res.Response!);
         return res.Response;
     }
+    
+    
+    // public async Task<bool> LogoutAllAsync()
+    // {
+    //     var res = await http.PostAsJsonAsync("/api/account/logout-all", new { });
+    //     return res.Success;
+    // }
 }

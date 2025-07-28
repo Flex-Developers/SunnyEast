@@ -45,12 +45,6 @@ public sealed class AccountController : ApiControllerBase
         return NoContent();
     }
 
-    [HttpPost("logout-all")]
-    public async Task<IActionResult> LogoutAll()
-    {
-        await Mediator.Send(new LogoutAllCommand());
-        return NoContent();
-    }
 
     // Тихий рефреш токена после изменений профиля/email/телефона
     [HttpPost("refresh-token")]
@@ -67,4 +61,10 @@ public sealed class AccountController : ApiControllerBase
         return NoContent();
     }
 
+    // [HttpPost("logout-all")]
+    // public async Task<IActionResult> LogoutAll()
+    // {
+    //     await Mediator.Send(new LogoutAllCommand());
+    //     return NoContent();
+    // }
 }
