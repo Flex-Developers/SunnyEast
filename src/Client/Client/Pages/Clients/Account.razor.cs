@@ -98,7 +98,7 @@ public partial class Account
                 {
                     await AuthState.MarkUserAsLoggedOut();
                     Snackbar.Add("Аккаунт удалён.", Severity.Success);
-                    Nav.NavigateTo("/", true);
+                    Nav.NavigateTo("/");
                 }
                 else
                 {
