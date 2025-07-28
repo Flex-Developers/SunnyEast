@@ -7,7 +7,8 @@ using Microsoft.Extensions.Configuration;
 
 namespace Client.Infrastructure.Realtime;
 
-public class OrderRealtimeService(ILocalStorageService storage, IConfiguration config) : IOrderRealtimeService, IAsyncDisposable
+public class OrderRealtimeService(ILocalStorageService storage, IConfiguration config)
+    : IOrderRealtimeService, IAsyncDisposable
 {
     private HubConnection? _connection;
 
@@ -24,7 +25,15 @@ public class OrderRealtimeService(ILocalStorageService storage, IConfiguration c
         // если соединение существует, но отключено — просто стартуем
         if (_connection is not null)
         {
-            try { await _connection.StartAsync(); } catch { /* ignore */ }
+            try
+            {
+                await _connection.StartAsync();
+            }
+            catch
+            {
+                /* ignore */
+            }
+
             return;
         }
 
@@ -43,9 +52,9 @@ public class OrderRealtimeService(ILocalStorageService storage, IConfiguration c
             .WithAutomaticReconnect()
             .Build();
 
-        _connection.On<OrderResponse>("OrderCreated",       o => OnOrderCreated?.Invoke(o));
+        _connection.On<OrderResponse>("OrderCreated", o => OnOrderCreated?.Invoke(o));
         _connection.On<OrderResponse>("OrderStatusChanged", o => OnOrderStatusChanged?.Invoke(o));
-        _connection.On<OrderResponse>("OrderArchived",      o => OnOrderArchived?.Invoke(o));
+        _connection.On<OrderResponse>("OrderArchived", o => OnOrderArchived?.Invoke(o));
 
         try
         {
@@ -64,7 +73,6 @@ public class OrderRealtimeService(ILocalStorageService storage, IConfiguration c
 
         try
         {
-            await _connection.StopAsync();
             await _connection.DisposeAsync();
         }
         finally

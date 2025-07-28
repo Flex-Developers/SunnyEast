@@ -12,7 +12,7 @@ public class AuthService(
     IHttpClientService httpClient,
     NavigationManager navigationManager,
     CustomAuthStateProvider authStateProvider,
-    OrderRealtimeService realtime,
+    IOrderRealtimeService realtime,
     ISnackbar snackbar) : IAuthService
 {
     public async Task<bool> LoginAsync(LoginUserCommand command, string? returnUrl = null)
