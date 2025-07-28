@@ -16,12 +16,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="MySqlBackup.NET" Version="2.3.6" />
-        <PackageReference Include="MySql.Data" Version="8.3.0" />
-    </ItemGroup>
-
-
-    <ItemGroup>
         <ProjectReference Include="..\Infrastructure\Infrastructure.csproj"/>
     </ItemGroup>
 
