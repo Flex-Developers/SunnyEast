@@ -36,7 +36,7 @@
     
     <MudButton Variant="Variant.Text" Class="brand-btn" @onclick="() => Navigation.NavigateTo('/'.ToString())">
         <div class="brand-inner">
-            <MudText Typo="Typo.h5">Солнечный восток</MudText>
+            <MudText Typo="Typo.h5" Class="brand-title">Солнечный восток</MudText>
         </div>
     </MudButton>
 
@@ -117,6 +117,14 @@
 </MudAppBar>
 
 <style>
+    /* Меньший шрифт для бренда на SmAndDown (~≤600px) */
+    @@media (max-width: 600px) {
+        .brand-title {
+            font-size: 1.2rem !important;
+            line-height: 1.0; /* при необходимости подкорректируйте */
+        }
+    }
+    
     .cart-wrapper {
         position: relative;
         display: flex;
@@ -164,7 +172,5 @@
         padding-left: 24px; 
         padding-right: 24px;
     }
-
-
-
+    
 </style>
