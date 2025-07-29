@@ -23,7 +23,7 @@
 {
     <MudProgressCircular Class="ma-4" Indeterminate="true" Size="Size.Large"/>
 }
-else if (_me is null)
+else if (_account is null)
 {
     <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
         Не удалось загрузить профиль. Пожалуйста, войдите снова.
@@ -36,7 +36,7 @@ else
             <MudStack Spacing="2">
                 <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
                     <MudIcon Icon="@Icons.Material.Filled.AccountCircle" Size="Size.Large"/>
-                    <MudText Typo="Typo.h5">@_me.Name @_me.Surname</MudText>
+                    <MudText Typo="Typo.h5">@_account.Name @_account.Surname</MudText>
                 </MudStack>
 
                 <MudDivider Class="my-1"/>
@@ -44,28 +44,28 @@ else
                 <MudStack Spacing="1">
                     <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
                         <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small"/>
-                        <MudText Typo="Typo.body1">E‑mail: @_me.Email</MudText>
+                        <MudText Typo="Typo.body1">E‑mail: @_account.Email</MudText>
                         <MudSpacer/>
                         <MudTooltip Text="Скопировать e‑mail">
                             <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small"
-                                           OnClick="@(() => CopyToClipboard(_me.Email))"/>
+                                           OnClick="@(() => CopyToClipboard(_account.Email))"/>
                         </MudTooltip>
                     </MudStack>
 
                     <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
                         <MudIcon Icon="@Icons.Material.Filled.Phone" Size="Size.Small"/>
-                        <MudText Typo="Typo.body1">Телефон: @_me.Phone</MudText>
+                        <MudText Typo="Typo.body1">Телефон: @_account.Phone</MudText>
                         <MudSpacer/>
                         <MudTooltip Text="Скопировать номер">
                             <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small"
-                                           OnClick="@(() => CopyToClipboard(_me.Phone))"/>
+                                           OnClick="@(() => CopyToClipboard(_account.Phone))"/>
                         </MudTooltip>
                     </MudStack>
 
                     <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
                         <MudIcon Icon="@Icons.Material.Filled.Event" Size="Size.Small"/>
                         <MudText Typo="Typo.body1">Дата
-                            регистрации: @_me.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</MudText>
+                            регистрации: @_account.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</MudText>
                     </MudStack>
                 </MudStack>
             </MudStack>
