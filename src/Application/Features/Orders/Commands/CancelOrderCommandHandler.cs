@@ -1,8 +1,8 @@
 using Application.Common.Exceptions;
 using Application.Common.Interfaces.Contexts;
 using Application.Common.Interfaces.Services;
-using Application.Contract.Order;
 using Application.Contract.Order.Commands;
+using Application.Contract.Order.Hub;
 using Application.Contract.Order.Responses;
 using AutoMapper;
 using MediatR;

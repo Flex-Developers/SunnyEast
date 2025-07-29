@@ -2,9 +2,9 @@ using Application;
 using Infrastructure;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Contexts;
+using Infrastructure.Services.Order;
 using Microsoft.EntityFrameworkCore;
 using WebApi;
-using WebApi.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,9 +23,6 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
-
-
-
 
 using (var scope = app.Services.CreateScope())
 {
