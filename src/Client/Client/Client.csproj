@@ -26,7 +26,6 @@
     <ItemGroup>
         <Folder Include="Pages\Customer\"/>
         <Folder Include="wwwroot\fonts\" />
-        <Folder Include="wwwroot\Media\Developers\" />
     </ItemGroup>
 
     <ItemGroup>
