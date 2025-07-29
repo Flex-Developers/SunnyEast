@@ -1,6 +1,6 @@
-namespace Application.Contract.Order;
-
 using Application.Contract.Order.Responses;
+
+namespace Application.Contract.Order.Hub;
 
 public interface IOrderRealtimeNotifier
 {

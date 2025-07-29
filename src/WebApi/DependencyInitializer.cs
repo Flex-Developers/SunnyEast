@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
-using Application.Contract.Order;
-using WebApi.Services;
+using Microsoft.AspNetCore.Http.Features;
+using Application.Contract.Order.Hub;
+using Infrastructure.Services.Order;
 using Microsoft.OpenApi.Models;
 using WebApi.Filters;
 
@@ -42,6 +43,15 @@ public static class DependencyInitializer
                 }
             });
         });
+
+        services.Configure<FormOptions>(o =>
+        {
+            o.MultipartBodyLengthLimit = long.MaxValue;
+            o.ValueLengthLimit = int.MaxValue;
+            o.MultipartHeadersCountLimit = int.MaxValue;
+            o.MultipartHeadersLengthLimit = int.MaxValue;
+        });
+
         services.AddHttpContextAccessor();
         services.AddSignalR();
         services.AddScoped<IOrderRealtimeNotifier, OrderRealtimeNotifier>();

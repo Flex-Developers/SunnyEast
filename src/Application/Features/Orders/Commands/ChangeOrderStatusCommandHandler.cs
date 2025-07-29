@@ -2,10 +2,10 @@ using Application.Common.Exceptions;
 using Application.Common.Interfaces.Contexts;
 using Application.Contract.Enums;
 using Application.Contract.Order.Commands;
+using Application.Contract.Order.Hub;
 using Application.Contract.Order.Responses;
 using MediatR;
 using AutoMapper;
-using Application.Contract.Order;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Orders.Commands;
