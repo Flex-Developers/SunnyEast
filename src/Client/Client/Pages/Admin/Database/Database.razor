@@ -24,7 +24,7 @@
                         Скачивается один файл   <b>.sql.gz</b>   (вся база). Рекомендуется хранить в безопасном месте.
                     </MudText>
                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@(async () => await Download())" StartIcon="@Icons.Material.Filled.Download">
-                        Скачать текущую БД
+                        Скачать текущую Базу данных
                     </MudButton>
                 </MudStack>
             </MudPaper>
@@ -109,10 +109,10 @@
     private Task OpenFilePickerAsync()
         => _fileUpload?.OpenFilePickerAsync() ?? Task.CompletedTask;
 
-    private void OnInputFileChanged(InputFileChangeEventArgs e)
+    private void OnInputFileChanged(InputFileChangeEventArgs eventArgs)
     {
         ClearDragClass();
-        var files = e.GetMultipleFiles();
+        var files = eventArgs.GetMultipleFiles();
         var first = files.FirstOrDefault();
         _fileNames.Clear();
 
@@ -158,16 +158,26 @@
 
     private async Task Download()
     {
-        var ok = await DbAdmin.DownloadAsync();
-        if (!ok)
+        if (!(await DbAdmin.DownloadAsync()))
             Snackbar.Add("Не удалось скачать снимок базы.", Severity.Error);
     }
 
 
-    private void SetDragClass() => _dragClass = $"{DefaultDragClass} mud-border-primary";
-    private void ClearDragClass() => _dragClass = DefaultDragClass;
+    private void SetDragClass() 
+        => _dragClass = $"{DefaultDragClass} mud-border-primary";
+    
+    private void ClearDragClass() 
+        => _dragClass = DefaultDragClass;
 }
 
 <style>
-    .file-upload-input { position: absolute; width: 100%; height: 100%; overflow: hidden; z-index: 10; opacity: 0; }
+    .file-upload-input 
+    { 
+        position: absolute; 
+        width: 100%; 
+        height: 100%; 
+        overflow: hidden;
+        z-index: 10; 
+        opacity: 0; 
+    }
 </style>
