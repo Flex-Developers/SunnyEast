@@ -265,9 +265,23 @@
 
     private async Task<string> LoadSelectedCategoryAsync()
     {
-        var c = await LocalStorage.GetItemAsync<string>("selectedCategory");
-        return (_categories.Any(x => x.Name == c) ? c : string.Empty)!;
+        var selected = await LocalStorage.GetItemAsync<string>("selectedCategory");
+
+        if (!string.IsNullOrWhiteSpace(selected))
+        {
+            foreach (var category in _categories)
+                if (category.Name == selected)
+                    return selected;
+        }
+
+        foreach (var category in _categories)
+            if (category.Name == "Все продукты")
+                return category.Name;
+
+        Snackbar.Add("Категория по умолчанию 'Все продукты' не найдена.", Severity.Info);
+        return string.Empty;
     }
+
 
     private async Task OpenDescriptionAsync(ProductResponse p)
     {

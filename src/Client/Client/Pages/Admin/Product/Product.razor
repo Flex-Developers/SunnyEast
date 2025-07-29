@@ -266,7 +266,7 @@
         if (_categories.Any(c => c.Name == selectedCategory))
             return selectedCategory;
 
-        return string.Empty;
+        return string.IsNullOrEmpty(selectedCategory) ? "Все продукты" : _categories.FirstOrDefault(c => c.Name == "Все продукты")?.Name ?? "Все продукты";
     }
 
     private async Task CreateAsync()
