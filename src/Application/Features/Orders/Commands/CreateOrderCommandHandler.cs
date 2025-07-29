@@ -5,7 +5,7 @@ using Application.Contract.Order.Commands;
 using Application.Contract.Order.Responses;
 using Domain.Enums;
 using AutoMapper;
-using Application.Contract.Order;
+using Application.Contract.Order.Hub;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
