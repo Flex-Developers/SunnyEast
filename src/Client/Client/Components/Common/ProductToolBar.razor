@@ -1,0 +1,132 @@
+@* Components/ProductToolBar.razor *@
+<MudPaper Elevation="25">
+    <!-- DESKTOP TOOLBAR -->
+    <MudHidden Breakpoint="Breakpoint.SmAndDown">
+        <MudToolBar Class="desktop-toolbar">
+            <MudSelect T="string"
+                       Class="category-select"
+                       Value="SelectedCategory"
+                       ValueChanged="@(async v => await OnCategoryChanged(v))"
+                       Style="flex: 0 0 70%; margin-right: 0.5rem;">
+
+                @foreach (var c in _categories)
+                {
+                    <MudSelectItem Value="@c.Name">@c.Name</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudSpacer/>
+
+            <MudTextField @bind-Value="SearchTerm"
+                          Class="toolbar-search"
+                          Style="margin-bottom: 10px"
+                          Label="Поиск товаров"
+                          Adornment="Adornment.End"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true"
+                          DebounceInterval="300"/>
+        </MudToolBar>
+    </MudHidden>
+
+    <!-- MOBILE TOOLBAR -->
+    <MudHidden Breakpoint="Breakpoint.MdAndUp">
+        <MudToolBar Dense="true" Class="mobile-toolbar">
+            @if (!_isSearchOpen)
+            {
+                <MudSelect T="string"
+                           Class="toolbar-category-mobile category-select"
+                           Value="SelectedCategory"
+                           ValueChanged="@(async v => await OnCategoryChanged(v))"
+                           FullWidth="true"
+                           Style="flex: 1 1 0; min-width: 160%; margin-right: 0.5rem;">
+
+                    @foreach (var c in _categories)
+                    {
+                        <MudSelectItem Value="@c.Name">@c.Name</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudSpacer/>
+                <MudIconButton Icon="@Icons.Material.Filled.Search"
+                               Color="Color.Inherit"
+                               OnClick="ToggleSearch"/>
+            }
+            else
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                               Color="Color.Inherit"
+                               OnClick="ToggleSearch"/>
+
+                <MudTextField @bind-Value="SearchTerm"
+                              Class="toolbar-search"
+                              Placeholder="Поиск товаров"
+                              Adornment="Adornment.End"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Immediate="true"
+                              DebounceInterval="300"
+                              Style="flex:1 1 auto; max-width:500px;"/>
+            }
+        </MudToolBar>
+    </MudHidden>
+</MudPaper>
+
+<style>
+    /* Desktop */
+    .responsive-toolbar .toolbar-category {
+        min-width: 200px;
+        margin-right: 1rem;
+    }
+
+    .responsive-toolbar .toolbar-search {
+        min-width: 300px;
+    }
+
+    /* ==== DESKTOP ==== */
+    .desktop-toolbar {
+        display: flex;
+        align-items: center;
+        padding: 0 1rem; /* можно убрать, если не нужно */
+    }
+
+    /* ==== DESKTOP ==== */
+    .desktop-toolbar .toolbar-category {
+        /* оставляем flex: 0 0 200px; max-width:250px; */
+    }
+
+    .desktop-toolbar .toolbar-search {
+        flex: 1 1 auto;
+        max-width: 400px; /* было 400px */
+        margin-left: auto;
+    }
+
+    /* ==== MOBILE ==== */
+    /* вместо full-width делаем 70% ширины контейнера */
+    .mobile-toolbar .toolbar-category-mobile {
+        flex: 0 0 150%; /* занимает 70% ширины тулбара */
+        max-width: 150%; /* то же самое */
+        margin-right: 0.5rem; /* немного отступа от иконки */
+    }
+
+    /* иконка поиска на мобилке справа */
+    .mobile-toolbar .mud-icon-button {
+        flex: 0 0 auto;
+    }
+
+    /* анимация разворота поля поиска */
+    .mobile-toolbar .toolbar-search-mobile {
+        transition: width 0.3s ease;
+    }
+
+    /* ===== ГЛУБОКАЯ ОБРЕЗКА ТЕКСТА В MUDSELECT ===== */
+    .category-select .mud-select-input,
+    .category-select .mud-input-slot,
+    .category-select input {
+              
+        text-overflow: ellipsis;   /* троеточие */
+        white-space: nowrap;       /* ровно одна строка */
+    }
+
+    /* дополнительное страхование: селект всегда можно ужать */
+    .category-select { min-width: 80% !important; }
+
+
+</style>
