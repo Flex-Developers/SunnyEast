@@ -188,6 +188,13 @@
     {
         await CartService.RemoveOrderAsync(item.ProductSlug, item.SelectedVolume);
         _items.Remove(item);
+        
+        if (_items.Count == 0)
+        {
+            Navigation.NavigateTo("/cart");
+            return;
+        }
+        
         RecalculateTotal();
         StateHasChanged();
     }
