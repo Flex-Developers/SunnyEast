@@ -4,11 +4,11 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    
+
     <title>Client</title>
-    
+
     <base href="/"/>
-    
+
     <link rel="stylesheet" href="css/app.css"/>
     <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet"/>
     <link rel="icon" type="image/png" href="Logo1.png"/>
@@ -24,12 +24,18 @@
 
 <body>
 <div id="app">
-    <svg class="loading-progress">
-        <circle r="40%" cx="50%" cy="50%"/>
-        <circle r="40%" cx="50%" cy="50%"/>
-    </svg>
-    <div class="loading-progress-text"></div>
+    <div class="loader">
+        <!-- 1) Логотип -->
+        <img src="Logo1.png" alt="Logo" class="loader-logo"/>
+
+        <!-- 2) Подпись — теперь «скруглённая» под логотипом -->
+        <div class="loader-credit">Developed by Avazbek Olimov</div>
+
+        <!-- 3) Процент загрузки — последний -->
+        <div class="loading-progress-text"></div>
+    </div>
 </div>
+
 
 <div id="blazor-error-ui">
     Возникла ошибка, попробуйте снова, позже.
@@ -38,6 +44,7 @@
 </div>
 <script src="_framework/Blazor.WebAssembly.js"></script>
 <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+<script src="_content/Client.Infrastructure/exampleJsInterop.js"></script>
 
 </body>
 

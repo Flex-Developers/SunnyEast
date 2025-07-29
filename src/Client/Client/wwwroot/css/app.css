@@ -163,17 +163,6 @@ a, .btn-link {
             transition: stroke-dasharray 0.05s ease-in-out;
         }
 
-.loading-progress-text {
-    position: absolute;
-    text-align: center;
-    font-weight: bold;
-    inset: calc(20vh + 3.25rem) 0 auto 0.2rem;
-}
-
-    .loading-progress-text:after {
-        content: var(--blazor-load-percentage-text, "Загрузка...");
-    }
-
 code {
     color: #c02d76;
 }
@@ -215,4 +204,62 @@ footer a,
 }
 
 .footer-link:hover{ text-decoration:underline; }
+
+
+
+
+/* ==== Переносим весь лоадер чуть выше страницы ==== */
+.loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;   /* выравниваем сверху */
+    padding-top: 15vh;              /* отступ сверху страницы */
+    height: calc(100vh - 15vh);     /* оставшаяся высота */
+    background-color: white;
+}
+
+
+/* ==== Логотип чуть больше + отступ снизу ==== */
+.loader-logo {
+    width: 260px;           /* увеличили ради объёма */
+    height: auto;
+    margin-bottom: 1.5rem;  /* пространство под логотипом */
+    animation: pulse 3s ease-in-out infinite;
+}
+
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50%      { transform: scale(1.1); opacity: 1; }
+}
+
+/* ==== Усы: скругления сверху + бордер + запрет переноса ==== */
+.loader-credit {
+    margin: 0;                     /* убрали отрицательный маржин */
+    padding: 0.5rem 1rem;          /* больше «воздуха» вокруг текста */
+    background-color: white;
+    border: 2px solid #019934;     /* видимый контур */
+    border-top-left-radius: 130px; /* скругление «усы» */
+    border-top-right-radius: 130px;
+    font-size: 1.2rem;
+    font-style: italic;
+    letter-spacing: 0.5px;
+    color: #019934;
+    white-space: nowrap;           /* текст в одну строку */
+}
+
+
+
+/* ==== Процент под подписью ==== */
+.loading-progress-text {
+    margin-top: 1.5rem;  /* пространство после «усов» */
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #019934;
+}
+.loading-progress-text::after {
+    content: var(--blazor-load-percentage-text, "0%");
+}
+
 

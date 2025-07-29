@@ -1,0 +1,183 @@
+@page "/admin/database"
+@attribute [Authorize(Roles = ApplicationRoles.SuperAdmin)]
+
+@using Application.Contract.Identity
+@using Microsoft.AspNetCore.Authorization
+@using Client.Infrastructure.Services.Database
+@using Severity = MudBlazor.Severity
+@inject IDatabaseAdminService DbAdmin
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mx-auto mt-6">
+
+    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-2">База данных</MudText>
+    <MudText Typo="Typo.subtitle2" Align="Align.Center" Class="mb-4">
+        Полный снимок MySQL: экспорт/импорт всей базы.
+    </MudText>
+
+    <MudGrid Spacing="4">
+        <MudItem xs="12">
+            <MudPaper Elevation="10" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.h6">Скачать снимок</MudText>
+                    <MudText Typo="Typo.body1">
+                        Скачивается один файл   <b>.sql.gz</b>   (вся база). Рекомендуется хранить в безопасном месте.
+                    </MudText>
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@(async () => await Download())" StartIcon="@Icons.Material.Filled.Download">
+                        Скачать текущую Базу данных
+                    </MudButton>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudPaper Elevation="10" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.h6">Загрузить снимок</MudText>
+                    <MudText Typo="Typo.body1">
+                        Поддерживаются файлы  <b>.sql</b>  или  <b>.sql.gz</b>.  Перед восстановлением автоматически создадим автобэкап.
+                    </MudText>
+
+                    <MudStack Style="width: 100%">
+                        <MudFileUpload T="IReadOnlyList<IBrowserFile>"
+                                       @ref="@_fileUpload"
+                                       OnFilesChanged="OnInputFileChanged"
+                                       AppendMultipleFiles
+                                       Hidden="@false"
+                                       InputClass="file-upload-input"
+                                       tabindex="-1"
+                                       @ondrop="@ClearDragClass"
+                                       @ondragenter="@SetDragClass"
+                                       @ondragleave="@ClearDragClass"
+                                       @ondragend="@ClearDragClass">
+                            <ActivatorContent>
+                                <MudPaper Height="220px" Outlined="true" Class="@_dragClass">
+                                    <MudText Typo="Typo.h6" Align="Align.Center">Перетащите файл сюда или нажмите</MudText>
+                                    <MudText Typo="Typo.body1" Align="Align.Center">(.sql или .sql.gz)</MudText>
+                                    <MudStack Row Justify="Justify.Center" Spacing="1" Class="mt-2">
+                                        @foreach (var file in _fileNames)
+                                        {
+                                            <MudChip T="string" Color="Color.Dark" Text="@file" tabindex="-1" />
+                                        }
+                                    </MudStack>
+                                </MudPaper>
+                            </ActivatorContent>
+                        </MudFileUpload>
+
+                        <MudToolBar Gutters="@false" Class="relative d-flex justify-end gap-4 mt-2">
+                            <MudButton Color="Color.Primary" OnClick="@OpenFilePickerAsync" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.FolderOpen">
+                                Выбрать файл
+                            </MudButton>
+                            <MudButton Color="Color.Primary" Disabled="@(!_file.IsSet)" OnClick="@Upload" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Upload">
+                                Загрузить
+                            </MudButton>
+                            <MudButton Color="Color.Error" Disabled="@(!_file.IsSet)" OnClick="@ClearAsync" Variant="Variant.Text">
+                                Очистить
+                            </MudButton>
+                        </MudToolBar>
+                    </MudStack>
+
+                    @if (_busy)
+                    {
+                        <MudProgressLinear Indeterminate Class="mt-3" />
+                    }
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+</MudContainer>
+
+@code {
+    private const string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-2 mud-width-full mud-height-full";
+    private string _dragClass = DefaultDragClass;
+    private readonly List<string> _fileNames = new();
+    private MudFileUpload<IReadOnlyList<IBrowserFile>>? _fileUpload;
+
+    private (bool IsSet, IBrowserFile? File) _file;
+    private bool _busy;
+
+    private async Task ClearAsync()
+    {
+        await (_fileUpload?.ClearAsync() ?? Task.CompletedTask);
+        _fileNames.Clear();
+        _file = default;
+        ClearDragClass();
+        StateHasChanged();
+    }
+
+    private Task OpenFilePickerAsync()
+        => _fileUpload?.OpenFilePickerAsync() ?? Task.CompletedTask;
+
+    private void OnInputFileChanged(InputFileChangeEventArgs eventArgs)
+    {
+        ClearDragClass();
+        var files = eventArgs.GetMultipleFiles();
+        var first = files.FirstOrDefault();
+        _fileNames.Clear();
+
+        if (first is not null)
+        {
+            // проверим расширение
+            var ext = Path.GetExtension(first.Name).ToLowerInvariant();
+            if (ext is ".sql" or ".gz")
+            {
+                _file = (true, first);
+                _fileNames.Add(first.Name);
+                return;
+            }
+            Snackbar.Add("Поддерживаются только .sql или .sql.gz", Severity.Warning);
+        }
+
+        _file = default;
+    }
+
+    private async Task Upload()
+    {
+        if (!_file.IsSet || _file.File is null) return;
+
+        try
+        {
+            _busy = true;
+            StateHasChanged();
+
+            var ok = await DbAdmin.RestoreAsync(_file.File);
+            if (ok)
+                Snackbar.Add("Восстановление успешно выполнено.", Severity.Success);
+            else
+                Snackbar.Add("Не удалось выполнить восстановление.", Severity.Error);
+
+            await ClearAsync();
+        }
+        finally
+        {
+            _busy = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Download()
+    {
+        if (!(await DbAdmin.DownloadAsync()))
+            Snackbar.Add("Не удалось скачать снимок базы.", Severity.Error);
+    }
+
+
+    private void SetDragClass() 
+        => _dragClass = $"{DefaultDragClass} mud-border-primary";
+    
+    private void ClearDragClass() 
+        => _dragClass = DefaultDragClass;
+}
+
+<style>
+    .file-upload-input 
+    { 
+        position: absolute; 
+        width: 100%; 
+        height: 100%; 
+        overflow: hidden;
+        z-index: 10; 
+        opacity: 0; 
+    }
+</style>
