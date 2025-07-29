@@ -26,4 +26,9 @@
         <PackageReference Include="MySql.Data" Version="8.3.0"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+
 </Project>
