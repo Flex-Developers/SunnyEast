@@ -18,5 +18,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Shop> Shops { get; set; }
     public DbSet<ShopOrder> ShopOrders { get; set; }
-    public DbSet<Staff> Staff { get; set; } = null!;
+    public DbSet<Staff> Staff { get; set; }
+    public DbSet<NotificationSubscription> NotificationSubscriptions { get; set; }
 }

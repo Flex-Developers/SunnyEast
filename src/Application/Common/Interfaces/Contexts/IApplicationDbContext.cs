@@ -18,4 +18,5 @@ public interface IApplicationDbContext
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     public DbSet<ApplicationUser> Users { get; set; }
     public  DbSet<Staff> Staff { get; set; }
+    public DbSet<NotificationSubscription> NotificationSubscriptions { get; set; }
 }
