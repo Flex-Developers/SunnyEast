@@ -36,6 +36,7 @@ public static class DependencyInitializer
         services.AddScoped<IDbSnapshotService, DbSnapshotService>();
         services.AddSingleton<IDateTimeService, DateTimeService>();
         services.AddSingleton<IVolumeGroupService, VolumeGroupService>();
+        services.AddScoped<IPushNotificationService, WebPushNotificationService>();
         services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(identityOptions =>
             {
                 identityOptions.ClaimsIdentity.RoleClaimType = ClaimTypes.Role;

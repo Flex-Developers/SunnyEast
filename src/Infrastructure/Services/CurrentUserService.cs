@@ -16,4 +16,10 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor) : ICur
     {
         return httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Role)?.Value;
     }
+
+    public Guid GetUserId()
+    {
+        var value = httpContextAccessor.HttpContext?.User.FindFirst("uid")?.Value;
+        return value != null ? new Guid(value) : Guid.Empty;
+    }
 }

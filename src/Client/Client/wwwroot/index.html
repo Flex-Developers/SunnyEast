@@ -20,6 +20,16 @@
     <!--    theme manager-->
     <link href="_content/MudBlazor.ThemeManager/MudBlazorThemeManager.css" rel="stylesheet"/>
     <!--    theme manager-->
+
+    <!-- Web App Manifest for PWA support -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Meta tags for mobile PWA -->
+    <meta name="theme-color" content="#512da8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="SunnyEast">
+    <link rel="apple-touch-icon" href="icon-192.png">
 </head>
 
 <body>
@@ -46,6 +56,8 @@
 <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 <script src="_content/Client.Infrastructure/exampleJsInterop.js"></script>
 
+<script src="pushInterop.js"></script>
+<script>navigator.serviceWorker.register('service-worker.js');</script>
 </body>
 
 </html>
