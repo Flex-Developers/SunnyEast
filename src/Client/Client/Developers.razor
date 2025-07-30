@@ -1,16 +1,10 @@
 @page "/developers"
+@inject IJSRuntime JS
 
-<div class="developers-page">
-    <!-- Hero секция с анимированным фоном -->
-    <div class="hero-section">
-        <div class="hero-background">
-            <div class="floating-shape shape-1"></div>
-            <div class="floating-shape shape-2"></div>
-            <div class="floating-shape shape-3"></div>
-            <div class="floating-shape shape-4"></div>
-            <div class="floating-shape shape-5"></div>
-        </div>
-        
+<div class="developers-page" data-theme="@(IsDarkMode ? "dark" : "light")">
+
+    <!-- Заголовки -->
+    <div class="headers-section">
         <div class="hero-content">
             <div class="hero-title">
                 <MudText Typo="Typo.h2" Class="main-title">
@@ -18,11 +12,11 @@
                 </MudText>
                 <div class="title-underline"></div>
             </div>
-            
+
             <MudText Typo="Typo.h4" Class="sub-title">
                 Команда разработчиков
             </MudText>
-            
+
             <MudText Typo="Typo.subtitle1" Class="hero-description">
                 Мы создали Sol-vostok.ru с нуля. Нашли ошибку или есть идея? — напишите нам!
             </MudText>
@@ -31,55 +25,9 @@
 
     <!-- Основной контент -->
     <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="main-content">
-        
-        <!-- Статистика команды -->
-        <div class="team-stats">
-            <MudGrid Justify="Justify.Center" Spacing="3">
-                <MudItem xs="6" sm="3">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large" />
-                        </div>
-                        <div class="stat-number">@Team.Count</div>
-                        <div class="stat-label">Разработчика</div>
-                    </div>
-                </MudItem>
-                <MudItem xs="6" sm="3">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Large" />
-                        </div>
-                        <div class="stat-number">200+</div>
-                        <div class="stat-label">Часов кода</div>
-                    </div>
-                </MudItem>
-                <MudItem xs="6" sm="3">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <MudIcon Icon="@Icons.Material.Filled.Coffee" Size="Size.Large" />
-                        </div>
-                        <div class="stat-number">∞</div>
-                        <div class="stat-label">Чашек кофе</div>
-                    </div>
-                </MudItem>
-                <MudItem xs="6" sm="3">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <MudIcon Icon="@Icons.Material.Filled.Favorite" Size="Size.Large" />
-                        </div>
-                        <div class="stat-number">1</div>
-                        <div class="stat-label">Проект мечты</div>
-                    </div>
-                </MudItem>
-            </MudGrid>
-        </div>
 
         <!-- Карточки разработчиков -->
         <div class="team-section">
-            <MudText Typo="Typo.h4" Class="section-title" Align="Align.Center">
-                Познакомьтесь с командой
-            </MudText>
-            
             <MudGrid Justify="Justify.Center" Spacing="4" Class="team-grid">
                 @foreach (var (dev, index) in Team.Select((dev, i) => (dev, i)))
                 {
@@ -87,24 +35,24 @@
                         <div class="developer-card @($"animate-card-{index + 1}")">
                             <div class="card-glow"></div>
                             <div class="card-background"></div>
-                            
+
                             <div class="card-header">
                                 <div class="photo-container">
                                     @if (!string.IsNullOrWhiteSpace(dev.PhotoUrl))
                                     {
-                                        <img src="@dev.PhotoUrl" alt="@dev.Name" class="dev-photo" />
+                                        <img src="@dev.PhotoUrl" alt="@dev.Name" class="dev-photo"/>
                                     }
                                     else
                                     {
                                         <div class="dev-photo-placeholder">
-                                            <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" />
+                                            <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large"/>
                                         </div>
                                     }
                                     <div class="photo-overlay">
                                         <div class="status-indicator online"></div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="dev-info">
                                     <MudText Typo="Typo.h5" Class="dev-name">@dev.Name</MudText>
                                     <MudText Typo="Typo.subtitle2" Class="dev-role">@dev.Role</MudText>
@@ -115,7 +63,7 @@
                                 <MudText Typo="Typo.body2" Class="dev-description">
                                     @dev.Description
                                 </MudText>
-                                
+
                                 <div class="skills-container">
                                     @{
                                         var skills = index == 0 
@@ -175,7 +123,7 @@
             <div class="contact-card">
                 <div class="contact-background"></div>
                 <div class="contact-content">
-                    <MudIcon Icon="@Icons.Material.Filled.Mail" Size="Size.Large" Class="contact-icon" />
+                    <MudIcon Icon="@Icons.Material.Filled.Mail" Size="Size.Large" Class="contact-icon"/>
                     <MudText Typo="Typo.h5" Class="contact-title">
                         Связаться с нами
                     </MudText>
@@ -198,633 +146,73 @@
             </div>
         </div>
 
+        <!-- Статистика команды -->
+        <div class="team-stats">
+            <MudGrid Justify="Justify.Center" Spacing="3">
+                <MudItem xs="6" sm="3">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large"/>
+                        </div>
+                        <div class="stat-number">@Team.Count</div>
+                        <div class="stat-label">Разработчика</div>
+                    </div>
+                </MudItem>
+                <MudItem xs="6" sm="3">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Large"/>
+                        </div>
+                        <div class="stat-number">200+</div>
+                        <div class="stat-label">Часов кода</div>
+                    </div>
+                </MudItem>
+                <MudItem xs="6" sm="3">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <MudIcon Icon="@Icons.Material.Filled.Coffee" Size="Size.Large"/>
+                        </div>
+                        <div class="stat-number">∞</div>
+                        <div class="stat-label">Чашек кофе</div>
+                    </div>
+                </MudItem>
+                <MudItem xs="6" sm="3">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <MudIcon Icon="@Icons.Material.Filled.Favorite" Size="Size.Large"/>
+                        </div>
+                        <div class="stat-number">1</div>
+                        <div class="stat-label">Проект мечты</div>
+                    </div>
+                </MudItem>
+            </MudGrid>
+        </div>
+
     </MudContainer>
+
+    <!-- Hero секция с анимированным фоном (перенесена в конец) -->
+    <div class="hero-section">
+        <div class="hero-background">
+            <div class="floating-shape shape-1"></div>
+            <div class="floating-shape shape-2"></div>
+            <div class="floating-shape shape-3"></div>
+            <div class="floating-shape shape-4"></div>
+            <div class="floating-shape shape-5"></div>
+        </div>
+    </div>
 </div>
 
-<style>
-    .developers-page {
-        min-height: 100vh;
-        background: linear-gradient(135deg, #fef7e7 0%, #f0f9ff 50%, #fef7e7 100%);
-        position: relative;
-        overflow-x: hidden;
-    }
-
-    /* === HERO SECTION === */
-    .hero-section {
-        position: relative;
-        min-height: 60vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        padding: 4rem 2rem;
-        overflow: hidden;
-    }
-
-    .hero-background {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1;
-    }
-
-    .floating-shape {
-        position: absolute;
-        border-radius: 50%;
-        opacity: 0.1;
-        animation: float 8s ease-in-out infinite;
-    }
-
-    .floating-shape.shape-1 {
-        width: 200px;
-        height: 200px;
-        background: #FF6600;
-        top: 10%;
-        left: 10%;
-        animation-delay: 0s;
-    }
-
-    .floating-shape.shape-2 {
-        width: 150px;
-        height: 150px;
-        background: #FFCC00;
-        top: 20%;
-        right: 15%;
-        animation-delay: 2s;
-    }
-
-    .floating-shape.shape-3 {
-        width: 300px;
-        height: 300px;
-        background: #019934;
-        bottom: 20%;
-        left: 5%;
-        animation-delay: 4s;
-    }
-
-    .floating-shape.shape-4 {
-        width: 100px;
-        height: 100px;
-        background: #CD9933;
-        top: 60%;
-        right: 30%;
-        animation-delay: 1s;
-    }
-
-    .floating-shape.shape-5 {
-        width: 250px;
-        height: 250px;
-        background: #FF6600;
-        bottom: 10%;
-        right: 10%;
-        animation-delay: 3s;
-    }
-
-    @@keyframes float {
-        0%, 100% { 
-            transform: translateY(0px) rotate(0deg) scale(1);
-        }
-        33% { 
-            transform: translateY(-30px) rotate(120deg) scale(1.1);
-        }
-        66% { 
-            transform: translateY(15px) rotate(240deg) scale(0.9);
-        }
-    }
-
-    .hero-content {
-        position: relative;
-        z-index: 2;
-        max-width: 800px;
-    }
-
-    .main-title {
-        margin-bottom: 1rem;
-        animation: titleSlideIn 1s ease-out;
-    }
-
-    .gradient-text {
-        background: linear-gradient(135deg, #FF6600, #FFCC00, #019934);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        font-weight: 800;
-        text-shadow: none;
-        animation: gradientShift 3s ease-in-out infinite;
-    }
-
-    @@keyframes gradientShift {
-        0%, 100% { filter: hue-rotate(0deg); }
-        50% { filter: hue-rotate(30deg); }
-    }
-
-    .title-underline {
-        width: 120px;
-        height: 4px;
-        background: linear-gradient(90deg, #FF6600, #019934);
-        margin: 0 auto 2rem;
-        border-radius: 2px;
-        animation: underlineGrow 1s ease-out 0.5s both;
-    }
-
-    @@keyframes underlineGrow {
-        from { width: 0; }
-        to { width: 120px; }
-    }
-
-    .sub-title {
-        color: #333;
-        margin-bottom: 1rem;
-        animation: titleSlideIn 1s ease-out 0.3s both;
-    }
-
-    .hero-description {
-        color: #666;
-        max-width: 600px;
-        margin: 0 auto;
-        animation: titleSlideIn 1s ease-out 0.6s both;
-    }
-
-    @@keyframes titleSlideIn {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* === MAIN CONTENT === */
-    .main-content {
-        position: relative;
-        z-index: 2;
-        padding: 3rem 0;
-    }
-
-    /* === TEAM STATS === */
-    .team-stats {
-        margin-bottom: 5rem;
-        animation: fadeInUp 1s ease-out 0.8s both;
-    }
-
-    .stat-card {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 20px;
-        padding: 2rem 1rem;
-        text-align: center;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-        transition: left 0.5s ease;
-    }
-
-    .stat-card:hover::before {
-        left: 100%;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-    }
-
-    .stat-icon {
-        color: #019934;
-        margin-bottom: 1rem;
-    }
-
-    .stat-number {
-        font-size: 2.5rem;
-        font-weight: 800;
-        color: #333;
-        margin-bottom: 0.5rem;
-        background: linear-gradient(135deg, #FF6600, #019934);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
-    .stat-label {
-        color: #666;
-        font-weight: 500;
-        font-size: 0.9rem;
-    }
-
-    /* === TEAM SECTION === */
-    .team-section {
-        margin-bottom: 5rem;
-    }
-
-    .section-title {
-        margin-bottom: 3rem;
-        color: #333;
-        position: relative;
-    }
-
-    .section-title::after {
-        content: '';
-        position: absolute;
-        bottom: -10px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 80px;
-        height: 3px;
-        background: linear-gradient(90deg, #FF6600, #019934);
-        border-radius: 2px;
-    }
-
-    .team-grid {
-        animation: fadeInUp 1s ease-out 1s both;
-    }
-
-    /* === DEVELOPER CARDS === */
-    .developer-card {
-        position: relative;
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 24px;
-        padding: 2rem;
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        overflow: hidden;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .animate-card-1 {
-        animation: cardSlideIn 0.8s ease-out 1.2s both;
-    }
-
-    .animate-card-2 {
-        animation: cardSlideIn 0.8s ease-out 1.4s both;
-    }
-
-    @@keyframes cardSlideIn {
-        from {
-            opacity: 0;
-            transform: translateY(50px) scale(0.9);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-    }
-
-    .card-glow {
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(1, 153, 52, 0.1) 0%, transparent 70%);
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        pointer-events: none;
-    }
-
-    .developer-card:hover .card-glow {
-        opacity: 1;
-    }
-
-    .card-background {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, rgba(255, 102, 0, 0.02), rgba(1, 153, 52, 0.02));
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        pointer-events: none;
-    }
-
-    .developer-card:hover .card-background {
-        opacity: 1;
-    }
-
-    .developer-card:hover {
-        transform: translateY(-12px) scale(1.02);
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-    }
-
-    .card-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 1.5rem;
-        position: relative;
-    }
-
-    .photo-container {
-        position: relative;
-        margin-right: 1rem;
-        flex-shrink: 0;
-    }
-
-    .dev-photo, .dev-photo-placeholder {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 4px solid rgba(1, 153, 52, 0.1);
-        transition: all 0.3s ease;
-    }
-
-    .dev-photo-placeholder {
-        background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #999;
-    }
-
-    .developer-card:hover .dev-photo,
-    .developer-card:hover .dev-photo-placeholder {
-        border-color: #019934;
-        transform: scale(1.1);
-    }
-
-    .photo-overlay {
-        position: absolute;
-        bottom: 5px;
-        right: 5px;
-    }
-
-    .status-indicator {
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        border: 3px solid white;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    .status-indicator.online {
-        background: #4CAF50;
-        animation: pulse 2s infinite;
-    }
-
-    @@keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-    }
-
-    .dev-info {
-        flex: 1;
-    }
-
-    .dev-name {
-        color: #333;
-        margin-bottom: 0.25rem;
-        font-weight: 700;
-    }
-
-    .dev-role {
-        color: #019934;
-        font-weight: 600;
-        font-size: 0.9rem;
-    }
-
-    .card-content {
-        flex: 1;
-        margin-bottom: 1.5rem;
-    }
-
-    .dev-description {
-        color: #666;
-        line-height: 1.6;
-        margin-bottom: 1rem;
-    }
-
-    .skills-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .skill-tag {
-        background: linear-gradient(135deg, rgba(1, 153, 52, 0.1), rgba(255, 102, 0, 0.1));
-        color: #019934;
-        padding: 0.25rem 0.75rem;
-        border-radius: 12px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        border: 1px solid rgba(1, 153, 52, 0.2);
-        transition: all 0.3s ease;
-    }
-
-    .developer-card:hover .skill-tag {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(1, 153, 52, 0.2);
-    }
-
-    .card-actions {
-        display: flex;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-    }
-
-    .action-btn {
-        border-radius: 12px !important;
-        text-transform: none !important;
-        font-weight: 600 !important;
-        transition: all 0.3s ease !important;
-        flex: 1;
-        min-width: 120px;
-    }
-
-    .primary-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 16px rgba(1, 153, 52, 0.3) !important;
-    }
-
-    .secondary-btn:hover {
-        transform: translateY(-2px);
-        background: rgba(1, 153, 52, 0.05) !important;
-    }
-
-    .ghost-btn {
-        opacity: 0.6;
-    }
-
-    /* === CONTACT SECTION === */
-    .contact-section {
-        margin-top: 3rem;
-        animation: fadeInUp 1s ease-out 1.6s both;
-    }
-
-    .contact-card {
-        position: relative;
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 24px;
-        padding: 3rem 2rem;
-        text-align: center;
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-        max-width: 600px;
-        margin: 0 auto;
-    }
-
-    .contact-background {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, rgba(1, 153, 52, 0.05), rgba(255, 102, 0, 0.05));
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-    .contact-card:hover .contact-background {
-        opacity: 1;
-    }
-
-    .contact-content {
-        position: relative;
-        z-index: 2;
-    }
-
-    .contact-icon {
-        color: #019934;
-        margin-bottom: 1rem;
-    }
-
-    .contact-title {
-        color: #333;
-        margin-bottom: 1rem;
-        font-weight: 700;
-    }
-
-    .contact-description {
-        color: #666;
-        margin-bottom: 2rem;
-        max-width: 400px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .contact-btn {
-        border-radius: 16px !important;
-        padding: 0.75rem 2rem !important;
-        font-weight: 600 !important;
-        text-transform: none !important;
-        margin-bottom: 1rem !important;
-        transition: all 0.3s ease !important;
-    }
-
-    .contact-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 24px rgba(1, 153, 52, 0.3) !important;
-    }
-
-    .contact-note {
-        color: #888;
-        font-style: italic;
-    }
-
-    @@keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(40px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* === RESPONSIVE === */
-    @@media (max-width: 768px) {
-        .hero-section {
-            min-height: 50vh;
-            padding: 2rem 1rem;
-        }
-
-        .main-title {
-            font-size: 2rem !important;
-        }
-
-        .sub-title {
-            font-size: 1.5rem !important;
-        }
-
-        .floating-shape {
-            opacity: 0.05;
-        }
-
-        .card-header {
-            flex-direction: column;
-            text-align: center;
-        }
-
-        .photo-container {
-            margin-right: 0;
-            margin-bottom: 1rem;
-        }
-
-        .dev-photo, .dev-photo-placeholder {
-            width: 100px;
-            height: 100px;
-        }
-
-        .card-actions {
-            flex-direction: column;
-        }
-
-        .action-btn {
-            width: 100%;
-        }
-
-        .contact-card {
-            padding: 2rem 1rem;
-        }
-    }
-
-    @@media (max-width: 480px) {
-        .main-title {
-            font-size: 1.75rem !important;
-        }
-
-        .developer-card {
-            padding: 1.5rem;
-        }
-
-        .stat-card {
-            padding: 1.5rem 1rem;
-        }
-
-        .stat-number {
-            font-size: 2rem;
-        }
-    }
-</style>
-
 @code {
+
+    [CascadingParameter] // приходит от MudThemeProvider
+    private bool IsDarkMode { get; set; }
+
+
     private sealed record Developer(
         string Name,
         string Role,
         string Description,
-        string Email,
+        string? Email,
         string? GitHub = null,
         string? PhotoUrl = null,
         string? Position = null);
@@ -841,9 +229,33 @@
 
         new("Firuz Isoboev", "Backend Developer, Team Lead",
             "Архитектурные решения, аутентификация, интеграция с базой данных и построение серверной логики. Ведущий команды и дизайнер архитектуры системы.",
-            "friend@example.com",
+            null,
             "https://github.com/Firuz2006", // GitHub скрыт
             null, // Фото заменено на аватар
             "Team Lead, Solution Architect")
     ];
+    
+    private DotNetObjectReference<Developers> _dotnetRef;
+
+    protected override async Task OnAfterRenderAsync(bool first)
+    {
+        if (first)
+        {
+            _dotnetRef = DotNetObjectReference.Create(this);
+            IsDarkMode = await JS.InvokeAsync<bool>("isDarkMode");
+            await JS.InvokeVoidAsync("setupThemeObserver", _dotnetRef);
+            StateHasChanged();
+        }
+    }
+
+    [JSInvokable]
+    public void OnThemeChanged(bool dark)
+    {
+        IsDarkMode = dark;
+        StateHasChanged();
+    }
+
+    public void Dispose() => _dotnetRef?.Dispose();
+
+
 }
