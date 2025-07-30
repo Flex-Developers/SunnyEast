@@ -1,5 +1,4 @@
 @page "/developers"
-@inject IJSRuntime JS
 
 <div class="developers-page" data-theme="@(IsDarkMode ? "dark" : "light")">
 
@@ -17,7 +16,7 @@
                 Команда разработчиков
             </MudText>
 
-            <MudText Typo="Typo.subtitle1" Class="hero-description">
+            <MudText Typo="Typo.h6" Class="hero-description">
                 Мы создали Sol-vostok.ru с нуля. Нашли ошибку или есть идея? — напишите нам!
             </MudText>
         </div>
@@ -220,42 +219,18 @@
     // заполняйте список своей командой
     private readonly List<Developer> Team =
     [
-        new("Avazbek Olimov", "Full‑Stack .NET Developer",
+        new("Avazbek Olimov", "Full‑Stack .NET Developer UI Designer",
             "Разработка серверной логики на ASP.NET Core и клиентской части на Blazor. Ответственность за UI-дизайн, адаптивную верстку и пользовательский опыт.",
             "avazbekolimov722@gmail.com",
             "https://github.com/Avazbek22",
             "/Media/Developers/Avazbek.jpg",
             "Full-Stack Developer, UI Designer"),
 
-        new("Firuz Isoboev", "Backend Developer, Team Lead",
+        new("Firuz Isoboev", "Backend Developer, Team Lead Solution Architect",
             "Архитектурные решения, аутентификация, интеграция с базой данных и построение серверной логики. Ведущий команды и дизайнер архитектуры системы.",
             null,
             "https://github.com/Firuz2006", // GitHub скрыт
             null, // Фото заменено на аватар
             "Team Lead, Solution Architect")
     ];
-    
-    private DotNetObjectReference<Developers> _dotnetRef;
-
-    protected override async Task OnAfterRenderAsync(bool first)
-    {
-        if (first)
-        {
-            _dotnetRef = DotNetObjectReference.Create(this);
-            IsDarkMode = await JS.InvokeAsync<bool>("isDarkMode");
-            await JS.InvokeVoidAsync("setupThemeObserver", _dotnetRef);
-            StateHasChanged();
-        }
-    }
-
-    [JSInvokable]
-    public void OnThemeChanged(bool dark)
-    {
-        IsDarkMode = dark;
-        StateHasChanged();
-    }
-
-    public void Dispose() => _dotnetRef?.Dispose();
-
-
 }
