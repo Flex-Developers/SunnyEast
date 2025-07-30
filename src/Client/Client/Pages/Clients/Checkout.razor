@@ -191,6 +191,7 @@
         
         if (_items.Count == 0)
         {
+            await CartService.ClearAsync();
             Navigation.NavigateTo("/cart");
             return;
         }
@@ -201,6 +202,9 @@
 
     private async Task SubmitOrder()
     {
+        if (_items.Count() == 0)
+            return;
+        
         var created = await OrderService.CreateAsync(_selectedShop!, _items, _comment);
         if (created is null)
         {

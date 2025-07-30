@@ -21,7 +21,7 @@
     SelectedCategory="@SelectedCategory"
     SelectedCategoryChanged="@(cat => OnCategoryChanged(cat))"
     SearchTerm="@SearchTerm"
-    SearchTermChanged="@(txt => SearchTerm = txt)" />
+    SearchTermChanged="@(txt => SearchTerm = txt)"/>
 
 
 <MudGrid Spacing="3" Justify="Justify.FlexStart" Style="margin-top:3px;margin-bottom:50px">
@@ -94,14 +94,17 @@
                                            OnClick="@(() => IncreaseQuantity(product))"/>
                         </div>
 
-                        <MudButton Color="Color.Info" Variant="Variant.Filled" Size="Size.Small"
-                                   Disabled="@IsInCart(product)"
-                                   OnClick="@(async () => await AddToCart(product))"
-                                   Class="button">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="@(IsInCart(product) ? Color.Error : Color.Info)"
+                                   Size="Size.Small"
+                                   Disabled="false"
+                                   Class="button"
+                                   OnClick="@(async () => await ToggleCart(product))">
+
                             @if (IsInCart(product))
                             {
-                                <MudIcon Icon="@Icons.Material.Filled.Check" Class="cart-icon"/>
-                                <span style="margin-left:6px">В корзине</span>
+                                <MudIcon Icon="@Icons.Material.Filled.RemoveShoppingCart" Class="cart-icon"/>
+                                <span style="margin-left:6px">Убрать</span>
                             }
                             else
                             {
@@ -109,6 +112,7 @@
                                 <span style="margin-left:6px">В корзину</span>
                             }
                         </MudButton>
+
                     </div>
 
                     <div class="description-container">
@@ -153,18 +157,53 @@
         var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
         var cat = System.Web.HttpUtility.ParseQueryString(uri.Query)["category"];
         SelectedCategory = cat ?? await LoadSelectedCategoryAsync();
+        CartService.OnChange += SyncCart;
 
         await LoadProductsAsync(SelectedCategory);
         await LoadCartStateAsync();
     }
 
-    private void IncreaseQuantity(ProductResponse p) => p.Quantity = Math.Min(p.Quantity + 1, 99);
+    private async void SyncCart()
+    {
+        await LoadCartStateAsync();
+        StateHasChanged();
+    }
 
-    private void DecreaseQuantity(ProductResponse p) => p.Quantity = Math.Max(p.Quantity - 1, 1);
+    private async Task IncreaseQuantity(ProductResponse p)
+    {
+        p.Quantity = Math.Min(p.Quantity + 1, 99);
+
+        if (IsInCart(p))
+            await PushQuantityToCart(p);
+    }
+
+    private async Task DecreaseQuantity(ProductResponse p)
+    {
+        p.Quantity = Math.Max(p.Quantity - 1, 1);
+
+        if (IsInCart(p))
+            await PushQuantityToCart(p);
+    }
+
+    private async Task PushQuantityToCart(ProductResponse p)
+    {
+        var price = p.Prices.First(x => x.Volume == p.SelectedVolume);
+
+        await CartService.UpdateOrderAsync(new CartItemDto
+        {
+            ProductSlug = p.Slug,
+            ProductName = p.Name,
+            SelectedVolume = price.Volume,
+            Quantity = p.Quantity, // ← только это реально меняется
+            Price = price.Full!.Value,
+            DiscountPrice = price.Discount,
+            ImageUrl = p.Images?.FirstOrDefault()
+        });
+    }
 
     private void OnVolumeChanged(ProductResponse p, string? vol)
     {
-        if (string.IsNullOrWhiteSpace(vol))
+        if (string.IsNullOrWhiteSpace(vol) || vol == p.SelectedVolume)
             return;
 
         p.SelectedVolume = vol;
@@ -175,6 +214,21 @@
 
         StateHasChanged();
     }
+
+    private async Task ToggleCart(ProductResponse p)
+    {
+        if (IsInCart(p))
+        {
+            await CartService.RemoveOrderAsync(p.Slug, p.SelectedVolume);
+            _cartKeys.Remove($"{p.Slug}|{p.SelectedVolume}");
+            Snackbar.Add("Удалено из корзины", Severity.Info);
+        }
+        else
+        {
+            await AddToCart(p); // старый метод остаётся без изменений
+        }
+    }
+
 
     private async Task AddToCart(ProductResponse p)
     {
@@ -281,6 +335,11 @@
             new DialogParameters { { "ContentText", p.Description }, { "ProductName", p.Name } });
     }
 
+    public void Dispose()
+    {
+        CartService.OnChange -= SyncCart;
+    }
+
 }
 
 <style>
@@ -382,5 +441,5 @@
     .cart-icon {
         font-size: 20px;
     }
-    
+
 </style>
