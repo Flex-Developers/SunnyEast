@@ -21,7 +21,7 @@ public partial class Account
     private string _pwdConfirm = "";
     private string? _pwdConfirmError;
 
-    private MyAccountResponse? _me;
+    private MyAccountResponse? _account;
 
     // Модели
     private UpdateProfileCommand _profile = new() { Name = "", Surname = "" };
@@ -46,20 +46,20 @@ public partial class Account
 
     protected override async Task OnInitializedAsync()
     {
-        var me = await AccountService.GetAsync();
-        if (me is null)
+        var myAccountResponse = await AccountService.GetAsync();
+        if (myAccountResponse is null)
         {
             Nav.NavigateTo($"/login?returnUrl={Uri.EscapeDataString("/account")}");
             return;
         }
 
-        _me = me;
+        _account = myAccountResponse;
 
         // Уже заполненные значения в TextField-ах
-        _profile.Name = me.Name;
-        _profile.Surname = me.Surname;
-        _email.NewEmail = me.Email ?? string.Empty; // <-- ВАЖНО: сразу показываем текущий e‑mail
-        _phone = (me.Phone ?? "").Replace("+7-", ""); // показываем без +7-
+        _profile.Name = myAccountResponse.Name;
+        _profile.Surname = myAccountResponse.Surname;
+        _email.NewEmail = myAccountResponse.Email ?? string.Empty; // <-- ВАЖНО: сразу показываем текущий e‑mail
+        _phone = (myAccountResponse.Phone ?? "").Replace("+7-", ""); // показываем без +7-
 
         _loading = false;
     }
@@ -202,7 +202,7 @@ public partial class Account
             if (ok)
             {
                 await AccountService.RefreshTokenAsync();
-                _me = await AccountService.GetAsync();
+                _account = await AccountService.GetAsync();
                 _editProfile = false;
                 Snackbar.Add("Сохранено.", Severity.Success);
             }
@@ -255,12 +255,11 @@ public partial class Account
         }
     }
 
-
     private void CancelProfileEdit()
     {
-        if (_me is null) return;
-        _profile.Name = _me.Name;
-        _profile.Surname = _me.Surname;
+        if (_account is null) return;
+        _profile.Name = _account.Name;
+        _profile.Surname = _account.Surname;
         _editProfile = false;
     }
 
@@ -280,7 +279,7 @@ public partial class Account
             if (ok)
             {
                 await AccountService.RefreshTokenAsync();
-                _me = await AccountService.GetAsync();
+                _account = await AccountService.GetAsync();
                 _editEmail = false;
                 Snackbar.Add("E‑mail изменён.", Severity.Success);
             }
@@ -294,7 +293,7 @@ public partial class Account
 
     private void CancelEmailEdit()
     {
-        _email.NewEmail = _me?.Email ?? "";
+        _email.NewEmail = _account?.Email ?? "";
         _editEmail = false;
     }
 
@@ -314,7 +313,7 @@ public partial class Account
             if (ok)
             {
                 await AccountService.RefreshTokenAsync();
-                _me = await AccountService.GetAsync();
+                _account = await AccountService.GetAsync();
                 _editPhone = false;
                 Snackbar.Add("Телефон изменён.", Severity.Success);
             }
@@ -328,7 +327,7 @@ public partial class Account
 
     private void CancelPhoneEdit()
     {
-        _phone = (_me?.Phone ?? "").Replace("+7-", "");
+        _phone = (_account?.Phone ?? "").Replace("+7-", "");
         _editPhone = false;
     }
 }

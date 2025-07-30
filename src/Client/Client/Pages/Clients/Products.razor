@@ -7,6 +7,7 @@
 @using Client.Infrastructure.Services.Category
 @using Client.Infrastructure.Services.Product
 @using Severity = MudBlazor.Severity
+@using Client.Components.Common
 @inject IProductService ProductService
 @inject NavigationManager Navigation
 @inject ICategoryService CategoryService
@@ -15,29 +16,13 @@
 @inject Client.Infrastructure.Services.Cart.ICartService CartService
 
 
-<MudPaper Elevation="25">
-    <MudToolBar>
-        <MudSelect T="string" Label="Категория" Style="margin-right:15px"
-                   Value="@SelectedCategory"
-                   ValueChanged="@(async v => await OnCategoryChanged(v))">
-            @foreach (var c in _categories)
-            {
-                <MudSelectItem Value="@c.Name">@c.Name</MudSelectItem>
-            }
-        </MudSelect>
+<ProductToolBar
+    Categories="@_categories"
+    SelectedCategory="@SelectedCategory"
+    SelectedCategoryChanged="@(cat => OnCategoryChanged(cat))"
+    SearchTerm="@SearchTerm"
+    SearchTermChanged="@(txt => SearchTerm = txt)" />
 
-        <MudSpacer/>
-
-        <MudTextField @bind-Value="SearchTerm"
-                      Label="Поиск товаров"
-                      Adornment="Adornment.End"
-                      AdornmentIcon="@Icons.Material.Filled.Search"
-                      Immediate="true"
-                      DebounceInterval="300"
-                      Class="search-field" />
-
-    </MudToolBar>
-</MudPaper>
 
 <MudGrid Spacing="3" Justify="Justify.FlexStart" Style="margin-top:3px;margin-bottom:50px">
     @foreach (var product in _products)
@@ -145,6 +130,13 @@
     private List<ProductResponse> _allProducts = new();
     [Parameter] public string SelectedCategory { get; set; } = string.Empty;
 
+    private bool _isSearchOpen;
+
+    private void ToggleSearch()
+    {
+        _isSearchOpen = !_isSearchOpen;
+    }
+
     private string? SearchTerm
     {
         get => _searchTerm;
@@ -224,7 +216,7 @@
     {
         if (string.IsNullOrWhiteSpace(term))
         {
-            _products = _allProducts.ToList(); 
+            _products = _allProducts.ToList();
         }
         else
         {
@@ -252,22 +244,36 @@
 
             OnVolumeChanged(p, p.SelectedVolume);
         }
-        
+
         _allProducts = result;
 
         if (string.IsNullOrWhiteSpace(_searchTerm))
-            _products = _allProducts.ToList(); 
+            _products = _allProducts.ToList();
         else
-            ApplySearch(_searchTerm); 
+            ApplySearch(_searchTerm);
 
         await LocalStorage.SetItemAsync("selectedCategory", category);
     }
 
     private async Task<string> LoadSelectedCategoryAsync()
     {
-        var c = await LocalStorage.GetItemAsync<string>("selectedCategory");
-        return (_categories.Any(x => x.Name == c) ? c : string.Empty)!;
+        var selected = await LocalStorage.GetItemAsync<string>("selectedCategory");
+
+        if (!string.IsNullOrWhiteSpace(selected))
+        {
+            foreach (var category in _categories)
+                if (category.Name == selected)
+                    return selected;
+        }
+
+        foreach (var category in _categories)
+            if (category.Name == "Все продукты")
+                return category.Name;
+
+        Snackbar.Add("Категория по умолчанию 'Все продукты' не найдена.", Severity.Info);
+        return string.Empty;
     }
+
 
     private async Task OpenDescriptionAsync(ProductResponse p)
     {
@@ -278,11 +284,6 @@
 }
 
 <style>
-
-    .search-field {
-        width: 50px;
-        margin-left: auto;
-    }
 
     .product-card {
         position: relative;
@@ -381,5 +382,5 @@
     .cart-icon {
         font-size: 20px;
     }
-
+    
 </style>
