@@ -678,23 +678,29 @@
     }
 
     /* Карточка преимущества */
-    .homepage-advantage-enhanced {
-        padding: 40px 20px; /* Внутренние отступы */
-        text-align: center; /* Центрирование текста */
-        border-radius: 20px; /* Скругленные углы */
-        position: relative; /* Для позиционирования эффектов */
-        overflow: hidden; /* Скрывает эффекты за границами */
-        transition: all 0.4s ease; /* Плавная анимация */
-        opacity: 0; /* Изначально невидима */
-        transform: translateY(50px); /* Смещена вниз */
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Легкая тень */
-        border: 2px solid transparent; /* Прозрачная граница */
-        height: 250px; /* Фиксированная высота */
-        width: 300px;
-        display: flex; /* Flexbox для вертикального центрирования */
-        flex-direction: column; /* Вертикальное расположение */
-        justify-content: center; /* Центрирование содержимого */
+     .homepage-advantage-enhanced {
+        padding: 40px 20px;
+        text-align: center;
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s ease;
+        opacity: 0;
+        transform: translateY(50px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        border: 2px solid transparent;
+
+        /* вместо жёсткой ширины — адаптивность */
+        min-height: 250px;
+        max-width: 100%;
+        flex: 1 1 220px; /* позволяет расти и сжиматься, базово 220px */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        margin: 0 auto;
+        box-sizing: border-box;
     }
+
 
     /* Эффекты при наведении на преимущество */
     .homepage-advantage-enhanced:hover {
