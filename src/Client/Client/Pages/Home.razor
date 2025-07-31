@@ -144,54 +144,22 @@
         </div>
 
         <MudGrid Class="homepage-advantages-grid" Style="margin-top: 30px" Spacing="4">
-            <MudItem xs="12" sm="6" md="3" Class="homepage-advantage-item">
-                <MudPaper Elevation="0" Class="homepage-advantage-enhanced homepage-advantage-1 homepage-scroll-animate">
-                    <div class="homepage-advantage-icon-wrapper">
-                        <MudIcon Icon="@Icons.Material.Filled.Store" Class="homepage-advantage-icon" Size="Size.Large"/>
-                        <div class="homepage-icon-glow"></div>
-                    </div>
-                    <MudText Typo="Typo.h6" Class="homepage-advantage-title">Доступные цены</MudText>
-                    <MudText Typo="Typo.body2" Class="homepage-advantage-description">
-                        Всегда выгодные предложения и приятные бонусы для наших клиентов
-                    </MudText>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3" Class="homepage-advantage-item">
-                <MudPaper Elevation="0" Class="homepage-advantage-enhanced homepage-advantage-2 homepage-scroll-animate">
-                    <div class="homepage-advantage-icon-wrapper">
-                        <MudIcon Icon="@Icons.Material.Filled.Star" Class="homepage-advantage-icon" Size="Size.Large"/>
-                        <div class="homepage-icon-glow"></div>
-                    </div>
-                    <MudText Typo="Typo.h6" Class="homepage-advantage-title">Высокое качество</MudText>
-                    <MudText Typo="Typo.body2" Class="homepage-advantage-description">
-                        Тщательно отобранные товары прямо с Востока
-                    </MudText>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3" Class="homepage-advantage-item">
-                <MudPaper Elevation="0" Class="homepage-advantage-enhanced homepage-advantage-3 homepage-scroll-animate">
-                    <div class="homepage-advantage-icon-wrapper">
-                        <MudIcon Icon="@Icons.Material.Filled.People" Class="homepage-advantage-icon" Size="Size.Large"/>
-                        <div class="homepage-icon-glow"></div>
-                    </div>
-                    <MudText Typo="Typo.h6" Class="homepage-advantage-title">1100+ клиентов</MudText>
-                    <MudText Typo="Typo.body2" Class="homepage-advantage-description">
-                        Нам доверяют более тысячи довольных покупателей
-                    </MudText>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3" Class="homepage-advantage-item">
-                <MudPaper Elevation="0" Class="homepage-advantage-enhanced homepage-advantage-4 homepage-scroll-animate">
-                    <div class="homepage-advantage-icon-wrapper">
-                        <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Class="homepage-advantage-icon" Size="Size.Large"/>
-                        <div class="homepage-icon-glow"></div>
-                    </div>
-                    <MudText Typo="Typo.h6" Class="homepage-advantage-title">Широкий ассортимент</MudText>
-                    <MudText Typo="Typo.body2" Class="homepage-advantage-description">
-                        Более 500 уникальных товаров восточной культуры
-                    </MudText>
-                </MudPaper>
-            </MudItem>
+            @for (int i = 0; i < _advantages.Count; i++)
+            {
+                var adv = _advantages[i];
+                <MudItem xs="12" sm="6" md="3" Class="homepage-advantage-item">
+                    <MudPaper Elevation="0" Class="@($"homepage-advantage-enhanced {adv.CssClass} homepage-scroll-animate")">
+                        <div class="homepage-advantage-icon-wrapper">
+                            <MudIcon Icon="@adv.Icon" Class="homepage-advantage-icon" Size="Size.Large"/>
+                            <div class="homepage-icon-glow"></div>
+                        </div>
+                        <MudText Typo="Typo.h6" Class="homepage-advantage-title">@adv.Title</MudText>
+                        <MudText Typo="Typo.body2" Class="homepage-advantage-description">
+                            @adv.Description
+                        </MudText>
+                    </MudPaper>
+                </MudItem>
+            }
         </MudGrid>
     </div>
 
@@ -210,73 +178,47 @@
     <div class="homepage-carousel-wrapper">
         <div class="homepage-products-carousel" id="productsCarousel">
             <div class="homepage-carousel-track">
-                <MudPaper Elevation="0" Class="homepage-product-category-preview">
-                    <div class="homepage-product-icon">🗡️</div>
-                    <h4>Ножи и клинки</h4>
-                    <p>Изысканные коллекции для ценителей</p>
-                </MudPaper>
-                <MudPaper Elevation="0" Class="homepage-product-category-preview">
-                    <div class="homepage-product-icon">🍯</div>
-                    <h4>Казаны</h4>
-                    <p>Для настоящих кулинарных шедевров</p>
-                </MudPaper>
-                <MudPaper Elevation="0" Class="homepage-product-category-preview">
-                    <div class="homepage-product-icon">🥜</div>
-                    <h4>Сухофрукты и орехи</h4>
-                    <p>Натуральные и полезные лакомства</p>
-                </MudPaper>
-                <MudPaper Elevation="0" Class="homepage-product-category-preview">
-                    <div class="homepage-product-icon">🍵</div>
-                    <h4>Чай и напитки</h4>
-                    <p>Отборные сорта для гурманов</p>
-                </MudPaper>
-                <MudPaper Elevation="0" Class="homepage-product-category-preview">
-                    <div class="homepage-product-icon">🏺</div>
-                    <h4>Восточная посуда</h4>
-                    <p>Изысканные сервизы и чайники</p>
-                </MudPaper>
-                <MudPaper Elevation="0" Class="homepage-product-category-preview">
-                    <div class="homepage-product-icon">🍬</div>
-                    <h4>Сладости</h4>
-                    <p>Традиционные восточные деликатесы</p>
-                </MudPaper>
-                <!-- Дублируем для бесшовности -->
-                <MudPaper Elevation="0" Class="homepage-product-category-preview">
-                    <div class="homepage-product-icon">🗡️</div>
-                    <h4>Ножи и клинки</h4>
-                    <p>Изысканные коллекции для ценителей</p>
-                </MudPaper>
-                <MudPaper Elevation="0" Class="homepage-product-category-preview">
-                    <div class="homepage-product-icon">🍯</div>
-                    <h4>Казаны</h4>
-                    <p>Для настоящих кулинарных шедевров</p>
-                </MudPaper>
-                <MudPaper Elevation="0" Class="homepage-product-category-preview">
-                    <div class="homepage-product-icon">🥜</div>
-                    <h4>Сухофрукты и орехи</h4>
-                    <p>Натуральные и полезные лакомства</p>
-                </MudPaper>
-                <MudPaper Elevation="0" Class="homepage-product-category-preview">
-                    <div class="homepage-product-icon">🍵</div>
-                    <h4>Чай и напитки</h4>
-                    <p>Отборные сорта для гурманов</p>
-                </MudPaper>
-                <MudPaper Elevation="0" Class="homepage-product-category-preview">
-                    <div class="homepage-product-icon">🏺</div>
-                    <h4>Восточная посуда</h4>
-                    <p>Изысканные сервизы и чайники</p>
-                </MudPaper>
-                <MudPaper Elevation="0" Class="homepage-product-category-preview">
-                    <div class="homepage-product-icon">🍬</div>
-                    <h4>Сладости</h4>
-                    <p>Традиционные восточные деликатесы</p>
-                </MudPaper>
+                @foreach (var preview in SeamlessProductPreviews)
+                {
+                    <MudPaper Elevation="0" Class="homepage-product-category-preview">
+                        <div class="homepage-product-icon">@preview.IconEmoji</div>
+                        <h4>@preview.Title</h4>
+                        <p>@preview.Description</p>
+                    </MudPaper>
+                }
             </div>
         </div>
     </div>
 </div>
 
+
 @code {
+    
+    // Records для секции "Почему выбирают нас"
+    private readonly record struct Advantage(string Title, string Description, string Icon, string CssClass);
+    private readonly List<Advantage> _advantages = new()
+    {
+        new Advantage("Доступные цены", "Всегда выгодные предложения и приятные бонусы для наших клиентов", Icons.Material.Filled.Store, "homepage-advantage-1"),
+        new Advantage("Высокое качество", "Тщательно отобранные товары прямо с Востока", Icons.Material.Filled.Star, "homepage-advantage-2"),
+        new Advantage("1100+ клиентов", "Нам доверяют более тысячи довольных покупателей", Icons.Material.Filled.People, "homepage-advantage-3"),
+        new Advantage("Широкий ассортимент", "Более 500 уникальных товаров восточной культуры", Icons.Material.Filled.ShoppingCart, "homepage-advantage-4")
+    };
+
+// Records для кинематографической карусели (повторяем для бесшовности)
+    private readonly record struct ProductCategoryPreview(string IconEmoji, string Title, string Description);
+    private readonly List<ProductCategoryPreview> _productPreviews = new()
+    {
+        new ProductCategoryPreview("🗡️", "Ножи и клинки", "Изысканные коллекции для ценителей"),
+        new ProductCategoryPreview("🍯", "Казаны", "Для настоящих кулинарных шедевров"),
+        new ProductCategoryPreview("🥜", "Сухофрукты и орехи", "Натуральные и полезные лакомства"),
+        new ProductCategoryPreview("🍵", "Чай и напитки", "Отборные сорта для гурманов"),
+        new ProductCategoryPreview("🏺", "Восточная посуда", "Изысканные сервизы и чайники"),
+        new ProductCategoryPreview("🍬", "Сладости", "Традиционные восточные деликатесы")
+    };
+
+// Список дублируется для бесшовной карусели
+    private IEnumerable<ProductCategoryPreview> SeamlessProductPreviews =>
+        _productPreviews.Concat(_productPreviews);
 
     private List<string> Slides = new()
     {
@@ -385,9 +327,7 @@
         -webkit-text-fill-color: transparent;
         background-clip: text;
     }
-
-
-
+    
     /* Подзаголовок приветствия */
     .homepage-welcome-subtitle {
         font-weight: 300; /* Тонкий шрифт */
