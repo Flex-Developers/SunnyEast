@@ -32,7 +32,7 @@
     <!-- Добро пожаловать секция -->
     <div class="homepage-welcome-section homepage-fade-in-up" style="margin-top: 30px;">
         <div class="homepage-welcome-content">
-            <MudText Typo="Typo.h2" Align="Align.Center" Class="homepage-welcome-title homepage-gradient-text">
+            <MudText Typo="Typo.h2" Align="Align.Center" Class="homepage-welcome-title gradient-text">
                 Добро пожаловать в Солнечный Восток
             </MudText>
             <MudText Typo="Typo.h6" Align="Align.Center" Class="homepage-welcome-subtitle"
@@ -51,7 +51,7 @@
     <!-- Популярные категории с улучшенными анимациями -->
     <div class="homepage-section-wrapper" style="margin-top: 70px;">
         <div style="text-align: center;">
-            <MudText Typo="Typo.h3" Align="Align.Center" Class="homepage-section-title homepage-gradient-text homepage-scroll-animate">
+            <MudText Typo="Typo.h3" Align="Align.Center" Class="homepage-section-title gradient-text homepage-scroll-animate">
                 <span class="homepage-title-emoji">🔥</span> Популярные категории
             </MudText>
         </div>
@@ -86,7 +86,7 @@
     <!-- Наши магазины с улучшенным дизайном -->
     <div class="homepage-section-wrapper" style="margin-top: 120px">
         <div style="text-align: center;">
-            <MudText Typo="Typo.h3" Align="Align.Center" Class="homepage-section-title homepage-gradient-text homepage-scroll-animate">
+            <MudText Typo="Typo.h3" Align="Align.Center" Class="homepage-section-title gradient-text homepage-scroll-animate">
                 <span class="homepage-title-emoji">🏪</span> Наши магазины
             </MudText>
         </div>
@@ -138,7 +138,7 @@
     <!-- Почему выбирают нас с крутыми анимациями -->
     <div class="homepage-section-wrapper" style="margin-top: 90px;">
         <div style="text-align: center;">
-            <MudText Typo="Typo.h3" Align="Align.Center" Class="homepage-section-title homepage-gradient-text homepage-scroll-animate">
+            <MudText Typo="Typo.h3" Align="Align.Center" Class="homepage-section-title gradient-text homepage-scroll-animate">
                 <span class="homepage-title-emoji">💎</span> Почему выбирают именно нас
             </MudText>
         </div>
@@ -198,7 +198,7 @@
     <!-- Новая секция с товарами -->
     <div class="homepage-products-preview-section" style="margin-top: 130px; margin-bottom: 10px;">
         <div style="text-align: center;">
-            <MudText Typo="Typo.h3" Align="Align.Center" Class="homepage-section-title homepage-gradient-text homepage-scroll-animate">
+            <MudText Typo="Typo.h3" Align="Align.Center" Class="homepage-section-title gradient-text homepage-scroll-animate">
                 <span class="homepage-title-emoji">🎁</span> Что мы предлагаем
             </MudText>
         </div>
@@ -379,12 +379,14 @@
     }
 
     /* Градиентный текст - применяется ко всем заголовкам */
-    .homepage-gradient-text {
-        background: linear-gradient(45deg, #FF6600, #FFCC00); /* Градиент от оранжевого к желтому */
-        -webkit-background-clip: text; /* Обрезает фон по тексту для WebKit */
-        -webkit-text-fill-color: transparent; /* Делает текст прозрачным для WebKit */
-        background-clip: text; /* Обрезает фон по тексту */
+    .gradient-text {
+        background: linear-gradient(45deg, #FF6600, #FFCC00);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
+
+
 
     /* Подзаголовок приветствия */
     .homepage-welcome-subtitle {
