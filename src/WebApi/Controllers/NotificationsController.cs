@@ -16,9 +16,9 @@ public class NotificationsController(IConfiguration configuration) : ApiControll
 
     [Authorize]
     [HttpDelete("unsubscribe")]
-    public async Task<IActionResult> Unsubscribe([FromQuery] string endpoint)
+    public async Task<IActionResult> Unsubscribe()
     {
-        var command = new DeleteNotificationSubscriptionCommand(endpoint);
+        var command = new DeleteNotificationSubscriptionCommand();
         await Mediator.Send(command);
         return Ok();
     }

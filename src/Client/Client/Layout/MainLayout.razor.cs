@@ -1,4 +1,5 @@
 using Client.Infrastructure.Preferences;
+using Client.Infrastructure.Services.Notifications;
 using Client.Infrastructure.Theme;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
@@ -11,16 +12,17 @@ public partial class MainLayout
     private readonly MudTheme _currentTheme = ApplicationThemes.DefaultTheme;
     private bool _isDarkMode;
     private MudThemeProvider _mudThemeProvider = null!;
+    [Inject] private INotificationManager NotificationManager { get; set; } = null!;
 
     [Parameter] public EventCallback OnDarkModeToggle { get; set; }
     private bool _drawerOpen;
-    
+
     private DrawerVariant _drawerVariant = DrawerVariant.Persistent;
 
     private void OnBpChanged(Breakpoint bp)
     {
         // всё, что уже Md (960px) и уже меньше — мобильный режим
-        _drawerVariant = bp < Breakpoint.Md ? DrawerVariant.Responsive : DrawerVariant.Persistent;   
+        _drawerVariant = bp < Breakpoint.Md ? DrawerVariant.Responsive : DrawerVariant.Persistent;
         StateHasChanged();
     }
 
@@ -29,6 +31,14 @@ public partial class MainLayout
         _themePreference = await ClientPreferences.GetPreference() as ClientPreference ?? new ClientPreference();
 
         SetCurrentTheme(_themePreference);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await NotificationManager.InitializeAsync();
+        }
     }
 
     private void SetCurrentTheme(ClientPreference themePreference)

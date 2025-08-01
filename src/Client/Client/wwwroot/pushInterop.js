@@ -55,5 +55,26 @@ window.pushInterop = {
         const key = rawKey ? btoa(String.fromCharCode(...new Uint8Array(rawKey))) : '';
         const auth = rawAuth ? btoa(String.fromCharCode(...new Uint8Array(rawAuth))) : '';
         return {Endpoint: sub.endpoint, Keys: {P256dh: key, Auth: auth}};
+    },
+    isSupported: () => {
+        return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+    },
+
+    getPermissionStatus: async () => {
+        return Notification.permission;
+    },
+
+    showNotificationPrompt: async (vapidPublicKey) => {
+        try {
+            const permission = await Notification.requestPermission();
+
+            if (permission !== 'granted') {
+                return null;
+            }
+
+            return await window.pushInterop.subscribeUser(vapidPublicKey);
+        } catch (error) {
+            return null;
+        }
     }
 };

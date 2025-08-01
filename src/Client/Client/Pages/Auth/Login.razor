@@ -4,7 +4,6 @@
 @using Application.Contract.User.Commands
 @using Client.Infrastructure.Services.Auth
 @using Severity = MudBlazor.Severity
-@inject IJSRuntime JS
 
 @inject IAuthService AuthService
 
@@ -175,7 +174,6 @@
                 // if success
                 Snackbar.Add("Успешный вход.", Severity.Success);
                 StateHasChanged();
-                await JS.InvokeAsync<string>("pushInterop.requestNotificationPermission");
             }
             else
             {

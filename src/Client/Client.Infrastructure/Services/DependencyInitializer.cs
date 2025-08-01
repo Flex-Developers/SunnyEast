@@ -39,7 +39,6 @@ public static class DependencyInitializer
             .AddScoped<IDatabaseAdminService, DatabaseAdminService>()
             .AddScoped<IPushNotificationClientService, PushNotificationClientService>()
             .AddScoped<INotificationSubscriptionApiService, NotificationSubscriptionApiService>()
-            .AddScoped<INotificationManager, NotificationManager>()
-            .AddScoped<IAuthNotificationService, AuthNotificationService>();
+            .AddScoped<INotificationManager, NotificationManager>();
     }
 }

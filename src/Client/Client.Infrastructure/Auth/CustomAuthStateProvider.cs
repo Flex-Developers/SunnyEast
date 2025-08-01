@@ -3,11 +3,15 @@ using System.Security.Claims;
 using Application.Contract.User.Responses;
 using Blazored.LocalStorage;
 using Client.Infrastructure.Services.Cart;
+using Client.Infrastructure.Services.Notifications;
 using Microsoft.AspNetCore.Components.Authorization;
 
 namespace Client.Infrastructure.Auth;
 
-public class CustomAuthStateProvider(ILocalStorageService localStorageService, ICartService cartService) : AuthenticationStateProvider
+public class CustomAuthStateProvider(
+    ILocalStorageService localStorageService,
+    ICartService cartService,
+    INotificationManager notificationManager) : AuthenticationStateProvider
 {
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
@@ -28,12 +32,19 @@ public class CustomAuthStateProvider(ILocalStorageService localStorageService, I
                 var claims = jwtToken.Claims;
                 var identity = new ClaimsIdentity(claims, "jwt");
                 var principal = new ClaimsPrincipal(identity);
+
+                if (!await notificationManager.IsEnabledAsync())
+                {
+                    await notificationManager.EnableNotificationsAsync();
+                }
+
                 return new AuthenticationState(principal);
             }
         }
         catch (Exception)
         {
             await localStorageService.RemoveItemAsync("authToken");
+            await notificationManager.DisableNotificationsAsync();
         }
 
         return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
@@ -48,6 +59,10 @@ public class CustomAuthStateProvider(ILocalStorageService localStorageService, I
         var identity = new ClaimsIdentity(claims, "jwt");
         var principal = new ClaimsPrincipal(identity);
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(principal)));
+        if (!await notificationManager.IsEnabledAsync())
+        {
+            await notificationManager.EnableNotificationsAsync();
+        }
     }
 
     public async Task MarkUserAsLoggedOut()
@@ -57,5 +72,6 @@ public class CustomAuthStateProvider(ILocalStorageService localStorageService, I
         var identity = new ClaimsIdentity();
         var principal = new ClaimsPrincipal(identity);
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(principal)));
+        await notificationManager.DisableNotificationsAsync();
     }
 }
