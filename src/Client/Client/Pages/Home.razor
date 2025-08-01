@@ -51,42 +51,45 @@
     <!-- Популярные категории с улучшенными анимациями -->
     <div class="homepage-section-wrapper" style="margin-top: 70px;">
         <div style="text-align: center;">
-            <MudText Typo="Typo.h3" Align="Align.Center" Class="homepage-section-title gradient-text homepage-scroll-animate">
+            <MudText Typo="Typo.h3" Align="Align.Center"
+                     Class="homepage-section-title gradient-text homepage-scroll-animate">
                 <span class="homepage-title-emoji">🔥</span> Популярные категории
             </MudText>
         </div>
-
-        <MudGrid Class="homepage-category-grid-enhanced mt-4" Justify="Justify.Center">
-            @if (_popularCategories != null && _popularCategories.Any())
-            {
-                @for (int i = 0; i < _popularCategories.Count && i < 6; i++)
-                {
-                    var category = _popularCategories[i];
-                    var delay    = i * 0.2;
-                    <MudItem xs="12" sm="6" md="4" Class="homepage-category-item-wrapper">
-                        <MudCard Elevation="0" Class="homepage-category-card-enhanced homepage-scroll-animate"
-                                 @onclick="() => NavigateToProducts(category.Name)"
-                                 Style="@($"animation-delay: {delay:0.##}s")">
-                            <div class="homepage-category-image-wrapper">
-                                <MudCardMedia Image="@category.ImageUrl" Class="homepage-category-card-image-enhanced"/>
-                                <div class="homepage-category-overlay">
-                                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Class="homepage-category-arrow"/>
-                                </div>
-                                <div class="homepage-category-name-overlay">
-                                    <MudText Class="homepage-category-name-text" Typo="Typo.h5">@category.Name</MudText>
-                                </div>
-                            </div>
-                        </MudCard>
-                    </MudItem>
-                }
-            }
-        </MudGrid>
     </div>
+
+    <div class="homepage-category-grid-enhanced custom-css-grid">
+        @if (_popularCategories != null && _popularCategories.Any())
+        {
+            @for (int i = 0; i < _popularCategories.Count && i < 6; i++)
+            {
+                var category = _popularCategories[i];
+                var delay = i * 0.2;
+                <div class="homepage-category-item-wrapper">
+                    <MudCard Elevation="0" Class="homepage-category-card-enhanced homepage-scroll-animate"
+                             @onclick="() => NavigateToProducts(category.Name)"
+                             Style="@($"animation-delay: {delay:0.##}s")">
+                        <div class="homepage-category-image-wrapper">
+                            <MudCardMedia Image="@category.ImageUrl" Class="homepage-category-card-image-enhanced"/>
+                            <div class="homepage-category-overlay">
+                                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Class="homepage-category-arrow"/>
+                            </div>
+                            <div class="homepage-category-name-overlay">
+                                <MudText Class="homepage-category-name-text" Typo="Typo.h5">@category.Name</MudText>
+                            </div>
+                        </div>
+                    </MudCard>
+                </div>
+            }
+        }
+    </div>
+
 
     <!-- Наши магазины с улучшенным дизайном -->
     <div class="homepage-section-wrapper" style="margin-top: 120px">
         <div style="text-align: center;">
-            <MudText Typo="Typo.h3" Align="Align.Center" Class="homepage-section-title gradient-text homepage-scroll-animate">
+            <MudText Typo="Typo.h3" Align="Align.Center"
+                     Class="homepage-section-title gradient-text homepage-scroll-animate">
                 <span class="homepage-title-emoji">🏪</span> Наши магазины
             </MudText>
         </div>
@@ -97,7 +100,7 @@
                 var shop = _shops[i];
                 var delay = i * 0.3;
                 <MudItem xs="12" sm="12" md="6" lg="6" Class="homepage-shop-item-wrapper">
-                    <MudCard Elevation="0" Class="homepage-shop-card-enhanced homepage-scroll-animate" 
+                    <MudCard Elevation="0" Class="homepage-shop-card-enhanced homepage-scroll-animate"
                              Style="@($"animation-delay: {delay:0.##}s")">
                         <div class="homepage-shop-image-container">
                             <MudCarousel Style="height: 300px; border-radius: 15px 15px 0 0"
@@ -138,7 +141,8 @@
     <!-- Почему выбирают нас с крутыми анимациями -->
     <div class="homepage-section-wrapper" style="margin-top: 100px;">
         <div style="text-align: center;">
-            <MudText Typo="Typo.h3" Align="Align.Center" Class="homepage-section-title gradient-text homepage-scroll-animate">
+            <MudText Typo="Typo.h3" Align="Align.Center"
+                     Class="homepage-section-title gradient-text homepage-scroll-animate">
                 <span class="homepage-title-emoji">💎</span> Почему выбирают именно нас
             </MudText>
         </div>
@@ -148,7 +152,8 @@
             {
                 var adv = _advantages[i];
                 <MudItem xs="12" sm="6" md="3" Class="homepage-advantage-item">
-                    <MudPaper Elevation="0" Class="@($"homepage-advantage-enhanced {adv.CssClass} homepage-scroll-animate")">
+                    <MudPaper Elevation="0"
+                              Class="@($"homepage-advantage-enhanced {adv.CssClass} homepage-scroll-animate")">
                         <div class="homepage-advantage-icon-wrapper">
                             <MudIcon Icon="@adv.Icon" Class="homepage-advantage-icon" Size="Size.Large"/>
                             <div class="homepage-icon-glow"></div>
@@ -166,7 +171,8 @@
     <!-- Новая секция с товарами -->
     <div class="homepage-products-preview-section" style="margin-top: 130px; margin-bottom: 10px;">
         <div style="text-align: center;">
-            <MudText Typo="Typo.h3" Align="Align.Center" Class="homepage-section-title gradient-text homepage-scroll-animate">
+            <MudText Typo="Typo.h3" Align="Align.Center"
+                     Class="homepage-section-title gradient-text homepage-scroll-animate">
                 <span class="homepage-title-emoji">🎁</span> Что мы предлагаем
             </MudText>
         </div>
@@ -193,9 +199,10 @@
 
 
 @code {
-    
+
     // Records для секции "Почему выбирают нас"
     private readonly record struct Advantage(string Title, string Description, string Icon, string CssClass);
+
     private readonly List<Advantage> _advantages =
     [
         new("Доступные цены", "Всегда выгодные предложения и приятные бонусы для наших клиентов", Icons.Material.Filled.Store, "homepage-advantage-1"),
@@ -234,7 +241,7 @@
 
     private List<ProductCategoryResponse>? _popularCategories = new();
     private List<ShopVm> _shops = new();
-    
+
     private bool _scrollAnimationsInitialized = false;
     private bool _dataLoaded = false;
 
@@ -265,6 +272,7 @@
             _scrollAnimationsInitialized = true;
         }
     }
+
 }
 
 <style>
@@ -298,6 +306,12 @@
     .homepage-carousel-image {
         width: 100%; /* Занимает всю ширину контейнера */
         height: 100vh; /* Высота на весь viewport */
+    }
+
+    /* Стандартные отступы для MudContainer */
+    .mud-container {
+        padding-left: 16px; /* Левый отступ */
+        padding-right: 16px; /* Правый отступ */
     }
 
     /* Секция приветствия */
@@ -336,7 +350,7 @@
             font-size: clamp(2rem, 5vw, 2.8rem);
         }
     }
-    
+
     /* Широкие экраны: в одну строку */
     @@media (min-width: 1200px) {
         .homepage-welcome-title {
@@ -353,7 +367,7 @@
         -webkit-text-fill-color: transparent;
         background-clip: text;
     }
-    
+
     /* Подзаголовок приветствия */
     .homepage-welcome-subtitle {
         font-weight: 300; /* Тонкий шрифт */
@@ -442,10 +456,10 @@
 
     /* Анимация пульсации для эмодзи в заголовках */
     @@keyframes homepageTitleEmojiPulse {
-        0%, 100% { 
+        0%, 100% {
             transform: scale(1) rotate(0deg); /* Обычный размер */
         }
-        50% { 
+        50% {
             transform: scale(1.2) rotate(10deg); /* Увеличение и поворот */
         }
     }
@@ -678,7 +692,7 @@
     }
 
     /* Карточка преимущества */
-     .homepage-advantage-enhanced {
+    .homepage-advantage-enhanced {
         padding: 40px 20px;
         text-align: center;
         border-radius: 20px;
@@ -787,8 +801,12 @@
 
     /* Анимация прокрутки вправо - исправлена для бесконечности */
     @@keyframes homepageScrollRight {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(0); }
+        0% {
+            transform: translateX(-100%);
+        }
+        100% {
+            transform: translateX(0);
+        }
     }
 
     /* Карточка товара в карусели */
@@ -847,10 +865,10 @@
 
     /* Анимация плавания иконок товаров */
     @@keyframes homepageProductIconFloat {
-        0%, 100% { 
+        0%, 100% {
             transform: translateY(0); /* Исходное положение */
         }
-        50% { 
+        50% {
             transform: translateY(-5px); /* Поднимается на 5px */
         }
     }
@@ -1014,11 +1032,6 @@
         box-sizing: border-box; /* Включает padding и border в общую ширину/высоту */
     }
 
-    /* Стандартные отступы для MudContainer */
-    .mud-container {
-        padding-left: 16px; /* Левый отступ */
-        padding-right: 16px; /* Правый отступ */
-    }
 
     /* Плавные переходы для интерактивных элементов */
     a, button, .mud-card, .mud-paper, .mud-button-root {
@@ -1136,5 +1149,67 @@
             display: none; /* Скрываем плавающие элементы на мобильных */
         }
     }
+
+    /* --- Фиксы выравнивания карточек категорий --- */
+
+    /* .homepage-category-grid-enhanced {
+        padding: 0 16px;
+        box-sizing: border-box;
+    }
+
+    .homepage-category-item-wrapper {
+        flex: 1 1 0;
+        max-width: 380px;
+        padding: 8px;
+        display: flex;
+        justify-content: center;
+        box-sizing: border-box;
+    }
+
+    .homepage-category-item-wrapper .mud-item {
+        padding: 0;
+        margin: 0;
+    }
+
+    .homepage-category-card-enhanced {
+        flex: 0 1 100%;
+    }
+     */
+
+    /* === Надёжный заменитель MudGrid для популярных категорий === */
+    .custom-css-grid {
+        display: grid;
+        gap: 30px;
+        padding: 0 16px;
+        max-width: 1200px;
+        margin: 0 auto;
+        box-sizing: border-box;
+
+        /* По умолчанию — 1 колонка (мобильные) */
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    /* Средние экраны — 2 колонки */
+    @@media (min-width: 700px) {
+        .custom-css-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    /* Большие экраны — 3 колонки */
+    @@media (min-width: 1100px) {
+        .custom-css-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+
+    .custom-css-grid .homepage-category-item-wrapper {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
 
 </style>
