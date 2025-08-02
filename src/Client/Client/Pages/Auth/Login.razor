@@ -20,6 +20,7 @@
                               Variant="Variant.Outlined"
                               InputType="InputType.Text"
                               OnBlur="NormalizeLoginInput"
+                              OnKeyUp="OnKeyUpHandler"
                               Error="!_isValidLogin"
                               Required="true"
                               ErrorText="@_errorMessage"
@@ -31,6 +32,7 @@
                               RequiredError="Пароль обязателен."
                               Variant="Variant.Outlined"
                               InputType="@_passwordInput"
+                              OnKeyUp="OnKeyUpHandler"
                               Error="@(_isValidPassword == false)"
                               ErrorText="Пароль должен содержать минимум 8 символов."
                               Adornment="Adornment.End"
@@ -67,13 +69,14 @@
     private bool _isValidLogin = true;
     private bool _isValidPassword = true;
     private bool _rememberMe;
+    private bool _isSubmitting; // защита от двукратного сабмита
     private string _loginInput;
     private string? _returnUrl;
     private string _errorMessage = "Почта или телефон не могут быть пустыми.";
     private MudForm _form = null!;
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
-    
+
     protected override void OnInitialized()
     {
         var uri = new Uri(Navigation.Uri);
@@ -178,6 +181,31 @@
             else
             {
                 Snackbar.Add("Ошибка, попробуйте еще раз.", Severity.Error);
+            }
+        }
+    }
+
+    // единый обработчик Enter для всех полей формы
+    private async Task OnKeyUpHandler(KeyboardEventArgs e)
+    {
+        if (_isSubmitting)
+            return;
+
+        // Триггерим только чистый Enter (без Ctrl/Alt/Shift/Meta), включая NumpadEnter
+        if (e is not null &&
+            (e.Key == "Enter" || e.Code == "Enter" || e.Key == "NumpadEnter") &&
+            !e.ShiftKey && !e.CtrlKey && !e.AltKey && !e.MetaKey)
+        {
+            try
+            {
+                _isSubmitting = true;
+                // Гарантируем, что email/телефон нормализован, даже если фокус ещё в поле
+                NormalizeLoginInput();
+                await Submit();
+            }
+            finally
+            {
+                _isSubmitting = false;
             }
         }
     }
