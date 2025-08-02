@@ -1,21 +1,19 @@
-﻿@using Microsoft.AspNetCore.Components.Authorization
-@using Application.Contract.Identity
-@using Client.Components.Common  
+﻿@using Client.Components.Common
 
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
                 <Authorizing>
-                    <MudProgressCircular Class="mx-auto mt-6" />
+                    <MudProgressCircular Class="mx-auto mt-6"/>
                 </Authorizing>
 
                 <NotAuthorized>
-                    <AccessGuard />   
+                    <AccessGuard/>
                 </NotAuthorized>
             </AuthorizeRouteView>
 
-            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+            <FocusOnNavigate RouteData="@routeData" Selector="h1"/>
         </Found>
 
         <NotFound>

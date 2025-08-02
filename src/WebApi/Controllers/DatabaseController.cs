@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 [Authorize(Roles = ApplicationRoles.SuperAdmin)]
+[ApiExplorerSettings(IgnoreApi = true)]
 public sealed class DatabaseController : ApiControllerBase
 {
     /// <summary>Скачать полный снимок БД (.sql.gz)</summary>

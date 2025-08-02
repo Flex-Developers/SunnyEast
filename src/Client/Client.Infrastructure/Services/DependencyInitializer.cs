@@ -12,6 +12,7 @@ using Client.Infrastructure.Services.User;
 using Client.Infrastructure.Services.Validation;
 using Client.Infrastructure.Realtime;
 using Client.Infrastructure.Services.Database;
+using Client.Infrastructure.Services.Notifications;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Client.Infrastructure.Services;
@@ -35,7 +36,10 @@ public static class DependencyInitializer
             .AddScoped<IUserService, UserService>()
             .AddScoped<IOrderRealtimeService, OrderRealtimeService>()
             .AddScoped<IAccountService, AccountService>()
-            .AddScoped<IDatabaseAdminService, DatabaseAdminService>();
-
+            .AddScoped<IDatabaseAdminService, DatabaseAdminService>()
+            .AddScoped<IPushNotificationClientService, PushNotificationClientService>()
+            .AddScoped<INotificationSubscriptionApiService, NotificationSubscriptionApiService>()
+            .AddScoped<INotificationDialogService, NotificationDialogService>()
+            .AddScoped<INotificationManager, NotificationManager>();
     }
 }
