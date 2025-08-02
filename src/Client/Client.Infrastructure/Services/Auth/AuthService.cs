@@ -7,8 +7,7 @@ using MudBlazor;
 
 namespace Client.Infrastructure.Services.Auth;
 
-public class AuthService(
-    IHttpClientService httpClient,
+public class AuthService(IHttpClientService httpClient,
     NavigationManager navigationManager,
     CustomAuthStateProvider authStateProvider,
     ISnackbar snackbar) : IAuthService
@@ -23,6 +22,12 @@ public class AuthService(
         }
 
         return loginResponse.Success;
+    }
+
+    public async Task<bool> RegisterAsync(RegisterUserCommand command, string? returnUrl = null)
+    {
+        var response = await httpClient.PostAsJsonAsync("/api/user/register", command);
+        return response.Success;
     }
 
     public async Task LogoutAsync(bool navigateToHome = false)

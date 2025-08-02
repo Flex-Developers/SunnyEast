@@ -1,8 +1,8 @@
 ﻿@page "/Register"
 @using Application.Contract.User.Commands
-@using Client.Infrastructure.Services.HttpClient
+@using Client.Infrastructure.Services.Auth
 @using Severity = MudBlazor.Severity
-@inject IHttpClientService HttpClient
+@inject IAuthService AuthService
 @inject ISnackbar Snackbar
 
 
@@ -191,8 +191,7 @@
 
             if (_form.IsValid && isPhoneAndEmailEmpty == false)
             {
-                var response = await HttpClient.PostAsJsonAsync("/api/user/register", _user);
-                if (response.Success)
+                if (await AuthService.RegisterAsync(_user))
                 {
                     // --- Переходим на страницу подтверждения кода (UI-демо) ---
                     var channel = string.IsNullOrWhiteSpace(_user.Email) ? "телефон" : "e-mail";
