@@ -18,7 +18,6 @@ public class NotificationManager(
 {
     private bool _isInitialized;
 
-
     public async Task InitializeAsync()
     {
         if (_isInitialized)
@@ -59,6 +58,13 @@ public class NotificationManager(
         try
         {
             logger.LogInformation("Enabling push notifications...");
+
+            var requestPermissionResult = await clientService.RequestPermissionAsync();
+            if (!requestPermissionResult)
+            {
+                logger.LogWarning("User denied push notification permission");
+                return false;
+            }
 
             var subscriptionResult = await clientService.SubscribeAsync();
 
@@ -125,7 +131,7 @@ public class NotificationManager(
         try
         {
             var isEnabled = await clientService.IsEnabledAsync();
-            var status = await clientService.GetPermissionStatusAsync();
+            var status = await clientService.GetSubscriptionAsync();
 
             logger.LogInformation("Current notification status: {Status}, Enabled: {IsEnabled}", status, isEnabled);
         }

@@ -33,11 +33,6 @@ public class CustomAuthStateProvider(
                 var identity = new ClaimsIdentity(claims, "jwt");
                 var principal = new ClaimsPrincipal(identity);
 
-                if (!await notificationManager.IsEnabledAsync())
-                {
-                    await notificationManager.EnableNotificationsAsync();
-                }
-
                 return new AuthenticationState(principal);
             }
         }

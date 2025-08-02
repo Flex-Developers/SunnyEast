@@ -11,7 +11,8 @@ public interface IPushNotificationClientService
     Task<CreateNotificationSubscriptionCommand?> SubscribeAsync();
     Task<bool> UnsubscribeAsync();
     Task<bool> IsEnabledAsync();
-    Task<string> GetPermissionStatusAsync();
+    Task<bool> RequestPermissionAsync();
+    Task<CreateNotificationSubscriptionCommand?> GetSubscriptionAsync();
 }
 
 public class PushNotificationClientService(
@@ -31,13 +32,6 @@ public class PushNotificationClientService(
             if (string.IsNullOrEmpty(_vapidPublicKey))
             {
                 logger.LogWarning("VAPID public key not configured");
-                return false;
-            }
-
-            var isSupported = await jsRuntime.InvokeAsync<bool>("pushInterop.isSupported");
-            if (!isSupported)
-            {
-                logger.LogInformation("Push notifications not supported in this browser");
                 return false;
             }
 
@@ -80,7 +74,7 @@ public class PushNotificationClientService(
 
             var createCommand =
                 await jsRuntime.InvokeAsync<CreateNotificationSubscriptionCommand?>(
-                    "pushInterop.showNotificationPrompt",
+                    "pushInterop.subscribeUser",
                     _vapidPublicKey);
             Console.WriteLine(createCommand); //todo remove this shit
             return createCommand;
@@ -97,7 +91,21 @@ public class PushNotificationClientService(
     {
         try
         {
-            var permission = await jsRuntime.InvokeAsync<string>("pushInterop.getPermissionStatus");
+            var permission = await GetSubscriptionAsync();
+            return permission != null;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to check notification status");
+            return false;
+        }
+    }
+
+    public async Task<bool> RequestPermissionAsync()
+    {
+        try
+        {
+            var permission = await jsRuntime.InvokeAsync<string>("pushInterop.requestNotificationPermission");
             return permission == "granted";
         }
         catch (Exception ex)
@@ -107,8 +115,8 @@ public class PushNotificationClientService(
         }
     }
 
-    public async Task<string> GetPermissionStatusAsync()
+    public async Task<CreateNotificationSubscriptionCommand?> GetSubscriptionAsync()
     {
-        return await jsRuntime.InvokeAsync<string>("pushInterop.getPermissionStatus");
+        return await jsRuntime.InvokeAsync<CreateNotificationSubscriptionCommand?>("pushInterop.getSubscription");
     }
 }

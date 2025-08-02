@@ -16,11 +16,12 @@ public class NotificationSubscriptionApiService(IHttpClientService httpClientSer
     {
         try
         {
-            var response = await httpClientService.PostAsJsonAsync("api/notifications/subscribe", subscription);
+            var response = await httpClientService.PostAsJsonAsync("/api/notifications/subscribe", subscription);
             return response.Success;
         }
-        catch (Exception)
+        catch (Exception e)
         {
+            Console.WriteLine(e);
             return false;
         }
     }
@@ -30,7 +31,7 @@ public class NotificationSubscriptionApiService(IHttpClientService httpClientSer
         try
         {
             var response =
-                await httpClientService.DeleteAsync("api/notifications/unsubscribe");
+                await httpClientService.DeleteAsync("/api/notifications/unsubscribe");
             return response.Success;
         }
         catch (Exception)
