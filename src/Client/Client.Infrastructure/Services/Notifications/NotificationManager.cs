@@ -8,11 +8,13 @@ public interface INotificationManager
     Task<bool> EnableNotificationsAsync();
     Task<bool> DisableNotificationsAsync();
     Task<bool> IsEnabledAsync();
+    Task<bool> RequestPermissionWithDialogAsync();
 }
 
 public class NotificationManager(
     IPushNotificationClientService clientService,
     INotificationSubscriptionApiService apiService,
+    INotificationDialogService dialogService,
     ILogger<NotificationManager> logger)
     : INotificationManager
 {
@@ -104,12 +106,14 @@ public class NotificationManager(
             logger.LogInformation("Disabling push notifications...");
 
 
-            var unsubscribeSuccess = await clientService.UnsubscribeAsync();
+            var unsubscribeEndpoint = await clientService.UnsubscribeAsync();
+            if (unsubscribeEndpoint != null)
+            {
+                return await apiService.DeleteSubscriptionAsync(unsubscribeEndpoint);
+            }
 
 
-            await apiService.DeleteSubscriptionAsync();
-
-            return unsubscribeSuccess;
+            return false;
         }
         catch (Exception ex)
         {
@@ -124,6 +128,63 @@ public class NotificationManager(
             await InitializeAsync();
 
         return await clientService.IsEnabledAsync();
+    }
+
+    public async Task<bool> RequestPermissionWithDialogAsync()
+    {
+        if (!_isInitialized)
+        {
+            await InitializeAsync();
+            if (!_isInitialized)
+            {
+                logger.LogWarning("Notification manager not initialized");
+                return false;
+            }
+        }
+
+        try
+        {
+            // Show dialog to get user consent first
+            var userConsent = await dialogService.ShowPermissionDialogAsync();
+            if (!userConsent)
+            {
+                logger.LogInformation("User declined notification permission dialog");
+                return false;
+            }
+
+            // Request permission immediately after user clicks "Allow" 
+            // This ensures it's within the user-generated event handler
+            logger.LogInformation("User agreed, requesting browser permission...");
+            var requestPermissionResult = await clientService.RequestPermissionAsync();
+            if (!requestPermissionResult)
+            {
+                logger.LogWarning("Browser denied push notification permission");
+                return false;
+            }
+
+            // Subscribe and register with server
+            var subscriptionResult = await clientService.SubscribeAsync();
+            if (subscriptionResult != null)
+            {
+                var serverSuccess = await apiService.CreateSubscriptionAsync(subscriptionResult);
+                if (serverSuccess)
+                {
+                    logger.LogInformation("Successfully registered subscription with server");
+                }
+                else
+                {
+                    logger.LogWarning("Failed to register subscription with server");
+                }
+                return true;
+            }
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to enable push notifications with dialog");
+            return false;
+        }
     }
 
     private async Task SyncSubscriptionStatusAsync()

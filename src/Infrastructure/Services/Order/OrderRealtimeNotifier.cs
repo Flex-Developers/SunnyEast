@@ -22,6 +22,7 @@ public sealed class OrderRealtimeNotifier(
         await hub.Clients.Group(OrderGroupNames.Shop(order.ShopId)).OrderStatusChanged(order);
         await hub.Clients.Group(OrderGroupNames.SuperAdminsGroup).OrderStatusChanged(order);
         await hub.Clients.Group(OrderGroupNames.Customer(order.Customer.Id)).OrderStatusChanged(order);
+        await pushNotificationService.SendOrderStatusUpdateNotificationAsync(order);
     }
 
     public async Task OrderArchived(OrderResponse order)
@@ -29,5 +30,6 @@ public sealed class OrderRealtimeNotifier(
         await hub.Clients.Group(OrderGroupNames.Shop(order.ShopId)).OrderArchived(order);
         await hub.Clients.Group(OrderGroupNames.SuperAdminsGroup).OrderArchived(order);
         await hub.Clients.Group(OrderGroupNames.Customer(order.Customer.Id)).OrderArchived(order);
+        await pushNotificationService.SendOrderArchivedNotificationAsync(order);
     }
 }

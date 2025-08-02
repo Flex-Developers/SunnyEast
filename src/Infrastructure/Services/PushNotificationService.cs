@@ -37,83 +37,6 @@ public class PushNotificationService : IPushNotificationService
         }
     }
 
-    public async Task PushAsync(Guid userId, string actionType, string header, string body)
-    {
-        try
-        {
-            // Get all notification subscriptions for the user
-            var subscriptions = await _context.Set<NotificationSubscription>()
-                .Where(s => s.UserId == userId)
-                .ToListAsync();
-
-            if (!subscriptions.Any())
-            {
-                _logger.LogWarning("No notification subscriptions found for user {UserId}", userId);
-                return;
-            }
-
-            // Create the notification payload
-            var payload = new
-            {
-                title = header,
-                body = body,
-                actionType = actionType,
-                timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                icon = "/icon-192x192.png", // Default icon, can be made configurable
-                badge = "/badge-72x72.png", // Default badge, can be made configurable
-                data = new
-                {
-                    actionType = actionType,
-                    userId = userId
-                }
-            };
-
-            var payloadJson = JsonSerializer.Serialize(payload);
-
-            // Send notification to all user's subscriptions
-            var tasks = subscriptions.Select(async subscription =>
-            {
-                try
-                {
-                    var pushSubscription = new PushSubscription(
-                        subscription.Endpoint,
-                        subscription.P256Dh,
-                        subscription.Auth);
-
-                    await _webPushClient.SendNotificationAsync(pushSubscription, payloadJson);
-                    _logger.LogInformation("Push notification sent successfully to user {UserId} endpoint {Endpoint}",
-                        userId, subscription.Endpoint);
-                }
-                catch (WebPushException ex)
-                {
-                    _logger.LogError(ex,
-                        "Failed to send push notification to user {UserId} endpoint {Endpoint}. Status: {StatusCode}",
-                        userId, subscription.Endpoint, ex.StatusCode);
-
-                    // If subscription is no longer valid, remove it
-                    if (ex.StatusCode == System.Net.HttpStatusCode.Gone ||
-                        ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-                    {
-                        _context.Set<NotificationSubscription>().Remove(subscription);
-                        await _context.SaveChangesAsync();
-                        _logger.LogInformation("Removed invalid subscription for user {UserId}", userId);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Unexpected error sending push notification to user {UserId}", userId);
-                }
-            });
-
-            await Task.WhenAll(tasks);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error in PushAsync for user {UserId}", userId);
-            throw;
-        }
-    }
-
     public async Task SendCreateOrderNotificationAsync(OrderResponse order)
     {
         var receivers = await _context.Staff
@@ -126,13 +49,68 @@ public class PushNotificationService : IPushNotificationService
                 await _context.NotificationSubscriptions.FirstOrDefaultAsync(f => f.UserId == receiver.UserId);
             if (receiverSubscriptions != null)
             {
-                await _webPushClient.SendNotificationAsync(new PushSubscription(receiverSubscriptions.Endpoint,
-                        receiverSubscriptions.P256Dh, receiverSubscriptions.Auth), JsonSerializer.Serialize(new
+                try
+                {
+                    await _webPushClient.SendNotificationAsync(new PushSubscription(receiverSubscriptions.Endpoint,
+                            receiverSubscriptions.P256Dh, receiverSubscriptions.Auth), JsonSerializer.Serialize(new
+                        {
+                            title = "Новый заказ",
+                            body = ""
+                        })
+                    );
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e.ToString());
+                }
+            }
+        }
+    }
+
+    public async Task SendOrderStatusUpdateNotificationAsync(OrderResponse order)
+    {
+        var customerSubscriptions = await _context.NotificationSubscriptions
+            .Where(f => f.UserId == order.Customer.Id).ToListAsync();
+
+        foreach (var subscription in customerSubscriptions)
+        {
+            try
+            {
+                await _webPushClient.SendNotificationAsync(new PushSubscription(subscription.Endpoint,
+                        subscription.P256Dh, subscription.Auth), JsonSerializer.Serialize(new
                     {
-                        title = "Новый заказ",
-                        body = ""
+                        title = "Статус заказа изменен",
+                        body = "Ваш заказ обновлен"
                     })
                 );
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.ToString());
+            }
+        }
+    }
+
+    public async Task SendOrderArchivedNotificationAsync(OrderResponse order)
+    {
+        var customerSubscriptions = await _context.NotificationSubscriptions
+            .FirstOrDefaultAsync(f => f.UserId == order.Customer.Id);
+
+        if (customerSubscriptions != null)
+        {
+            try
+            {
+                await _webPushClient.SendNotificationAsync(new PushSubscription(customerSubscriptions.Endpoint,
+                        customerSubscriptions.P256Dh, customerSubscriptions.Auth), JsonSerializer.Serialize(new
+                    {
+                        title = "Заказ архивирован",
+                        body = "Ваш заказ завершен"
+                    })
+                );
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.ToString());
             }
         }
     }

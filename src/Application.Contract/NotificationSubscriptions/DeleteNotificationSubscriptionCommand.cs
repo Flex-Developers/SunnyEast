@@ -1,3 +1,3 @@
 namespace Application.Contract.NotificationSubscriptions;
 
-public record DeleteNotificationSubscriptionCommand : IRequest<Unit>;
+public record DeleteNotificationSubscriptionCommand(string Endpoint) : IRequest<Unit>;

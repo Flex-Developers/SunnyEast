@@ -39,7 +39,6 @@ public class CustomAuthStateProvider(
         catch (Exception)
         {
             await localStorageService.RemoveItemAsync("authToken");
-            await notificationManager.DisableNotificationsAsync();
         }
 
         return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
@@ -54,10 +53,6 @@ public class CustomAuthStateProvider(
         var identity = new ClaimsIdentity(claims, "jwt");
         var principal = new ClaimsPrincipal(identity);
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(principal)));
-        if (!await notificationManager.IsEnabledAsync())
-        {
-            await notificationManager.EnableNotificationsAsync();
-        }
     }
 
     public async Task MarkUserAsLoggedOut()

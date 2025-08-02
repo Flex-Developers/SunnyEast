@@ -9,7 +9,7 @@ public interface IPushNotificationClientService
 {
     Task<bool> InitializeAsync();
     Task<CreateNotificationSubscriptionCommand?> SubscribeAsync();
-    Task<bool> UnsubscribeAsync();
+    Task<string?> UnsubscribeAsync();
     Task<bool> IsEnabledAsync();
     Task<bool> RequestPermissionAsync();
     Task<CreateNotificationSubscriptionCommand?> GetSubscriptionAsync();
@@ -23,7 +23,7 @@ public class PushNotificationClientService(
 {
     private string? _vapidPublicKey;
 
-    public async Task<bool> InitializeAsync()
+    public Task<bool> InitializeAsync()
     {
         try
         {
@@ -32,20 +32,20 @@ public class PushNotificationClientService(
             if (string.IsNullOrEmpty(_vapidPublicKey))
             {
                 logger.LogWarning("VAPID public key not configured");
-                return false;
+                return Task.FromResult(false);
             }
 
             logger.LogInformation("Push notifications initialized successfully");
-            return true;
+            return Task.FromResult(true);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to initialize push notifications");
-            return false;
+            return Task.FromResult(false);
         }
     }
 
-    public async Task<bool> UnsubscribeAsync()
+    public async Task<string?> UnsubscribeAsync()
     {
         try
         {
@@ -53,12 +53,12 @@ public class PushNotificationClientService(
             var success = !string.IsNullOrEmpty(endpoint);
 
             logger.LogInformation("Unsubscribe result: {Success}, Endpoint: {Endpoint}", success, endpoint);
-            return success;
+            return endpoint;
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to unsubscribe from push notifications");
-            return false;
+            return null;
         }
     }
 

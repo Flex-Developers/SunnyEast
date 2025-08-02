@@ -6,7 +6,7 @@ namespace Client.Infrastructure.Services.Notifications;
 public interface INotificationSubscriptionApiService
 {
     Task<bool> CreateSubscriptionAsync(CreateNotificationSubscriptionCommand subscription);
-    Task<bool> DeleteSubscriptionAsync();
+    Task<bool> DeleteSubscriptionAsync(string unsubscribeEndpoint);
 }
 
 public class NotificationSubscriptionApiService(IHttpClientService httpClientService)
@@ -26,12 +26,13 @@ public class NotificationSubscriptionApiService(IHttpClientService httpClientSer
         }
     }
 
-    public async Task<bool> DeleteSubscriptionAsync()
+    public async Task<bool> DeleteSubscriptionAsync(string unsubscribeEndpoint)
     {
         try
         {
             var response =
-                await httpClientService.DeleteAsync("/api/notifications/unsubscribe");
+                await httpClientService.DeleteAsync("/api/notifications/unsubscribe?endpoint=" +
+                                                    Uri.EscapeDataString(unsubscribeEndpoint));
             return response.Success;
         }
         catch (Exception)
