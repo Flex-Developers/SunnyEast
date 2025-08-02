@@ -1,0 +1,145 @@
+@using Application.Contract.Identity
+@using Application.Contract.Staff.Enums
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = ApplicationRoles.SuperAdmin)]
+@using Client.Infrastructure.Services.Staff
+@using Severity = MudBlazor.Severity
+@inject IStaffService StaffService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.ManageAccounts" Class="mr-2 mb-n1"/>
+            Изменить роль
+        </MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudText Typo="Typo.subtitle2" Class="mb-2">
+            Пользователь: <b>@UserName</b>
+        </MudText>
+
+        <!-- Выбор роли: удобные кликабельные chips -->
+        <MudChipSet T="StaffRole"
+                    SelectionMode="SelectionMode.SingleSelection"
+                    SelectedValue="_role"
+                    CheckMark="true"
+                    SelectedValueChanged="OnRoleChanged"
+                    Class="mb-2 role-set">
+            <MudChip Value="StaffRole.Administrator"
+                     Color="Color.Primary"
+                     Variant="@ChipVariant(StaffRole.Administrator)">
+                <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Class="mr-1"/>
+                Администратор
+            </MudChip>
+
+            <MudChip Value="StaffRole.Salesman"
+                     Color="Color.Info"
+                     Variant="@ChipVariant(StaffRole.Salesman)">
+                <MudIcon Icon="@Icons.Material.Filled.Store" Class="mr-1"/>
+                Продавец
+            </MudChip>
+
+            <MudChip Value="StaffRole.None"
+                     Color="Color.Default"
+                     Variant="@ChipVariant(StaffRole.None)">
+                <MudIcon Icon="@Icons.Material.Filled.Block" Class="mr-1"/>
+                Нет
+            </MudChip>
+        </MudChipSet>
+
+        <MudDivider Class="my-2"/>
+
+        <!-- Превью выбранной роли -->
+        <div class="d-flex align-center mb-1">
+            <MudText Typo="Typo.body2" Class="mr-2">Выбрано:</MudText>
+            <MudChip T="string" Color="@RoleColor(_role)" Variant="Variant.Filled" Size="Size.Small">
+                @RoleTitle(_role)
+            </MudChip>
+        </div>
+
+        <!-- Подсказка: динамический текст и цвет -->
+        <MudAlert Severity="@(_role == StaffRole.None ? Severity.Warning : Severity.Info)"
+                  Variant="Variant.Text" Dense="true" Class="mt-2">
+            @AlertText(_role)
+        </MudAlert>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" Disabled="@_saving" OnClick="Cancel">Отмена</MudButton>
+        <MudButton Color="Color.Primary"
+                   Disabled="@(_saving || _role == CurrentRole)"
+                   Loading="_saving"
+                   OnClick="Save">
+            Сохранить
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public Guid UserId { get; set; }
+    [Parameter] public string UserName { get; set; } = string.Empty;
+    [Parameter] public StaffRole CurrentRole { get; set; }
+
+    private StaffRole _role;
+    private bool _saving;
+
+    protected override void OnInitialized() => _role = CurrentRole;
+
+    private void OnRoleChanged(StaffRole v) => _role = v;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Save()
+    {
+        _saving = true;
+        try
+        {
+            var ok = await StaffService.ChangeRoleAsync(UserId, _role);
+            if (!ok)
+            {
+                Snackbar.Add("Не удалось изменить роль.", Severity.Error);
+                MudDialog.Close(DialogResult.Ok(false));
+                return;
+            }
+
+            Snackbar.Add("Роль обновлена.", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    // Вспомогательные
+    private Variant ChipVariant(StaffRole r)
+    {
+        return _role == r ? Variant.Filled : Variant.Outlined;
+    }
+
+    private static Color RoleColor(StaffRole role) => role switch
+    {
+        StaffRole.Administrator => Color.Primary,
+        StaffRole.Salesman => Color.Info,
+        _ => Color.Default
+    };
+
+    private static string RoleTitle(StaffRole role) => role switch
+    {
+        StaffRole.Administrator => "Администратор",
+        StaffRole.Salesman => "Продавец",
+        _ => "Нет"
+    };
+
+    private static string AlertText(StaffRole role) => role switch
+    {
+        StaffRole.Administrator => "Администратор имеет расширенные права управления.",
+        StaffRole.Salesman => "Продавец работает с заказами в пределах назначенного магазина.",
+        _ /* None */ => "Роль «Нет» снимет права сотрудника. Привязка к магазину будет очищена на сервере, учётка может быть отключена.",
+    };
+
+}

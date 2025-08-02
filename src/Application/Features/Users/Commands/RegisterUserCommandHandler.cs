@@ -55,7 +55,10 @@ public class RegisterUserCommandHandler(
 
         result = await userManager.AddClaimsAsync(user, [
             new Claim(ClaimTypes.NameIdentifier, user.UserName),
-            new Claim(ClaimTypes.Name, user.Name)]);
+            new Claim("uid", user.Id.ToString()),           // НОВОЕ
+            new Claim(ClaimTypes.Name, user.Name)
+        ]);
+
 
         result.ThrowBadRequestIfError();
         await context.SaveChangesAsync(cancellationToken);

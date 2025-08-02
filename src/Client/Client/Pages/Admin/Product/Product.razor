@@ -1,47 +1,39 @@
 ﻿@page "/admin/products"
+@using Application.Contract.Identity
 @using Application.Contract.Product.Commands
 @using Application.Contract.Product.Queries
 @using Application.Contract.Product.Responses
 @using Application.Contract.ProductCategory.Responses
 @using Client.Components.Dialogs
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = ApplicationRoles.AllAdmins)]
 @using Client.Infrastructure.Services.Category
 @using Client.Infrastructure.Services.Product
+@using Client.Components.Common
 @inject IProductService ProductService
 @inject ICategoryService CategoryService
 @inject IDialogService DialogService
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 
+<div class="create-btn-wrapper">
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="CreateAsync" Class="button-create">
+        Создать➕
+    </MudButton>
+</div>
 
-<MudPaper Elevation="25">
-    <MudToolBar>
-        <MudSelect T="string" Label="Категория" Style="margin-right: 15px;"
-                   Value="@SelectedCategory" ValueChanged="@(async (string value) => await OnCategoryChanged(value))">
-            @foreach (var category in _categories)
-            {
-                <MudSelectItem Value="@(category.Name)">@category.Name</MudSelectItem>
-            }
-        </MudSelect>
-        
-        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="CreateAsync" Class="button-create">Создать➕</MudButton>
 
-        <MudSpacer/>
-
-        <MudTextField @bind-Value="SearchTerm"
-                      Label="Поиск товаров"
-                      Adornment="Adornment.End"
-                      AdornmentIcon="@Icons.Material.Filled.Search"
-                      Immediate="true"
-                      DebounceInterval="300"
-                      Class="search-field" />
-
-    </MudToolBar>
-</MudPaper>
+<ProductToolBar
+    Categories="@_categories"
+    SelectedCategory="@SelectedCategory"
+    SelectedCategoryChanged="@(cat => OnCategoryChanged(cat))"
+    SearchTerm="@SearchTerm"
+    SearchTermChanged="@(txt => SearchTerm = txt)" />
 
 <MudGrid Spacing="3" Justify="Justify.FlexStart" Style="margin-top: 3px; margin-bottom: 50px">
     @foreach (var product in _products)
     {
         <MudItem xs="12" sm="6" md="4" lg="2">
-            <MudCard Class="product-card">
+            <MudCard Elevation="3" Class="product-card">
                 
                 <MudCarousel Style="height: 250px; border-radius: 10px;" ItemsSource="@product.Images" Context="imgContext" EnableSwipeGesture="true" 
                              BulletsPosition="Position.Bottom" ShowBullets="false" AutoCycle="true" TData="string" BulletsColor="Color.Dark"
@@ -125,7 +117,6 @@
         }
     }
     
-
     [Parameter]
     public string? SelectedCategory { get; set; } = string.Empty;
 
@@ -263,7 +254,7 @@
         if (_categories.Any(c => c.Name == selectedCategory))
             return selectedCategory;
 
-        return string.Empty;
+        return string.IsNullOrEmpty(selectedCategory) ? "Все продукты" : _categories.FirstOrDefault(c => c.Name == "Все продукты")?.Name ?? "Все продукты";
     }
 
     private async Task CreateAsync()
@@ -280,16 +271,12 @@
 }
 
 <style>
-    .button-create {
-        vertical-align: middle;
-        margin-bottom: -10px
+    .create-btn-wrapper {
+        margin-bottom: 15px;
+        display: flex;          
+        justify-content: flex-end; 
     }
 
-    .search-field {
-        width: 100px;
-        margin-left: auto;
-    }
-    
     .product-card {
         position: relative;
         border-radius: 10px;

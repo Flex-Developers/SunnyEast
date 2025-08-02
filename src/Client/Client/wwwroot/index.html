@@ -4,11 +4,11 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    
+
     <title>Client</title>
-    
+
     <base href="/"/>
-    
+
     <link rel="stylesheet" href="css/app.css"/>
     <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet"/>
     <link rel="icon" type="image/png" href="Logo1.png"/>
@@ -20,16 +20,31 @@
     <!--    theme manager-->
     <link href="_content/MudBlazor.ThemeManager/MudBlazorThemeManager.css" rel="stylesheet"/>
     <!--    theme manager-->
+
+    <link href="manifest.webmanifest" rel="manifest"/>
+    
+    <!-- Meta tags for mobile PWA -->
+    <meta name="theme-color" content="#512da8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="SunnyEast">
+    <link rel="apple-touch-icon" href="icon-192.png">
 </head>
 
 <body>
 <div id="app">
-    <svg class="loading-progress">
-        <circle r="40%" cx="50%" cy="50%"/>
-        <circle r="40%" cx="50%" cy="50%"/>
-    </svg>
-    <div class="loading-progress-text"></div>
+    <div class="loader">
+        <!-- 1) Логотип -->
+        <img src="Logo1.png" alt="Logo" class="loader-logo"/>
+
+        <!-- 2) Подпись — теперь «скруглённая» под логотипом -->
+        <div class="loader-credit">Developed by Avazbek Olimov</div>
+
+        <!-- 3) Процент загрузки — последний -->
+        <div class="loading-progress-text"></div>
+    </div>
 </div>
+
 
 <div id="blazor-error-ui">
     Возникла ошибка, попробуйте снова, позже.
@@ -38,7 +53,14 @@
 </div>
 <script src="_framework/Blazor.WebAssembly.js"></script>
 <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+<script src="_content/Client.Infrastructure/exampleJsInterop.js"></script>
+<script src="/homePage.js"></script>
 
+
+<link rel="stylesheet" href="css/developersPage.css">
+
+<script src="pushInterop.js"></script>
+<script>navigator.serviceWorker.register('service-worker.js');</script>
 </body>
 
 </html>

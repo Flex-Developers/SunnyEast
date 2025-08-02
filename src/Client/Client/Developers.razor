@@ -1,0 +1,236 @@
+@page "/developers"
+
+<div class="developers-page" data-theme="@(IsDarkMode ? "dark" : "light")">
+
+    <!-- Заголовки -->
+    <div class="headers-section">
+        <div class="hero-content">
+            <div class="hero-title">
+                <MudText Typo="Typo.h2" Class="main-title">
+                    <span class="gradient-text">Солнечный Восток</span>
+                </MudText>
+                <div class="title-underline"></div>
+            </div>
+
+            <MudText Typo="Typo.h4" Class="sub-title">
+                Команда разработчиков
+            </MudText>
+
+            <MudText Typo="Typo.h6" Class="hero-description">
+                Мы создали Sol-vostok.ru с нуля. Нашли ошибку или есть идея? — напишите нам!
+            </MudText>
+        </div>
+    </div>
+
+    <!-- Основной контент -->
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="main-content">
+
+        <!-- Карточки разработчиков -->
+        <div class="team-section">
+            <MudGrid Justify="Justify.Center" Spacing="4" Class="team-grid">
+                @foreach (var (dev, index) in Team.Select((dev, i) => (dev, i)))
+                {
+                    <MudItem xs="12" sm="6" md="6" lg="5" xl="4">
+                        <div class="developer-card @($"animate-card-{index + 1}")">
+                            <div class="card-glow"></div>
+                            <div class="card-background"></div>
+
+                            <div class="card-header">
+                                <div class="photo-container">
+                                    @if (!string.IsNullOrWhiteSpace(dev.PhotoUrl))
+                                    {
+                                        <img src="@dev.PhotoUrl" alt="@dev.Name" class="dev-photo"/>
+                                    }
+                                    else
+                                    {
+                                        <div class="dev-photo-placeholder">
+                                            <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large"/>
+                                        </div>
+                                    }
+                                    <div class="photo-overlay">
+                                        <div class="status-indicator online"></div>
+                                    </div>
+                                </div>
+
+                                <div class="dev-info">
+                                    <MudText Typo="Typo.h5" Class="dev-name">@dev.Name</MudText>
+                                    <MudText Typo="Typo.subtitle2" Class="dev-role">@dev.Role</MudText>
+                                </div>
+                            </div>
+
+                            <div class="card-content">
+                                <MudText Typo="Typo.body2" Class="dev-description">
+                                    @dev.Description
+                                </MudText>
+
+                                <div class="skills-container">
+                                    @{
+                                        var skills = index == 0 
+                                            ? new[] { "C#", ".NET", "Blazor", "LINQ", "UI/UX", "Clean architecture", "CQRS" }
+                                            : new[] { "C#", "Design", "C++", "Backend", "Python", "SignalR"};
+                                    }
+                                    @foreach (var skill in skills)
+                                    {
+                                        <span class="skill-tag">@skill</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="card-actions">
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           Href=@($"mailto:{dev.Email}")
+                                           Target="_blank"
+                                           StartIcon="@Icons.Material.Filled.Email"
+                                           Class="action-btn primary-btn"
+                                           Size="Size.Medium">
+                                    Написать
+                                </MudButton>
+
+                                @if (!string.IsNullOrWhiteSpace(dev.GitHub))
+                                {
+                                    <MudButton Variant="Variant.Outlined"
+                                               Color="Color.Primary"
+                                               Href="@dev.GitHub"
+                                               Target="_blank"
+                                               StartIcon="@Icons.Material.Filled.Code"
+                                               Class="action-btn secondary-btn"
+                                               Size="Size.Medium">
+                                        GitHub
+                                    </MudButton>
+                                }
+                                else
+                                {
+                                    <MudButton Variant="Variant.Text"
+                                               Color="Color.Secondary"
+                                               StartIcon="@Icons.Material.Filled.Visibility"
+                                               Class="action-btn ghost-btn"
+                                               Size="Size.Medium"
+                                               Disabled="true">
+                                        Приватный
+                                    </MudButton>
+                                }
+                            </div>
+                        </div>
+                    </MudItem>
+                }
+            </MudGrid>
+        </div>
+
+        <!-- Секция контактов -->
+        <div class="contact-section">
+            <div class="contact-card">
+                <div class="contact-background"></div>
+                <div class="contact-content">
+                    <MudIcon Icon="@Icons.Material.Filled.Mail" Size="Size.Large" Class="contact-icon"/>
+                    <MudText Typo="Typo.h5" Class="contact-title">
+                        Связаться с нами
+                    </MudText>
+                    <MudText Typo="Typo.body1" Class="contact-description">
+                        Есть вопросы или предложения? Мы всегда рады общению!
+                    </MudText>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Href="mailto:avazbekolimov722@gmail.com"
+                               Target="_blank"
+                               StartIcon="@Icons.Material.Filled.Send"
+                               Size="Size.Large"
+                               Class="contact-btn">
+                        Написать нам
+                    </MudButton>
+                    <MudText Typo="Typo.caption" Class="contact-note">
+                        Ответим в течение суток ⚡
+                    </MudText>
+                </div>
+            </div>
+        </div>
+
+        <!-- Статистика команды -->
+        <div class="team-stats">
+            <MudGrid Justify="Justify.Center" Spacing="3">
+                <MudItem xs="6" sm="3">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large"/>
+                        </div>
+                        <div class="stat-number">@Team.Count</div>
+                        <div class="stat-label">Разработчика</div>
+                    </div>
+                </MudItem>
+                <MudItem xs="6" sm="3">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Large"/>
+                        </div>
+                        <div class="stat-number">200+</div>
+                        <div class="stat-label">Часов кода</div>
+                    </div>
+                </MudItem>
+                <MudItem xs="6" sm="3">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <MudIcon Icon="@Icons.Material.Filled.Coffee" Size="Size.Large"/>
+                        </div>
+                        <div class="stat-number">∞</div>
+                        <div class="stat-label">Чашек кофе</div>
+                    </div>
+                </MudItem>
+                <MudItem xs="6" sm="3">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <MudIcon Icon="@Icons.Material.Filled.Favorite" Size="Size.Large"/>
+                        </div>
+                        <div class="stat-number">1</div>
+                        <div class="stat-label">Проект мечты</div>
+                    </div>
+                </MudItem>
+            </MudGrid>
+        </div>
+
+    </MudContainer>
+
+    <!-- Hero секция с анимированным фоном (перенесена в конец) -->
+    <div class="hero-section">
+        <div class="hero-background">
+            <div class="floating-shape shape-1"></div>
+            <div class="floating-shape shape-2"></div>
+            <div class="floating-shape shape-3"></div>
+            <div class="floating-shape shape-4"></div>
+            <div class="floating-shape shape-5"></div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    [CascadingParameter] // приходит от MudThemeProvider
+    private bool IsDarkMode { get; set; }
+
+
+    private sealed record Developer(
+        string Name,
+        string Role,
+        string Description,
+        string? Email,
+        string? GitHub = null,
+        string? PhotoUrl = null,
+        string? Position = null);
+
+    // заполняйте список своей командой
+    private readonly List<Developer> Team =
+    [
+        new("Avazbek Olimov", "Full‑Stack .NET Developer, UI/UX Designer",
+            "Разработка серверной логики на ASP.NET Core и клиентской части на Blazor. Ответственность за UI-дизайн, адаптивную верстку и пользовательский опыт.",
+            "avazbekolimov722@gmail.com",
+            "https://github.com/Avazbek22",
+            "/Media/Developers/Avazbek.jpg",
+            "Full-Stack Developer, UI Designer"),
+
+        new("Firuz Isoboev", "Backend Developer, Team Lead, Solution Architect",
+            "Архитектурные решения, аутентификация, интеграция с базой данных и построение серверной логики. Ведущий команды и дизайнер архитектуры системы.",
+            null,
+            "https://github.com/Firuz2006", // GitHub скрыт
+            null, // Фото заменено на аватар
+            "Team Lead, Solution Architect")
+    ];
+}

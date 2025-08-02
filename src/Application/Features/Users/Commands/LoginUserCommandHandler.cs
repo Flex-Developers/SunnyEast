@@ -38,7 +38,8 @@ public class LoginUserCommandHandler(IJwtTokenService jwtTokenService, UserManag
 
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, user.UserName!),
+            new(ClaimTypes.NameIdentifier, user.UserName!), // как и было (для GetUserName())
+            new("uid", user.Id.ToString())                  // НОВЫЙ клейм с GUID
         };
 
         var roles = await userManager.GetRolesAsync(user);

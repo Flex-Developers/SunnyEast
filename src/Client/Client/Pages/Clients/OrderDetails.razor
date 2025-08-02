@@ -1,21 +1,23 @@
 @page "/orders/{Slug}"
-@attribute [Authorize]                       
+@attribute [Authorize]
 @using Application.Contract.Enums
 @using Application.Contract.Order.Responses
 @using Client.Components.Common
 @using Client.Components.Dialogs
+@using Client.Infrastructure.Services.Notifications
 @using Client.Infrastructure.Services.Order
 @using Microsoft.AspNetCore.Authorization
+@inject Infrastructure.Realtime.IOrderRealtimeService Realtime
 @using Severity = MudBlazor.Severity
-@inject IOrderService      OrderService
-@inject NavigationManager  Navigation
+@inject IOrderService OrderService
 @inject IDialogService Dialogs
+@implements IDisposable
 
-<MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
 
     @if (_loading)
     {
-        <MudProgressCircular Size="Size.Large" Class="mx-auto mt-6" />
+        <MudProgressCircular Size="Size.Large" Class="mx-auto mt-6"/>
     }
     else if (_order is null)
     {
@@ -26,16 +28,16 @@
     }
     else
     {
-        <MudPaper Class="pa-4">
+        <MudPaper Elevation="10" Class="pa-4">
 
             <!-- Заголовок -->
             <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
                 <MudText Typo="Typo.h4">Заказ №@_order.OrderNumber</MudText>
-                <MudSpacer />
-                <OrderStatusChip Status="@_order.Status" />
+                <MudSpacer/>
+                <OrderStatusChip Status="@_order.Status"/>
             </MudStack>
 
-            <MudDivider Class="mt-3 mb-4" />
+            <MudDivider Class="mt-3 mb-4"/>
 
             <!-- Сведения -->
             <MudGrid Class="mb-2">
@@ -48,7 +50,7 @@
                     {
                         <MudImage Src="@_order.Shop!.Images!.First()" Alt="shop"
                                   Width="100" Height="100"
-                                  Class="rounded object-cover mt-1" />
+                                  Class="rounded object-cover mt-1"/>
                     }
                 </MudItem>
 
@@ -67,7 +69,7 @@
                 }
             </MudGrid>
 
-            <MudDivider Class="my-3" />
+            <MudDivider Class="my-3"/>
 
             <!-- Таблица товаров -->
             <MudTable Items="_order.Items" Dense Hover Elevation="0" Breakpoint="Breakpoint.Sm">
@@ -96,7 +98,8 @@
                     <MudTd DataLabel="Объём">
                         @if (!string.IsNullOrWhiteSpace(context.Volume))
                         {
-                            <MudChip T="string" Variant="Variant.Outlined" Color="Color.Primary">@context.Volume</MudChip>
+                            <MudChip T="string" Variant="Variant.Outlined"
+                                     Color="Color.Primary">@context.Volume</MudChip>
                         }
                         else
                         {
@@ -117,7 +120,7 @@
 
             </MudTable>
 
-            <MudDivider Class="my-3" />
+            <MudDivider Class="my-3"/>
 
             <!-- Итог -->
             <MudText Typo="Typo.h6">
@@ -137,7 +140,7 @@
                     Заказ выдан: @_order.ClosedAt.Value.ToLocalTime()
                 </MudAlert>
             }
-            
+
             @if (_order.Status is OrderStatus.Submitted or OrderStatus.InProgress or OrderStatus.Ready)
             {
                 <MudDivider Class="my-3"/>
@@ -153,7 +156,12 @@
 </MudContainer>
 
 @code {
-    [Parameter] public string Slug { get; set; } = default!;
+
+    [Parameter]
+    public string Slug { get; set; } = null!;
+
+    [Inject]
+    private INotificationManager NotificationManager { get; set; } = null!;
 
     private OrderResponse? _order;
     private bool _loading = true;
@@ -162,8 +170,18 @@
     {
         _order = await OrderService.GetAsyncBySlug(Slug);
         _loading = false;
+
+        Realtime.OnOrderStatusChanged += OnStatusChanged;
     }
-    
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!await NotificationManager.IsEnabledAsync())
+        {
+            await NotificationManager.EnableNotificationsAsync();
+        }
+    }
+
     private async Task AskCancel(OrderResponse order)
     {
         var dialogParameters = new DialogParameters { ["Content"] = order.OrderNumber };
@@ -171,36 +189,55 @@
         if (!(await dialogReference.Result)!.Canceled)
             await CancelOrder(order);
     }
-    
+
     private async Task CancelOrder(OrderResponse order)
     {
         if (await OrderService.CancelOwnAsync(order.Slug))
         {
-            _order = await OrderService.GetAsyncBySlug(order.Slug);   
+            _order = await OrderService.GetAsyncBySlug(order.Slug);
             Snackbar.Add($"Заказ {order.OrderNumber} отменён", Severity.Success);
         }
         else
             Snackbar.Add($"Не удалось отменить {order.OrderNumber}", Severity.Warning);
 
-        
+
         StateHasChanged();
     }
-    
+
+    private void OnStatusChanged(OrderResponse order)
+    {
+        if (_order?.Slug == order.Slug)
+        {
+            _order = order;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        Realtime.OnOrderStatusChanged -= OnStatusChanged;
+    }
+
 }
 
 <style>
-    @@media (max-width:600px){
-        .mud-table-cell[data-label]::before{
-            content:attr(data-label);
-            display:block;
-            font-size:.80rem;
-            font-weight:500;
-            margin-bottom:4px;
+    @@media (max-width: 600px) {
+        .mud-table-cell[data-label]::before {
+            content: attr(data-label);
+            display: block;
+            font-size: .80rem;
+            font-weight: 500;
+            margin-bottom: 4px;
         }
     }
-    @@media (min-width:601px){
-        .mud-table-cell[data-label]::before{content:none;}
+
+    @@media (min-width: 601px) {
+        .mud-table-cell[data-label]::before {
+            content: none;
+        }
     }
 
-    .object-cover{object-fit:cover;}   
+    .object-cover {
+        object-fit: cover;
+    }
 </style>

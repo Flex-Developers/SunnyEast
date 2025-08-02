@@ -1,14 +1,17 @@
 ﻿@page "/admin/category"
+@using Application.Contract.Identity
 @using Application.Contract.ProductCategory.Responses
 @using Client.Components.Dialogs
 @using Client.Infrastructure.Services.Category
 @using Application.Contract.ProductCategory.Commands
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = ApplicationRoles.AllAdmins)]
 @inject IDialogService DialogService
 @inject ICategoryService CategoryService
 
 
-<div style="position: relative; display: flex; align-items: center; margin-bottom: 20px;">
-    <h3 style="display: inline-block; margin-right: 1px">Категория товаров</h3>
+<div class="main-container">
+    <h3 class="main-text">Категория товаров</h3>
     <MudButton StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled" Color="Color.Success" OnClick="@(async () => await AddAsync())"
                Style="position: absolute; right: 0; bottom: 5px;">
         Добавить
@@ -21,7 +24,7 @@
         foreach (var category in _categories)
         {
             <MudItem xs="12" sm="6" md="4" lg="2">
-                <MudCard @onclick="() => NavigateToProducts(category.Name)" Class="product-card">
+                <MudCard Elevation="3" @onclick="() => NavigateToProducts(category.Name)" Class="product-card">
                     <!-- Изображение категории -->
                     @if (!string.IsNullOrEmpty(category.ImageUrl))
                     {
@@ -116,6 +119,17 @@
 }
 
 <style>
+    .main-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .main-text {
+        display: inline-block;
+        margin-right: 1px
+    }
+    
     .dialog-background {
         backdrop-filter: blur(10px);
     }

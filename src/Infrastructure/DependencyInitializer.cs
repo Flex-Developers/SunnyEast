@@ -33,8 +33,10 @@ public static class DependencyInitializer
         services.AddScoped<ApplicationDbContextInitializer>();
         services.AddScoped<ISlugService, SlugService>();
         services.AddScoped<IPriceCalculatorService, PriceCalculatorService>();
+        services.AddScoped<IDbSnapshotService, DbSnapshotService>();
         services.AddSingleton<IDateTimeService, DateTimeService>();
         services.AddSingleton<IVolumeGroupService, VolumeGroupService>();
+        services.AddScoped<IPushNotificationService, PushNotificationService>();
         services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(identityOptions =>
             {
                 identityOptions.ClaimsIdentity.RoleClaimType = ClaimTypes.Role;
@@ -55,21 +57,38 @@ public static class DependencyInitializer
 
         JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
         services.AddAuthentication(o =>
-        {
-            o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            o.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        }).AddJwtBearer(op =>
-        {
-            op.TokenValidationParameters = new TokenValidationParameters
             {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey =
-                    new SymmetricSecurityKey(
+                o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                o.DefaultChallengeScheme    = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(op =>
+            {
+                op.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey         = new SymmetricSecurityKey(
                         Encoding.UTF8.GetBytes(configurations["JWT:Secret"]!)),
-                ValidateIssuer = false,
-                ValidateAudience = false
-            };
-        });
+                    ValidateIssuer           = false,
+                    ValidateAudience         = false
+                };
+
+                // >>> ВАЖНО: разрешаем токен в query для хаба /hubs/orders
+                op.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path        = context.HttpContext.Request.Path;
+
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            path.StartsWithSegments("/hubs/orders"))
+                        {
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
+            });
 
         services.AddAuthorization();
         services.AddScoped<IJwtTokenService, JwtTokenService>();

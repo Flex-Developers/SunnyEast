@@ -26,7 +26,7 @@ public class UserController : ApiControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = ApplicationRoles.Salesman + "," + ApplicationRoles.Administrator)]
+    [Authorize(Roles = ApplicationRoles.SuperAdmin)]
     public async Task<IActionResult> GetUsers([FromQuery] GetUserQuery query)
     {
         var response = await Mediator.Send(query);

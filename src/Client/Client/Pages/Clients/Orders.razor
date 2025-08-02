@@ -9,6 +9,7 @@
 @inject NavigationManager Navigation
 @inject IDialogService Dialogs
 @inject AuthenticationStateProvider AuthProvider
+@inject Infrastructure.Realtime.IOrderRealtimeService Realtime
 @implements IDisposable  
 
 
@@ -45,7 +46,7 @@
 
             <RowTemplate>
                 <MudTd DataLabel="Номер" Class="nowrap text-center">@context.OrderNumber</MudTd>
-                <MudTd DataLabel="Магазин">@context.Shop!.Address</MudTd>
+                <MudTd DataLabel="Магазин">@(context.Shop?.Address ?? "—")</MudTd>
                 <MudTd DataLabel="Статус" Class="text-center"><OrderStatusChip Status="@context.Status" /></MudTd>
                 <MudTd DataLabel="Сумма"  Class="text-center">@($"{context.Sum:N2} ₽")</MudTd>
                 <MudTd DataLabel="Действия">
@@ -102,20 +103,24 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var state  = await AuthProvider.GetAuthenticationStateAsync();
-        _isAuth = state.User.Identity?.IsAuthenticated == true;
+        var state = await AuthProvider.GetAuthenticationStateAsync();
+        _isAuth   = state.User.Identity?.IsAuthenticated == true;
+
+        // Подписки ДО первой загрузки, чтобы не потерять первое событие
+        Realtime.OnOrderCreated       += HandleCreated;
+        Realtime.OnOrderStatusChanged += HandleStatusChanged;
+        Realtime.OnOrderArchived      += HandleArchived;
 
         await RefreshOrders();
-        
         AuthProvider.AuthenticationStateChanged += OnAuthStateChanged;
     }
-    
+
     private async Task RefreshOrders()
     {
         _orders.Clear();
 
         if (_isAuth)                           
-            _orders.AddRange(await OrderService.GetAsync(string.Empty));
+            _orders.AddRange(await OrderService.GetAllAsync(string.Empty));
 
         StateHasChanged();                     
     }
@@ -130,7 +135,8 @@
     private bool FilterFunc(OrderResponse o) =>
         string.IsNullOrWhiteSpace(_search)
         || o.OrderNumber.Contains(_search, StringComparison.OrdinalIgnoreCase)
-        || o.Shop!.Address.Contains(_search, StringComparison.OrdinalIgnoreCase);
+        || (o.Shop?.Address?.Contains(_search, StringComparison.OrdinalIgnoreCase) ?? false);
+
 
     private async Task CancelOrder(OrderResponse order)
     {
@@ -150,9 +156,45 @@
             await CancelOrder(order);
     }
     
+    private void HandleCreated(OrderResponse order)
+    {
+        // Показываем только свои заказы, но с сервера уже приходит только «свои»
+        if (FilterFunc(order))
+        {
+            _orders.Insert(0, order);
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleStatusChanged(OrderResponse order)
+    {
+        var existing = _orders.FirstOrDefault(o => o.Slug == order.Slug);
+        if (existing is not null)
+        {
+            existing.Status     = order.Status;
+            existing.CanceledAt = order.CanceledAt;
+            existing.ClosedAt   = order.ClosedAt;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleArchived(OrderResponse order)
+    {
+        var existing = _orders.FirstOrDefault(o => o.Slug == order.Slug);
+        if (existing is not null)
+        {
+            _orders.Remove(existing);
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
     public void Dispose()
     {
         AuthProvider.AuthenticationStateChanged -= OnAuthStateChanged;
+
+        Realtime.OnOrderCreated       -= HandleCreated;
+        Realtime.OnOrderStatusChanged -= HandleStatusChanged;
+        Realtime.OnOrderArchived      -= HandleArchived;
     }
 }
 

@@ -23,7 +23,7 @@ public class CreateCartItemCommandHandler(
         order.Slug = slugService.GenerateSlug(
             $"{request.ShopOrderSlug}-{userName}-{request.CartSlug}");
 
-        var shopId = await context.ShopsOrders
+        var shopId = await context.ShopOrders
             .Where(s => s.ShopSlug == request.ShopOrderSlug)
             .Select(s => s.Id)
             .FirstOrDefaultAsync(cancellationToken);
@@ -31,7 +31,7 @@ public class CreateCartItemCommandHandler(
         if (shopId == Guid.Empty)
             throw new NotFoundException($"The shop with slug {request.ShopOrderSlug} not found.");
 
-        order.ProductId = await context.ShopsOrders.Select(s => s.ProductId)
+        order.ProductId = await context.ShopOrders.Select(s => s.ProductId)
             .FirstOrDefaultAsync(cancellationToken);
 
         var cart = await context.Carts.FirstOrDefaultAsync(s => s.Slug == request.CartSlug, cancellationToken);

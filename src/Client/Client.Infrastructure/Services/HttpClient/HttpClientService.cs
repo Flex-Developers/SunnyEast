@@ -22,6 +22,9 @@ public class HttpClientService(
 {
     private readonly string _baseUrl = configuration[Config.ApiBaseUrl]!;
 
+    private string MakeUrl(string url) =>
+        url.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? url : _baseUrl + url;
+    
     public string? ExceptionMessage { get; private set; } 
 
     public async Task<ServerResponse> GetAsync(string url)
@@ -170,6 +173,49 @@ public class HttpClientService(
         }
 
         return null;
+    }
+    
+    public async Task<ServerResponse<byte[]>> GetBytesAsync(string url)
+    {
+        var request  = new HttpRequestMessage(HttpMethod.Get, MakeUrl(url));
+        var response = await SendAsync(request);
+
+        if (response is null)
+            return new ServerResponse<byte[]>
+            {
+                Success    = false,
+                StatusCode = null,
+                Response   = null
+            };
+
+        if (!response.IsSuccessStatusCode)
+            return new ServerResponse<byte[]>
+            {
+                Success    = false,
+                StatusCode = response.StatusCode,
+                Response   = null
+            };
+
+        var bytes = await response.Content.ReadAsByteArrayAsync();
+        return new ServerResponse<byte[]>
+        {
+            Success    = true,
+            StatusCode = response.StatusCode,
+            Response   = bytes
+        };
+    }
+
+    public async Task<ServerResponse<object?>> PostAsync(string url, HttpContent content)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, MakeUrl(url)) { Content = content };
+        var response = await SendAsync(request);
+
+        return new ServerResponse<object?>
+        {
+            Success    = response?.IsSuccessStatusCode ?? false,
+            StatusCode = response?.StatusCode,
+            Response   = null
+        };
     }
 
     private async Task CheckForException(HttpResponseMessage? response)

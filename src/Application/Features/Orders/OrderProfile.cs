@@ -38,8 +38,6 @@ public class OrderProfile : Profile
                 opt => opt.MapFrom(s =>
                     (s.Product!.Images != null && s.Product.Images.Length > 0) ? s.Product.Images.First() : string.Empty));
 
-        CreateMap<Domain.Entities.ApplicationUser, CustomerResponse>();
-        
         CreateMap<Domain.Entities.Shop, ShopResponse>();
     }
 }

@@ -1,0 +1,199 @@
+@page "/admin/users"
+@using Microsoft.AspNetCore.Authorization
+@using Application.Contract.Identity
+@using Application.Contract.User.Responses
+@using Client.Infrastructure.Services.User
+@using Client.Infrastructure.Services.Staff
+@using Severity = MudBlazor.Severity
+@attribute [Authorize(Roles = ApplicationRoles.SuperAdmin)]
+
+@inject IUserService UserService
+@inject IStaffService StaffService
+@inject IDialogService Dialogs
+@inject NavigationManager Nav
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mx-auto">
+
+    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4 font-weight-bold">
+        Пользователи
+    </MudText>
+    <div class="users-table-wrap">
+        <MudTable T="CustomerResponse" Items="_users" Hover="true" Dense="true"
+                  Elevation="10" Bordered="true" Class="border rounded-lg"
+                  Filter="Filter" Breakpoint="Breakpoint.Sm">
+
+            <ToolBarContent>
+                <MudTextField T="string" @bind-Value="_search"
+                              Placeholder="Поиск по ФИО / почте / телефону…"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Immediate Class="w-100"/>
+            </ToolBarContent>
+
+            <HeaderContent>
+                <MudTh Class="date-cell">Имя фамилия</MudTh>
+                <MudTh class="email-col">Email</MudTh>
+                <MudTh>Телефон</MudTh>
+                <MudTh class="hide-sm date-cell">Дата регистрации</MudTh>
+                <MudTh class="actions-col">Действия</MudTh>
+            </HeaderContent>
+
+
+            <RowTemplate>
+                <MudTd DataLabel="Имя фамилия" >@FullName(context)</MudTd>
+                <MudTd DataLabel="Email">
+                    @if (!string.IsNullOrWhiteSpace(context.Email))
+                    {
+                        <MudTooltip Text="@context.Email">
+                            <span class="email-text ellipsis">@context.Email</span>
+                        </MudTooltip>
+                    }
+                    else { <span class="muted">—</span> }
+                </MudTd>
+                <MudTd DataLabel="Телефон">@context.Phone</MudTd>
+                <MudTd DataLabel="Дата регистрации" Class="hide-sm">@FormatDate(context.RegisteredAt)</MudTd>
+
+                <MudTd DataLabel="Действия" Class="actions-td">
+                    <div class="actions-cell @(context.IsStaff ? "single" : null)">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Info" Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Receipt"
+                                   OnClick="@(() => OpenOrders(context))">
+                            Заказы
+                        </MudButton>
+
+                        @if (!context.IsStaff)
+                        {
+                            <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.PersonAdd"
+                                       OnClick="@(() => AskHire(context))">
+                                Нанять
+                            </MudButton>
+                        }
+                    </div>
+                </MudTd>
+            </RowTemplate>
+
+            <NoRecordsContent>
+                <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="my-6">
+                    Ничего не найдено.
+                </MudText>
+            </NoRecordsContent>
+
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new[] {15}" HideRowsPerPage="true"
+                               HorizontalAlignment="HorizontalAlignment.End"
+                               InfoFormat="{first_item}-{last_item} из {all_items}"/>
+            </PagerContent>
+        </MudTable>
+    </div>
+</MudContainer>
+
+@code {
+    private List<CustomerResponse> _all = new();
+    private List<CustomerResponse> _users = new();
+    private string? _search;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _all = await UserService.GetAllUsersAsync();
+        _users = _all.ToList();
+    }
+
+    private static string FormatDate(DateTime? dt)
+        => dt.HasValue ? dt.Value.ToLocalTime().ToString("dd.MM.yyyy") : "—";
+
+
+    private bool Filter(CustomerResponse u) =>
+        string.IsNullOrWhiteSpace(_search)
+        || FullName(u).Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || (u.Email?.Contains(_search, StringComparison.OrdinalIgnoreCase) ?? false)
+        || (u.Phone?.Contains(_search, StringComparison.OrdinalIgnoreCase) ?? false);
+
+    private static string FullName(CustomerResponse u)
+    {
+        return string.Join(" ", new[] { u.Name, u.Surname }.Where(s => !string.IsNullOrWhiteSpace(s)));
+    }
+
+    private void OpenOrders(CustomerResponse user)
+    {
+        var name = Uri.EscapeDataString(FullName(user));
+        Nav.NavigateTo($"/admin/orders?userId={user.Id}&name={name}");
+    }
+
+    private async Task AskHire(CustomerResponse user)
+    {
+        var name = FullName(user);
+        var confirmed = await Dialogs.ShowMessageBox(
+            "Подтверждение назначения",
+            (MarkupString)$"Вы хотите назначить «{name}» сотрудником?",
+            yesText: "Назначить",
+            cancelText: "Отмена",
+            options: new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true }
+        );
+
+        if (confirmed is true)
+        {
+            var ok = await StaffService.HireAsync(user.Id);
+            if (ok)
+            {
+                Snackbar.Add($"Пользователь «{name}» добавлен в персонал.", Severity.Success);
+                Nav.NavigateTo("/admin/staff");
+            }
+            else
+            {
+                Snackbar.Add("Не удалось назначить пользователя сотрудником.", Severity.Error);
+            }
+        }
+    }
+
+}
+
+<style>
+    .users-table-wrap {
+        overflow-x: auto;
+    }
+
+    .hide-sm {
+        display: table-cell;
+    }
+
+    .date-cell {
+        white-space: nowrap;
+        width: 1%;
+    }
+
+    @@media (max-width: 768px) {
+        .hide-sm {
+            display: none;
+        }
+    }
+
+    /* колонка «Действия» ужимается по содержимому */
+    .actions-col {
+        width: 1%;
+        white-space: nowrap;
+    }
+
+    /* сама ячейка не переносит кнопки на новую строку */
+    .actions-td {
+        white-space: nowrap;
+        text-align: right;
+    }
+
+    /* компактный контейнер кнопок: ширина = сумме кнопок, без растяжения */
+    .actions-cell {
+        display: inline-grid;
+        grid-auto-flow: column;          /* кнопки всегда в одну строку */
+        grid-auto-columns: max-content;  /* ширина по содержимому */
+        gap: 8px;
+        margin-left: auto;               /* прижать к правому краю ячейки */
+    }
+
+    /* контролируем ширину кнопок и не даём им растягиваться */
+    .actions-cell .mud-button-root {
+        min-width: 100px;       /* подберите 110–140px по вкусу */
+        padding-inline: 12px;   /* чуть компактнее */
+        flex: 0 0 auto; /* не растягивать кнопки */
+    }
+
+</style>

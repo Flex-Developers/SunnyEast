@@ -2,7 +2,7 @@
 @inject Infrastructure.Services.Cart.ICartService CartService
 <MudAppBar Elevation="0">
 
-    <AuthorizeView Roles="@ApplicationRoles.Administrator">
+    <AuthorizeView Roles="@ApplicationRoles.AllStaffCsv">
         <MudTooltip Text="Меню">
             <div style="margin-left: -5px; padding-right: 15px">
                 <MudIconButton Icon="@Icons.Material.Rounded.Notes" Color="Color.Inherit" Edge="Edge.Start"
@@ -11,8 +11,10 @@
         </MudTooltip>
     </AuthorizeView>
 
+    @* Бургер меню для клиентов которое появляется в мобильных экранах *@
     <div style="margin-left: -20px">
-        <AuthorizeView Roles="@($"{ApplicationRoles.Administrator}, {ApplicationRoles.Salesman}")">
+        @* Перечисленные ниже пользователи не будут видеть (это меню для клиентов) *@
+        <AuthorizeView Roles="@ApplicationRoles.AllStaffCsv">
             <NotAuthorized>
                 <MudHidden Breakpoint="Breakpoint.MdAndUp">
                     <MudMenu Icon="@Icons.Material.Filled.Menu"
@@ -31,9 +33,10 @@
             </NotAuthorized>
         </AuthorizeView>
     </div>
+    
     <MudButton Variant="Variant.Text" Class="brand-btn" @onclick="() => Navigation.NavigateTo('/'.ToString())">
         <div class="brand-inner">
-            <MudText Typo="Typo.h5">Солнечный восток</MudText>
+            <MudText Typo="Typo.h5" Class="brand-title">Солнечный восток</MudText>
         </div>
     </MudButton>
 
@@ -69,7 +72,7 @@
     </div>
 
 
-    <MudMenu AnchorOrigin="Origin.BottomRight" LockScroll="true" TransformOrigin="Origin.TopRight">
+    <MudMenu AnchorOrigin="Origin.BottomRight" LockScroll="true" TransformOrigin="Origin.TopRight" Style="margin-right: -10px">
         <ActivatorContent>
             <MudIconButton Icon="@Icons.Material.Filled.Person" Color="Color.Inherit"/>
         </ActivatorContent>
@@ -114,6 +117,14 @@
 </MudAppBar>
 
 <style>
+    /* Меньший шрифт для бренда на SmAndDown (~≤600px) */
+    @@media (max-width: 600px) {
+        .brand-title {
+            font-size: 1.2rem !important;
+            line-height: 1.0; /* при необходимости подкорректируйте */
+        }
+    }
+    
     .cart-wrapper {
         position: relative;
         display: flex;
@@ -161,7 +172,5 @@
         padding-left: 24px; 
         padding-right: 24px;
     }
-
-
-
+    
 </style>

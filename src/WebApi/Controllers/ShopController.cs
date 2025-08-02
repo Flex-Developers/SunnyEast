@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers;
 
-[Authorize(Roles = ApplicationRoles.Administrator)]
+[Authorize(Roles = ApplicationRoles.SuperAdmin)]
 public class ShopController : ApiControllerBase
 {
     [HttpPost]
@@ -27,6 +27,14 @@ public class ShopController : ApiControllerBase
     public async Task<IActionResult> UpdateShop([FromBody] UpdateShopCommand command)
     {
         var response = await Mediator.Send(command);
+        return Ok(response);
+    }
+    
+    [HttpGet(nameof(GetShopVm))]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetShopVm([FromQuery] GetShopVmQuery query)
+    {
+        var response = await Mediator.Send(query);
         return Ok(response);
     }
 

@@ -1,9 +1,12 @@
+using Application.Contract.Identity;
 using Application.Contract.Product.Commands;
 using Application.Contract.Product.Queries;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers;
 
+[Authorize(Roles = ApplicationRoles.SuperAdmin + "," + ApplicationRoles.Administrator)]
 public class ProductController : ApiControllerBase
 {
     [HttpPost]
@@ -32,6 +35,7 @@ public class ProductController : ApiControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetProducts([FromQuery] GetProductsQuery query)
     {
         var response = await Mediator.Send(query);
@@ -39,6 +43,7 @@ public class ProductController : ApiControllerBase
     }
 
     [HttpGet("GetProductsByCategoryName/{categoryName}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetProductsByCategoryName([FromRoute]string categoryName)
     {
         var response = await Mediator.Send(new GetProductsByCategoryNameQuery { CategoryName = categoryName });

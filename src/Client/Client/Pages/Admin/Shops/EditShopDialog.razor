@@ -1,5 +1,8 @@
-﻿@using Application.Contract.Shops.Commands
+﻿@using Application.Contract.Identity
+@using Application.Contract.Shops.Commands
 @using Client.Infrastructure.Services.Shop
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = ApplicationRoles.SuperAdmin)]
 @inject IShopService ShopService
 @using Severity = MudBlazor.Severity
 
