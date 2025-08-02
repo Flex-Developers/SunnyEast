@@ -17,7 +17,7 @@ public sealed class CreateNotificationSubscriptionCommandHandler(
         var userId = currentUserService.GetUserId();
 
         var existingSubscription = await context.NotificationSubscriptions
-            .FirstOrDefaultAsync(ns => ns.Endpoint == request.Endpoint && ns.UserId == userId, cancellationToken);
+            .FirstOrDefaultAsync(ns => ns.UserId == userId, cancellationToken);
 
         if (existingSubscription != null)
         {

@@ -49,7 +49,9 @@ public partial class MainLayout
             await NotificationManager.InitializeAsync();
 
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            if (authState.User.IsInRole(ApplicationRoles.Salesman))
+            if (authState.User.IsInRole(ApplicationRoles.Salesman) ||
+                authState.User.IsInRole(ApplicationRoles.Administrator) ||
+                authState.User.IsInRole(ApplicationRoles.SuperAdmin))
             {
                 Console.WriteLine("User is a Salesman, requesting notification permission with dialog.");
                 await NotificationManager.RequestPermissionWithDialogAsync();
