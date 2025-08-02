@@ -13,6 +13,49 @@ html, body {
     --brand-black: #000000;
 }
 
+:root {
+    /* Привязка к твоим цветам из CustomColors.Light */
+    --mud-palette-primary: #019934;
+    --mud-palette-primary-darken: #017a2a; /* можно чуть темнее */
+    --mud-palette-primary-rgb: 1,153,52; /* для rgba(...) теней */
+    --mud-palette-secondary: #FFCC00;
+    --mud-palette-background: #ffffff;
+    --mud-palette-surface: #ffffff;
+    --mud-palette-text-primary: rgba(0,0,0,0.87);
+    --mud-palette-text-secondary: rgba(0,0,0,0.6);
+    --mud-palette-divider: #e0e0e0;
+    --mud-palette-appbar-background: #ffffff;
+    --mud-palette-appbar-text: rgba(0,0,0,0.87);
+    --mud-palette-drawer-background: #ffffff;
+    --mud-palette-drawer-text: rgba(0,0,0,0.7);
+
+    --digits: 6;
+    --box: 56px;
+    --card-pad: 48px;
+    --card-radius: 24px;
+    --input-size: 48px; /* базовый fallback */
+    --appbar-h: 54px;
+    --gap: 12px; /* базовый зазор между ячейками */
+}
+
+body.mud-dark {
+    /* Тёмная тема по аналогии с CustomColors.Dark */
+    --mud-palette-primary: #019934;
+    --mud-palette-primary-darken: #017a2a;
+    --mud-palette-primary-rgb: 1,153,52;
+    --mud-palette-secondary: #FFCC00;
+    --mud-palette-background: #1b1f22;
+    --mud-palette-surface: #202528;
+    --mud-palette-text-primary: rgba(255,255,255,0.7);
+    --mud-palette-text-secondary: rgba(255,255,255,0.5);
+    --mud-palette-divider: rgba(224,224,224,0.2);
+    --mud-palette-appbar-background: #1b1f22;
+    --mud-palette-appbar-text: rgba(255,255,255,0.7);
+    --mud-palette-drawer-background: #121212;
+    --mud-palette-drawer-text: rgba(255,255,255,0.5);
+}
+
+
 /*──────────────────  Co HeadlineCorp  ──────────────────*/
 
 /* Light(200‑300) */
@@ -213,9 +256,6 @@ footer a,
 }
 
 .footer-link:hover{ text-decoration:underline; }
-
-
-
 
 /* ==== Переносим весь лоадер чуть выше страницы ==== */
 .loader {
