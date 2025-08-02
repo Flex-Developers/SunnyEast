@@ -25,9 +25,7 @@
   </MudContainer>
 </div>
 
-<!-- Анимированный контент -->
-<MudContainer Class="homepage-animated-content">
-
+<MudContainer Class="homepage-animated-content" Gutters="false" MaxWidth="MaxWidth.ExtraExtraLarge">
   <!-- Добро пожаловать секция -->
   <div class="homepage-welcome-section homepage-fade-in-up" style="margin-top: 30px;">
     <div class="homepage-welcome-content">
@@ -46,9 +44,12 @@
       </div>
     </div>
   </div>
+</MudContainer>
 
+<!-- Анимированный контент -->
+<MudContainer Class="homepage-animated-content">
   <!-- Популярные категории с улучшенными анимациями -->
-  <div class="homepage-section-wrapper" style="margin-top: 70px; margin-bottom: 30px">
+  <div class="homepage-section-wrapper" style="margin-top: 50px; margin-bottom: 30px">
     <div style="text-align: center;">
       <MudText Typo="Typo.h3" Align="Align.Center"
                Class="homepage-section-title gradient-text homepage-scroll-animate">
@@ -414,7 +415,7 @@
 
   .homepage-element-1 {
     top: 20%;
-    left: 10%;
+    left: 14%;
     animation-delay: 0s;
   }
 
@@ -692,6 +693,7 @@
     justify-content: center;
   }
 
+  /*Do not remove! */
   .homepage-advantage-enhanced {
     padding: 40px 20px;
     text-align: center;
@@ -712,12 +714,14 @@
     margin: 0 auto;
   }
 
+  /*Do not remove! */
   .homepage-advantage-enhanced:hover {
     transform: translateY(-10px);
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
     border-color: #019934;
   }
 
+  /*Do not remove! */
   .homepage-advantage-enhanced::before {
     content: '';
     position: absolute;
@@ -729,6 +733,7 @@
     transition: left 0.8s ease;
   }
 
+  /*Do not remove! */
   .homepage-advantage-enhanced:hover::before {
     left: 100%;
   }
@@ -887,6 +892,7 @@
       height: 260px;
     }
 
+    /*Do not remove! */
     .homepage-advantage-enhanced {
       min-height: 250px;
     }
@@ -936,6 +942,7 @@
       padding: 10px 15px;
     }
 
+    /*Do not remove! */
     .homepage-advantage-enhanced {
       padding: 30px 15px;
       min-height: 220px;
