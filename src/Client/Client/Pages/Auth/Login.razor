@@ -172,6 +172,17 @@
 
         if (_form.IsValid && string.IsNullOrWhiteSpace(_errorMessage) && _isValidPassword)
         {
+            // Псевдо: сначала запрос на начало логина -> сервер шлёт код и флаг Requires2FA.
+            // if (requires2FA) показать диалог и после успешного ввода -> подтвердить -> обычный LoginAsync.
+            // var dialog = await DialogService.ShowAsync<VerificationCodeDialog>("Введите код подтверджения");
+            // var result = await dialog.Result;
+            // if (!result!.Canceled) {
+            //     var code = (string)result.Data!;
+            //     // TODO: вызвать /api/user/verify-login-code с email/телефоном и code
+            //     await AuthService.LoginAsync(_loginCommand, _returnUrl);
+            // }
+
+            
             if (await AuthService.LoginAsync(_loginCommand, _returnUrl))
             {
                 // if success

@@ -3,9 +3,12 @@
 @using Client.Infrastructure.Services.HttpClient
 @using Severity = MudBlazor.Severity
 @inject IHttpClientService HttpClient
+@inject ISnackbar Snackbar
+
 
 <MudContainer Class="register-container ">
-    <MudPaper Class="register-paper rounded pa-4 shadow-md" Elevation="3">
+    <MudPaper Class="register-paper rounded pa-4 shadow-md" Elevation="3" @onkeyup="OnKeyUpHandler">
+
         <MudForm Model="_user" @ref="_form" Validation="@(_userValidator.ValidateValue)" ValidationDelay="0"
                  Class="register-form d-flex flex-column gap-0">
             <MudCardHeader Class="text-center justify-center align-center">
@@ -150,6 +153,34 @@
             _passwordInput = InputType.Text;
         }
     }
+    
+    private static string MaskPhone(string? phone)
+    {
+        var digits = new string((phone ?? string.Empty).Where(char.IsDigit).ToArray()); // "1234567890"
+        if (digits.Length < 10)
+            return "+7-***-***-**-**";
+
+        // показываем только последние 4 цифры (две пары)
+        var last2a = digits[^4..^2]; // предпоследние 2 цифры
+        var last2b = digits[^2..];   // последние 2 цифры
+
+        return $"+7-***-***-{last2a}-{last2b}";
+    }
+
+
+    private static string MaskEmail(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return "";
+        
+        var at = email.IndexOf('@');
+        
+        if (at <= 1) 
+            return $"***{email.Substring(at)}";
+        
+        return $"{new string(email.Take(3).ToArray())}***{email.Substring(at)}";
+    }
+
 
     private async Task SubmitRegister()
     {
@@ -163,8 +194,14 @@
                 var response = await HttpClient.PostAsJsonAsync("/api/user/register", _user);
                 if (response.Success)
                 {
-                    Snackbar.Add("Успешная регистрация", Severity.Success);
-                    Navigation.NavigateTo("/");
+                    // --- Переходим на страницу подтверждения кода (UI-демо) ---
+                    var channel = string.IsNullOrWhiteSpace(_user.Email) ? "телефон" : "e-mail";
+                    var destination = string.IsNullOrWhiteSpace(_user.Email) ? MaskPhone(_user.PhoneNumber) : MaskEmail(_user.Email);
+                    var title = Uri.EscapeDataString("Подтверждение регистрации");
+                    var returnUrl = Uri.EscapeDataString("/");
+
+                    var to = Uri.EscapeDataString(destination);
+                    Navigation.NavigateTo($"/verify?purpose=register&channel={channel}&to={to}&title={title}&len=6&returnUrl={returnUrl}");
                 }
                 else
                 {

@@ -1,0 +1,951 @@
+@page "/verify"
+@using Severity = MudBlazor.Severity
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Подтверждение кода</PageTitle>
+
+<div class="verify-wrapper">
+
+    <MudContainer Gutters="false" MaxWidth="MaxWidth.False" Class="verify-container">
+        <MudPaper Class="@($"verify-card {(_showSuccess ? "success" : string.Empty)}")"
+                  Elevation="8"
+                  Square="false"
+                  @onkeyup="OnKeyUp">
+
+            @if (!_showSuccess)
+            {
+                <div class="card-header">
+                    <div class="icon-wrapper">
+                        <MudIcon Icon="@Icons.Material.Filled.Shield" Size="Size.Large"/>
+                    </div>
+                    <MudText Typo="Typo.h4" Class="title">@_title</MudText>
+                    <MudText Typo="Typo.body1" Class="subtitle">
+                        Мы отправили код подтверждения на
+                    </MudText>
+                    <span class="destination">@(_destination ?? _channel)</span>
+                </div>
+
+                <div class="code-input-container">
+                    <div class="code-inputs" style="--digits:@_codeLength" @ref="_codeInputsRef">
+                        @for (int i = 0; i < _codeLength; i++)
+                        {
+                            var index = i;
+                            <input
+                                type="text"
+                                inputmode="numeric"
+                                pattern="[0-9]*"
+                                autocomplete="one-time-code"
+                                maxlength="1"
+                                class="code-input @(_codeValues[index].Length > 0 ? "filled" : "")"
+                                value="@_codeValues[index]"
+                                @oninput="@(e => OnCodeInput(index, e.Value?.ToString() ?? ""))"
+                                @onkeydown="@(e => OnKeyDown(index, e))"
+                                @onkeyup="@(e => OnKeyUp(e))"
+                                @onpaste="@(async e => await OnPaste(e))"
+                                @onfocus="@(async () => await OnFocus(index))"
+                                placeholder="·"
+                                id="@($"code-input-{index}")"
+                                disabled="@_isSubmitting"/>
+                        }
+                    </div>
+
+                    @if (_isSubmitting)
+                    {
+                        <div class="loading-overlay">
+                            <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true"/>
+                        </div>
+                    }
+                </div>
+
+                <div class="actions">
+                    <MudButton
+                        Variant="Variant.Filled"
+                        Color="Color.Primary"
+                        FullWidth="true"
+                        Size="Size.Large"
+                        Disabled="@(!IsCodeComplete || _isSubmitting)"
+                        OnClick="SubmitCode"
+                        Class="submit-button">
+                        @if (_isSubmitting)
+                        {
+                            <span>Проверяем...</span>
+                        }
+                        else
+                        {
+                            <span>Подтвердить</span>
+                        }
+                    </MudButton>
+
+                    <div class="resend-section">
+                        @if (_canResend)
+                        {
+                            <MudButton
+                                Variant="Variant.Text"
+                                Color="Color.Primary"
+                                OnClick="ResendCode"
+                                Class="resend-button">
+                                Отправить код повторно
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Class="resend-timer">
+                                Отправить повторно через @_resendTimer сек
+                            </MudText>
+                        }
+                    </div>
+
+                    <MudButton
+                        Variant="Variant.Outlined"
+                        Color="Color.Default"
+                        OnClick="Cancel"
+                        Class="cancel-button">
+                        Отмена
+                    </MudButton>
+                </div>
+            }
+            else
+            {
+                <div class="success-content">
+                    <div class="success-icon">
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle"/>
+                    </div>
+                    <MudText Typo="Typo.h5" Class="success-title">Успешно!</MudText>
+                    <MudText Typo="Typo.body1" Class="success-message">
+                        Код подтвержден. Перенаправляем вас...
+                    </MudText>
+                </div>
+            }
+        </MudPaper>
+    </MudContainer>
+</div>
+
+@code {
+    private string _title = "Подтвердите код";
+    private string _channel = "e-mail";
+    private string? _destination;
+    private string _purpose = "register";
+    private int _codeLength = 6;
+    private string _returnUrl = "/";
+
+    private string[] _codeValues = [];
+    private bool _isSubmitting = false;
+    private bool _showSuccess = false;
+    private bool _canResend = false;
+    private int _resendTimer = 60;
+    private Timer? _timer;
+    private ElementReference _codeInputsRef;
+
+    private bool IsCodeComplete => _codeValues.All(v => v is { Length: 1 } && char.IsDigit(v[0]));
+
+    protected override void OnInitialized()
+    {
+        var uri = new Uri(Navigation.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        _purpose = query["purpose"] ?? _purpose;
+        _channel = query["channel"] ?? _channel;
+        _destination = query["to"];
+        _title = query["title"] ?? (_purpose switch
+        {
+            "register" => "Подтверждение регистрации",
+            "login" => "Подтверждение входа",
+            "reset" => "Подтверждение сброса пароля",
+            _ => "Подтвердите код"
+        });
+        _returnUrl = query["returnUrl"] ?? "/";
+
+        if (int.TryParse(query["len"], out var len) && len is >= 4 and <= 8)
+            _codeLength = len;
+
+        _codeValues = new string[_codeLength];
+        for (int i = 0; i < _codeLength; i++)
+        {
+            _codeValues[i] = "";
+        }
+
+        StartResendTimer();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Фокус на первом поле ввода
+            await Task.Delay(300); // Ждем анимацию
+            await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('code-input-0')?.focus()");
+        }
+    }
+
+    private async Task OnCodeInput(int index, string value)
+    {
+        // Берём только последнюю введённую цифру
+        var last = (value ?? string.Empty).Trim().LastOrDefault();
+        if (last == default || !char.IsDigit(last))
+        {
+            _codeValues[index] = "";
+            StateHasChanged();
+            return;
+        }
+
+        _codeValues[index] = last.ToString();
+
+        // Фокус вперёд, если не крайнее поле
+        if (index < _codeLength - 1)
+        {
+            await JSRuntime.InvokeVoidAsync(
+                "eval",
+                $"document.getElementById('code-input-{index + 1}')?.focus()");
+        }
+    }
+
+
+    private async Task OnKeyDown(int index, KeyboardEventArgs e)
+    {
+        if (e.Key == "Backspace" && string.IsNullOrEmpty(_codeValues[index]) && index > 0)
+        {
+            // Переход к предыдущему полю при удалении
+            _codeValues[index - 1] = "";
+            await JSRuntime.InvokeVoidAsync("eval",
+                $"document.getElementById('code-input-{index - 1}')?.focus()");
+        }
+        else if (e.Key == "ArrowLeft" && index > 0)
+        {
+            await JSRuntime.InvokeVoidAsync("eval",
+                $"document.getElementById('code-input-{index - 1}')?.focus()");
+        }
+        else if (e.Key == "ArrowRight" && index < _codeLength - 1)
+        {
+            await JSRuntime.InvokeVoidAsync("eval",
+                $"document.getElementById('code-input-{index + 1}')?.focus()");
+        }
+    }
+
+    private async Task OnKeyUp(KeyboardEventArgs e)
+    {
+        if (_isSubmitting) return;
+
+        if ((e.Key == "Enter" || e.Code == "Enter" || e.Key == "NumpadEnter") &&
+            !e.ShiftKey && !e.CtrlKey && !e.AltKey && !e.MetaKey)
+        {
+            await SubmitCode();
+        }
+    }
+
+
+    private async Task OnPaste(ClipboardEventArgs e)
+    {
+        // Получаем вставленный текст через JS
+        var pastedText = await JSRuntime.InvokeAsync<string>("eval", "navigator.clipboard.readText()");
+
+
+        if (!string.IsNullOrEmpty(pastedText))
+        {
+            await HandlePastedCode(pastedText);
+        }
+    }
+
+    private async Task HandlePastedCode(string pastedText)
+    {
+        var cleanCode = new string((pastedText ?? string.Empty).Where(char.IsDigit).ToArray());
+
+        for (int i = 0; i < Math.Min(cleanCode.Length, _codeLength); i++)
+            _codeValues[i] = cleanCode[i].ToString();
+
+        // Фокус на первом пустом поле или на последнем занятом
+        var firstEmpty = Array.FindIndex(_codeValues, v => string.IsNullOrEmpty(v));
+        var focusIndex = firstEmpty >= 0 ? firstEmpty : _codeLength - 1;
+
+        await JSRuntime.InvokeVoidAsync(
+            "eval",
+            $"document.getElementById('code-input-{focusIndex}')?.focus()");
+
+        StateHasChanged();
+    }
+
+
+    private async Task HandleMultipleCharacters(int startIndex, string value)
+    {
+        var cleanValue = new string((value ?? string.Empty).Where(char.IsDigit).ToArray());
+
+        for (int i = 0; i < cleanValue.Length && startIndex + i < _codeLength; i++)
+            _codeValues[startIndex + i] = cleanValue[i].ToString();
+
+        var firstEmpty = Array.FindIndex(_codeValues, v => string.IsNullOrEmpty(v));
+        var focusIndex = firstEmpty >= 0 ? firstEmpty : Math.Min(startIndex + cleanValue.Length - 1, _codeLength - 1);
+
+        await JSRuntime.InvokeVoidAsync(
+            "eval",
+            $"document.getElementById('code-input-{focusIndex}')?.focus()");
+
+        StateHasChanged();
+    }
+
+
+    private async Task OnFocus(int index)
+    {
+        // Небольшая задержка даёт шанс виртуальной клавиатуре «вскрыться»
+        await Task.Delay(50);
+        await JSRuntime.InvokeVoidAsync("eval",
+            $"document.getElementById('code-input-{index}')?.scrollIntoView({{ behavior:'smooth', block:'center', inline:'center' }})");
+    }
+
+
+    private async Task SubmitCode()
+    {
+        if (!IsCodeComplete || _isSubmitting) return;
+
+        _isSubmitting = true;
+        var code = string.Join("", _codeValues);
+
+        try
+        {
+            // Имитация проверки кода
+            await Task.Delay(1500);
+
+            // TODO: Вызов реального API
+            // var result = await VerificationService.VerifyCode(code, _purpose, _channel, _destination);
+
+            _showSuccess = true;
+            StateHasChanged();
+
+            await Task.Delay(1500);
+
+            Snackbar.Add("Код успешно подтвержден!", Severity.Success);
+            Navigation.NavigateTo(_returnUrl, forceLoad: false);
+        }
+        catch
+        {
+            Snackbar.Add("Неверный код. Попробуйте еще раз.", Severity.Error);
+
+            // Очистка полей при ошибке
+            for (int i = 0; i < _codeLength; i++)
+            {
+                _codeValues[i] = "";
+            }
+
+            await JSRuntime.InvokeVoidAsync("eval",
+                "document.getElementById('code-input-0')?.focus()");
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private async Task ResendCode()
+    {
+        if (!_canResend) return;
+
+        try
+        {
+            // TODO: Вызов API повторной отправки
+            await Task.Delay(500);
+
+            Snackbar.Add("Код отправлен повторно", Severity.Info);
+            _canResend = false;
+            _resendTimer = 60;
+            StartResendTimer();
+        }
+        catch
+        {
+            Snackbar.Add("Ошибка при отправке кода", Severity.Error);
+        }
+    }
+
+    private void StartResendTimer()
+    {
+        _timer?.Dispose();
+        _timer = new Timer(_ =>
+        {
+            if (_resendTimer > 0)
+            {
+                _resendTimer--;
+                InvokeAsync(StateHasChanged);
+            }
+            else
+            {
+                _canResend = true;
+                _timer?.Dispose();
+                InvokeAsync(StateHasChanged);
+            }
+        }, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo(_returnUrl, forceLoad: false);
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+
+}
+
+<style>
+    .verify-wrapper {
+        height: calc(100svh - var(--appbar-h, 0px));
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        background: var(--mud-palette-background);
+        padding: 16px;
+        overflow: clip;
+    }
+
+    @@keyframes float {
+        0%, 100% {
+            transform: translate(0, 0) rotate(0deg);
+        }
+        25% {
+            transform: translate(50px, -50px) rotate(90deg);
+        }
+        50% {
+            transform: translate(-30px, 30px) rotate(180deg);
+        }
+        75% {
+            transform: translate(30px, 50px) rotate(270deg);
+        }
+    }
+
+    .verify-container {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 510px !important;
+    }
+
+    .verify-card {
+        background: var(--mud-palette-surface);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 48px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08), 0 2px 10px rgba(0, 0, 0, 0.04);
+        margin: 0 auto;
+        animation: cardEntry 0.5s ease-out;
+        transition: all 0.3s ease;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .verify-card.success {
+        animation: successPulse 0.6s ease-out;
+    }
+
+    @@keyframes cardEntry {
+        from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    @@keyframes successPulse {
+        0% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .card-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .icon-wrapper {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 24px;
+        background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-primary-darken) 100%);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: iconFloat 3s ease-in-out infinite;
+    }
+
+    .icon-wrapper .mud-icon-root {
+        color: white;
+        font-size: 40px;
+    }
+
+    @@keyframes iconFloat {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-5px);
+        }
+    }
+
+    .title {
+        font-weight: 500;
+        margin-bottom: 8px;
+        animation: fadeInUp 0.5s ease-out 0.1s both;
+        color: var(--mud-palette-text-primary);
+    }
+
+    .subtitle {
+        color: var(--mud-palette-text-secondary);
+        animation: fadeInUp 0.5s ease-out 0.2s both;
+        word-wrap: break-word;
+    }
+
+    .destination {
+        font-weight: 500;
+        font-size: 1rem;
+        color: var(--mud-palette-primary);
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .code-input-container {
+        margin-bottom: 32px;
+        position: relative;
+        animation: fadeInUp 0.5s ease-out 0.3s both;
+    }
+
+    .code-inputs {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 4px;
+    }
+
+    .code-input {
+        width: 56px;
+        height: 64px;
+        border: 2px solid var(--mud-palette-divider);
+        border-radius: 12px;
+        text-align: center;
+        font-size: 24px;
+        font-weight: 400;
+        background: var(--mud-palette-surface);
+        color: var(--mud-palette-text-primary);
+        transition: all 0.3s ease;
+        outline: none;
+        position: relative;
+        animation: inputEntry 0.5s ease-out both;
+        animation-delay: calc(0.4s + 0.05s);
+        flex-shrink: 0;
+    }
+
+    .code-input.filled {
+        border-color: var(--mud-palette-primary);
+        background: color-mix(in srgb, var(--mud-palette-primary) 5%, var(--mud-palette-surface));
+        animation: fillPulse 0.3s ease-out;
+    }
+
+    .code-input:focus {
+        border-color: var(--mud-palette-primary);
+        transform: scale(1.05);
+        box-shadow: 0 0 0 4px rgba(var(--mud-palette-primary-rgb), 0.2);
+    }
+
+    .code-input:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .code-input::placeholder {
+        color: var(--mud-palette-text-secondary);
+        font-size: 32px;
+        line-height: 1;
+    }
+
+    @@keyframes inputEntry {
+        from {
+            opacity: 0;
+            transform: scale(0.8) rotateX(-90deg);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) rotateX(0);
+        }
+    }
+
+    @@keyframes fillPulse {
+        0% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .loading-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.32);
+        border-radius: 12px;
+        z-index: 10;
+    }
+
+    .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        animation: fadeInUp 0.5s ease-out 0.6s both;
+    }
+
+    .submit-button {
+        height: 56px;
+        font-size: 20px;
+        font-weight: 500;
+        border-radius: 12px;
+        text-transform: none;
+        transition: all 0.3s ease;
+    }
+
+    .submit-button:not(:disabled):hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(var(--mud-palette-primary-rgb), 0.3);
+    }
+
+    .resend-section {
+        text-align: center;
+        min-height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .resend-timer {
+        color: var(--mud-palette-text-secondary);
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .resend-button {
+        text-transform: none;
+        font-weight: 500;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .cancel-button {
+        text-transform: none;
+        font-weight: 400;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    .success-content {
+        text-align: center;
+        padding: 40px 0;
+        animation: successEntry 0.5s ease-out;
+    }
+
+    @@keyframes successEntry {
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .success-icon {
+        margin-bottom: 24px;
+        animation: successBounce 0.6s ease-out 0.2s both;
+    }
+
+    .success-icon .mud-icon-root {
+        font-size: 80px;
+        color: var(--mud-palette-primary);
+    }
+
+    @@keyframes successBounce {
+        0% {
+            transform: scale(0) rotate(-180deg);
+        }
+        50% {
+            transform: scale(1.2) rotate(10deg);
+        }
+        100% {
+            transform: scale(1) rotate(0);
+        }
+    }
+
+    .success-title {
+        font-weight: 600;
+        margin-bottom: 8px;
+        animation: fadeInUp 0.5s ease-out 0.3s both;
+        color: var(--mud-palette-text-primary);
+    }
+
+    .success-message {
+        color: var(--mud-palette-text-secondary);
+        animation: fadeInUp 0.5s ease-out 0.4s both;
+    }
+
+    @@media (max-width: 768px) {
+        .verify-card {
+            padding: 32px 24px;
+        }
+
+        .code-input {
+            width: 52px;
+            height: 60px;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .verify-wrapper {
+            padding: 8px;
+        }
+
+        .verify-card {
+            padding: 24px 16px;
+            border-radius: 20px;
+        }
+
+        .card-header {
+            margin-bottom: 32px;
+        }
+
+        .icon-wrapper {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+        }
+
+        .icon-wrapper .mud-icon-root {
+            font-size: 32px;
+        }
+
+        .title {
+            font-size: 1.5rem;
+        }
+
+        .subtitle {
+            font-size: 0.875rem;
+        }
+
+        .code-input-container {
+            margin-bottom: 24px;
+        }
+
+        .code-inputs {
+            gap: 8px;
+            --input-size: min(48px, calc((100vw - 32px - 8px * (var(--digits, 6) - 1)) / var(--digits, 6)));
+        }
+
+        .code-input {
+            width: var(--input-size, 48px);
+            height: calc(var(--input-size, 48px) * 1.15);
+            font-size: 20px;
+            border-radius: 10px;
+        }
+
+        .code-input::placeholder {
+            font-size: 24px;
+        }
+
+        .actions {
+            gap: 12px;
+        }
+
+        .submit-button {
+            height: 48px;
+            font-size: 15px;
+        }
+
+        .success-icon .mud-icon-root {
+            font-size: 64px;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .verify-card {
+            padding: 20px 12px;
+        }
+
+        .code-inputs {
+            gap: 6px;
+            --input-size: min(42px, calc((100vw - 24px - 6px * (var(--digits, 6) - 1)) / var(--digits, 6)));
+        }
+
+        .code-input {
+            font-size: 18px;
+            border-width: 1.5px;
+        }
+    }
+
+    @@media (max-width: 380px) {
+        .code-inputs {
+            gap: 4px;
+            --input-size: min(38px, calc((100vw - 24px - 4px * (var(--digits, 6) - 1)) / var(--digits, 6)));
+        }
+
+        .code-input {
+            font-size: 16px;
+        }
+
+        .code-input::placeholder {
+            font-size: 20px;
+        }
+
+        .title {
+            font-size: 1.25rem;
+        }
+
+        .subtitle {
+            font-size: 0.8125rem;
+        }
+    }
+
+    @@media (max-width: 320px) {
+        .verify-card {
+            padding: 16px 8px;
+        }
+
+        .code-inputs {
+            gap: 3px;
+            --input-size: min(34px, calc((100vw - 16px - 3px * (var(--digits, 6) - 1)) / var(--digits, 6)));
+        }
+
+        .code-input {
+            font-size: 14px;
+            border-radius: 8px;
+        }
+
+        .icon-wrapper {
+            width: 56px;
+            height: 56px;
+        }
+
+        .icon-wrapper .mud-icon-root {
+            font-size: 28px;
+        }
+    }
+
+    @@media (max-height: 500px) and (orientation: landscape) {
+        .verify-wrapper {
+            min-height: auto;
+            padding: 8px;
+        }
+
+        .verify-card {
+            padding: 16px 24px;
+        }
+
+        .card-header {
+            margin-bottom: 16px;
+        }
+
+        .icon-wrapper {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 12px;
+        }
+
+        .icon-wrapper .mud-icon-root {
+            font-size: 24px;
+        }
+
+        .code-input {
+            width: 42px;
+            height: 48px;
+            font-size: 18px;
+        }
+
+        .actions {
+            gap: 8px;
+        }
+
+        .submit-button {
+            height: 40px;
+            font-size: 14px;
+        }
+    }
+
+    .code-inputs {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .code-inputs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .verify-container.mud-container-gutters {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+    }
+
+    .verify-card {
+        max-width: clamp(440px, 56vw, 680px);
+        padding: clamp(28px, 3.2vw, 48px);
+    }
+
+    @@media (min-width: 1600px) {
+        .verify-card {
+            max-width: 680px;
+        }
+    }
+
+    @@media (min-width: 768px) {
+        .code-inputs {
+            gap: 12px;
+        }
+
+        .code-input {
+            width: 56px;
+            height: 64px;
+        }
+    }
+
+    @@supports not (height: 100svh) {
+        .verify-wrapper {
+            height: calc(100vh - var(--appbar-h, 0px));
+        }
+    }
+
+    @@media (min-height: 700px) {
+        .verify-wrapper {
+            align-items: flex-start;
+            padding-top: clamp(24px, 10vh, 80px);
+        }
+    }
+</style>
