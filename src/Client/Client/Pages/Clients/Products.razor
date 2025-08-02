@@ -7,6 +7,7 @@
 @using Client.Infrastructure.Services.Category
 @using Client.Infrastructure.Services.Product
 @using Severity = MudBlazor.Severity
+@using Client.Components.Common
 @inject IProductService ProductService
 @inject NavigationManager Navigation
 @inject ICategoryService CategoryService
@@ -15,29 +16,13 @@
 @inject Client.Infrastructure.Services.Cart.ICartService CartService
 
 
-<MudPaper Elevation="25">
-    <MudToolBar>
-        <MudSelect T="string" Label="Категория" Style="margin-right:15px"
-                   Value="@SelectedCategory"
-                   ValueChanged="@(async v => await OnCategoryChanged(v))">
-            @foreach (var c in _categories)
-            {
-                <MudSelectItem Value="@c.Name">@c.Name</MudSelectItem>
-            }
-        </MudSelect>
+<ProductToolBar
+    Categories="@_categories"
+    SelectedCategory="@SelectedCategory"
+    SelectedCategoryChanged="@(cat => OnCategoryChanged(cat))"
+    SearchTerm="@SearchTerm"
+    SearchTermChanged="@(txt => SearchTerm = txt)"/>
 
-        <MudSpacer/>
-
-        <MudTextField @bind-Value="SearchTerm"
-                      Label="Поиск товаров"
-                      Adornment="Adornment.End"
-                      AdornmentIcon="@Icons.Material.Filled.Search"
-                      Immediate="true"
-                      DebounceInterval="300"
-                      Class="search-field" />
-
-    </MudToolBar>
-</MudPaper>
 
 <MudGrid Spacing="3" Justify="Justify.FlexStart" Style="margin-top:3px;margin-bottom:50px">
     @foreach (var product in _products)
@@ -109,14 +94,17 @@
                                            OnClick="@(() => IncreaseQuantity(product))"/>
                         </div>
 
-                        <MudButton Color="Color.Info" Variant="Variant.Filled" Size="Size.Small"
-                                   Disabled="@IsInCart(product)"
-                                   OnClick="@(async () => await AddToCart(product))"
-                                   Class="button">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="@(IsInCart(product) ? Color.Error : Color.Info)"
+                                   Size="Size.Small"
+                                   Disabled="false"
+                                   Class="button"
+                                   OnClick="@(async () => await ToggleCart(product))">
+
                             @if (IsInCart(product))
                             {
-                                <MudIcon Icon="@Icons.Material.Filled.Check" Class="cart-icon"/>
-                                <span style="margin-left:6px">В корзине</span>
+                                <MudIcon Icon="@Icons.Material.Filled.RemoveShoppingCart" Class="cart-icon"/>
+                                <span style="margin-left:6px">Убрать</span>
                             }
                             else
                             {
@@ -124,6 +112,7 @@
                                 <span style="margin-left:6px">В корзину</span>
                             }
                         </MudButton>
+
                     </div>
 
                     <div class="description-container">
@@ -145,6 +134,13 @@
     private List<ProductResponse> _allProducts = new();
     [Parameter] public string SelectedCategory { get; set; } = string.Empty;
 
+    private bool _isSearchOpen;
+
+    private void ToggleSearch()
+    {
+        _isSearchOpen = !_isSearchOpen;
+    }
+
     private string? SearchTerm
     {
         get => _searchTerm;
@@ -161,18 +157,53 @@
         var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
         var cat = System.Web.HttpUtility.ParseQueryString(uri.Query)["category"];
         SelectedCategory = cat ?? await LoadSelectedCategoryAsync();
+        CartService.OnChange += SyncCart;
 
         await LoadProductsAsync(SelectedCategory);
         await LoadCartStateAsync();
     }
 
-    private void IncreaseQuantity(ProductResponse p) => p.Quantity = Math.Min(p.Quantity + 1, 99);
+    private async void SyncCart()
+    {
+        await LoadCartStateAsync();
+        StateHasChanged();
+    }
 
-    private void DecreaseQuantity(ProductResponse p) => p.Quantity = Math.Max(p.Quantity - 1, 1);
+    private async Task IncreaseQuantity(ProductResponse p)
+    {
+        p.Quantity = Math.Min(p.Quantity + 1, 99);
+
+        if (IsInCart(p))
+            await PushQuantityToCart(p);
+    }
+
+    private async Task DecreaseQuantity(ProductResponse p)
+    {
+        p.Quantity = Math.Max(p.Quantity - 1, 1);
+
+        if (IsInCart(p))
+            await PushQuantityToCart(p);
+    }
+
+    private async Task PushQuantityToCart(ProductResponse p)
+    {
+        var price = p.Prices.First(x => x.Volume == p.SelectedVolume);
+
+        await CartService.UpdateOrderAsync(new CartItemDto
+        {
+            ProductSlug = p.Slug,
+            ProductName = p.Name,
+            SelectedVolume = price.Volume,
+            Quantity = p.Quantity, // ← только это реально меняется
+            Price = price.Full!.Value,
+            DiscountPrice = price.Discount,
+            ImageUrl = p.Images?.FirstOrDefault()
+        });
+    }
 
     private void OnVolumeChanged(ProductResponse p, string? vol)
     {
-        if (string.IsNullOrWhiteSpace(vol))
+        if (string.IsNullOrWhiteSpace(vol) || vol == p.SelectedVolume)
             return;
 
         p.SelectedVolume = vol;
@@ -183,6 +214,21 @@
 
         StateHasChanged();
     }
+
+    private async Task ToggleCart(ProductResponse p)
+    {
+        if (IsInCart(p))
+        {
+            await CartService.RemoveOrderAsync(p.Slug, p.SelectedVolume);
+            _cartKeys.Remove($"{p.Slug}|{p.SelectedVolume}");
+            Snackbar.Add("Удалено из корзины", Severity.Info);
+        }
+        else
+        {
+            await AddToCart(p); // старый метод остаётся без изменений
+        }
+    }
+
 
     private async Task AddToCart(ProductResponse p)
     {
@@ -224,7 +270,7 @@
     {
         if (string.IsNullOrWhiteSpace(term))
         {
-            _products = _allProducts.ToList(); 
+            _products = _allProducts.ToList();
         }
         else
         {
@@ -252,22 +298,36 @@
 
             OnVolumeChanged(p, p.SelectedVolume);
         }
-        
+
         _allProducts = result;
 
         if (string.IsNullOrWhiteSpace(_searchTerm))
-            _products = _allProducts.ToList(); 
+            _products = _allProducts.ToList();
         else
-            ApplySearch(_searchTerm); 
+            ApplySearch(_searchTerm);
 
         await LocalStorage.SetItemAsync("selectedCategory", category);
     }
 
     private async Task<string> LoadSelectedCategoryAsync()
     {
-        var c = await LocalStorage.GetItemAsync<string>("selectedCategory");
-        return (_categories.Any(x => x.Name == c) ? c : string.Empty)!;
+        var selected = await LocalStorage.GetItemAsync<string>("selectedCategory");
+
+        if (!string.IsNullOrWhiteSpace(selected))
+        {
+            foreach (var category in _categories)
+                if (category.Name == selected)
+                    return selected;
+        }
+
+        foreach (var category in _categories)
+            if (category.Name == "Все продукты")
+                return category.Name;
+
+        Snackbar.Add("Категория по умолчанию 'Все продукты' не найдена.", Severity.Info);
+        return string.Empty;
     }
+
 
     private async Task OpenDescriptionAsync(ProductResponse p)
     {
@@ -275,14 +335,14 @@
             new DialogParameters { { "ContentText", p.Description }, { "ProductName", p.Name } });
     }
 
+    public void Dispose()
+    {
+        CartService.OnChange -= SyncCart;
+    }
+
 }
 
 <style>
-
-    .search-field {
-        width: 50px;
-        margin-left: auto;
-    }
 
     .product-card {
         position: relative;

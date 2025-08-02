@@ -4,306 +4,1027 @@
 @using Client.Infrastructure.Services.Category
 @using Client.Infrastructure.Services.Shop
 @inject IShopService ShopService
+@inject IJSRuntime JS
 @inject ICategoryService CategoryService
 
-<div class="full-width-carousel-container">
-    <MudContainer MaxWidth="MaxWidth.False" Gutters="false"
-                  Style="margin-top: -80px; padding-left: 0; padding-right: 0">
-        <!-- Верхний баннер с слайдером -->
-        <MudCarousel TData="string" Class="carousel-banner" ItemsSource="@Slides"
-                     EnableSwipeGesture="true"
-                     AutoCycle="true"
-                     ShowArrows="true"
-                     ArrowsPosition="Position.Center"
-                     BulletsPosition="Position.Bottom"
-                     BulletsColor="Color.Dark"
-                     Context="imgContext">
-            <ItemTemplate>
-                <MudImage Src="@imgContext" Class="carousel-image" ObjectFit="ObjectFit.Cover"></MudImage>
-            </ItemTemplate>
-        </MudCarousel>
-
-    </MudContainer>
+<div class="homepage-full-width-carousel-container">
+  <MudContainer MaxWidth="MaxWidth.False" Gutters="false" Style="margin-top: -80px; padding-left: 0; padding-right: 0">
+    <!-- Верхний баннер с слайдером -->
+    <MudCarousel TData="string" Class="homepage-carousel-banner" ItemsSource="@Slides"
+                 EnableSwipeGesture="true"
+                 AutoCycle="true"
+                 ShowArrows="true"
+                 ArrowsPosition="Position.Center"
+                 BulletsPosition="Position.Bottom"
+                 BulletsColor="Color.Dark"
+                 Context="imgContext">
+      <ItemTemplate>
+        <MudImage Src="@imgContext" Class="homepage-carousel-image" ObjectFit="ObjectFit.Cover"></MudImage>
+      </ItemTemplate>
+    </MudCarousel>
+  </MudContainer>
 </div>
+
 <!-- Анимированный контент -->
-<MudContainer Class="animated-content">
+<MudContainer Class="homepage-animated-content">
 
-    <MudText Typo="Typo.h3" Align="Align.Center" Style="margin-top: 50px;" Class="fade-in title">Популярные категории
-    </MudText>
+  <!-- Добро пожаловать секция -->
+  <div class="homepage-welcome-section homepage-fade-in-up" style="margin-top: 30px;">
+    <div class="homepage-welcome-content">
+      <MudText Typo="Typo.h2" Align="Align.Center" Class="homepage-welcome-title gradient-text">
+        Добро пожаловать в Солнечный Восток
+      </MudText>
+      <MudText Typo="Typo.h6" Align="Align.Center" Class="homepage-welcome-subtitle"
+               Style="margin-top: 20px; opacity: 0.8; max-width: 800px; margin-left: auto; margin-right: auto;">
+        Ваша дверь в мир восточных традиций и уникальных товаров с 2022 года
+      </MudText>
+      <div class="homepage-floating-elements">
+        <div class="homepage-floating-element homepage-element-1">☀️</div>
+        <div class="homepage-floating-element homepage-element-2">🏺</div>
+        <div class="homepage-floating-element homepage-element-3">🍃</div>
+        <div class="homepage-floating-element homepage-element-4">⭐</div>
+      </div>
+    </div>
+  </div>
 
-    <!-- Сетка с популярными категориями -->
-    <MudGrid Class="fade-in mt-4 category-grid" Justify="Justify.Center">
-        @if (_popularCategories != null && _popularCategories.Any())
-        {
-            @foreach (var category in _popularCategories!)
-            {
-                <MudItem xs="12" sm="6" md="3">
-                    <MudCard Elevation="15" Class="category-card" @onclick="() => NavigateToProducts(category.Name)">
-                        <MudCardMedia Image="@category.ImageUrl" Class="category-card-image"/>
-                        <MudCardContent Class="category-card-content">
-                            <MudText Class="category-card-text" Typo="Typo.h5">@category.Name</MudText>
-                        </MudCardContent>
-                    </MudCard>
-                </MudItem>
-            }
-        }
+  <!-- Популярные категории с улучшенными анимациями -->
+  <div class="homepage-section-wrapper" style="margin-top: 70px; margin-bottom: 30px">
+    <div style="text-align: center;">
+      <MudText Typo="Typo.h3" Align="Align.Center"
+               Class="homepage-section-title gradient-text homepage-scroll-animate">
+        Популярные категории
+      </MudText>
+    </div>
+  </div>
+
+  <div class="homepage-category-grid-enhanced custom-css-grid">
+    @if (_popularCategories != null && _popularCategories.Any())
+    {
+      @for (int i = 0; i < _popularCategories.Count && i < 6; i++)
+      {
+        var category = _popularCategories[i];
+        var delay = i * 0.2;
+        <div class="homepage-category-item-wrapper">
+          <MudCard Elevation="0" Class="homepage-category-card-enhanced homepage-scroll-animate"
+                   @onclick="() => NavigateToProducts(category.Name)"
+                   Style="@($"animation-delay: {delay:0.##}s")">
+            <div class="homepage-category-image-wrapper">
+              <MudCardMedia Image="@category.ImageUrl" Class="homepage-category-card-image-enhanced"/>
+              <div class="homepage-category-overlay">
+                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Class="homepage-category-arrow"/>
+              </div>
+              <div class="homepage-category-name-overlay">
+                <MudText Class="homepage-category-name-text" Typo="Typo.h5">@category.Name</MudText>
+              </div>
+            </div>
+          </MudCard>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Наши магазины с улучшенным дизайном -->
+  <div class="homepage-section-wrapper" style="margin-top: 120px">
+    <div style="text-align: center;">
+      <MudText Typo="Typo.h3" Align="Align.Center"
+               Class="homepage-section-title gradient-text homepage-scroll-animate">
+        Наши магазины
+      </MudText>
+    </div>
+
+    <MudGrid Spacing="6" Class="homepage-shop-grid-enhanced mt-4" Justify="Justify.Center">
+      @for (int i = 0; i < _shops.Count; i++)
+      {
+        var shop = _shops[i];
+        var delay = i * 0.3;
+        <MudItem xs="12" sm="12" md="6" lg="6" Class="homepage-shop-item-wrapper">
+          <MudCard Elevation="0" Class="homepage-shop-card-enhanced homepage-scroll-animate"
+                   Style="@($"animation-delay: {delay:0.##}s")">
+            <div class="homepage-shop-image-container">
+              <MudCarousel Style="height: 300px; border-radius: 15px 15px 0 0"
+                           ItemsSource="@shop.Images"
+                           BulletsColor="Color.Dark"
+                           Context="imgContext"
+                           EnableSwipeGesture="true"
+                           ShowArrows="shop.Images!.Count() > 1"
+                           ShowBullets="shop.Images!.Count() > 1"
+                           AutoCycle="true"
+                           TData="string">
+                <ItemTemplate>
+                  <MudCardMedia Image="@imgContext" Class="homepage-shop-image"></MudCardMedia>
+                </ItemTemplate>
+              </MudCarousel>
+              <div class="homepage-shop-badge">
+                <MudIcon Icon="@Icons.Material.Filled.Store" Size="Size.Small"
+                         Style="margin-right: 5px"/>
+                Магазин
+              </div>
+            </div>
+            <MudCardContent Class="homepage-shop-card-content-enhanced">
+              <div class="homepage-shop-info">
+                <MudIcon Icon="@Icons.Material.Filled.LocationOn" Class="homepage-location-icon"/>
+                <MudText Typo="Typo.body1" Class="homepage-shop-address">
+                  @(shop.Address.Length > 55 ? shop.Address.Substring(0, 55) + "..." : shop.Address)
+                </MudText>
+              </div>
+            </MudCardContent>
+          </MudCard>
+        </MudItem>
+      }
     </MudGrid>
+  </div>
 
-    <MudText Typo="Typo.h3" Align="Align.Center" Style="margin-top: 150px" Class="fade-in title">Наши магазины</MudText>
+  <MudDivider Class="my-lg-5 homepage-custom-divider" DividerType="DividerType.FullWidth" Style="margin-top: 100px;"/>
 
-    <MudGrid Spacing="6" Class="fade-in mt-4 shop-grid" Justify="Justify.Center">
-        @foreach (var shop in _shops)
-        {
-            <MudItem xs="12" sm="12" md="6" lg="6">
-                <MudCard Elevation="15" Outlined="false" Class="shop-card">
-                    <MudCarousel Style="height: 270px; border-radius: 10px" ItemsSource="@shop.Images"
-                                 BulletsColor="Color.Dark"
-                                 Context="imgContext" 
-                                 EnableSwipeGesture="true" 
-                                 ShowArrows="shop.Images!.Count() > 1" 
-                                 ShowBullets="shop.Images!.Count() > 1"
-                                 AutoCycle="true"
-                                 TData="string">
-                        <ItemTemplate>
-                            <MudCardMedia Image="@imgContext"></MudCardMedia>
-                        </ItemTemplate>
-                    </MudCarousel>
+  <!-- Почему выбирают нас с крутыми анимациями -->
+  <div class="homepage-section-wrapper" style="margin-top: 100px;">
+    <div style="text-align: center;">
+      <MudText Typo="Typo.h3" Align="Align.Center"
+               Class="homepage-section-title gradient-text homepage-scroll-animate">
+        Почему выбирают именно нас
+      </MudText>
+    </div>
 
-                    <MudCardContent Class="shops-card-content">
-                        <MudText Typo="Typo.h6" Align="Align.Left" Class="shop-text">
-                            @(shop.Address.Length > 55 ? shop.Address.Substring(0, 55) + "..." : shop.Address)
-                        </MudText>
-                    </MudCardContent>
-                </MudCard>
-            </MudItem>
-        }
+    <MudGrid Class="homepage-advantages-grid" Style="margin-top: 30px" Spacing="4">
+      @for (int i = 0; i < _advantages.Count; i++)
+      {
+        var adv = _advantages[i];
+        <MudItem xs="12" sm="6" md="3" Class="homepage-advantage-item">
+          <MudPaper Elevation="0"
+                    Class="@($"homepage-advantage-enhanced {adv.CssClass} homepage-scroll-animate")">
+            <div class="homepage-advantage-icon-wrapper">
+              <MudIcon Icon="@adv.Icon" Class="homepage-advantage-icon" Size="Size.Large"/>
+              <div class="homepage-icon-glow"></div>
+            </div>
+            <MudText Typo="Typo.h6" Class="homepage-advantage-title">@adv.Title</MudText>
+            <MudText Typo="Typo.body2" Class="homepage-advantage-description">
+              @adv.Description
+            </MudText>
+          </MudPaper>
+        </MudItem>
+      }
     </MudGrid>
+  </div>
 
-    <MudDivider Class="my-lg-5" DividerType="DividerType.FullWidth"/>
-
-    <MudText Typo="Typo.h3" Align="Align.Center" Style="margin-top: 50px;" Class="fade-in title">Почему выбирают именно
-        нас
-    </MudText>
-
-    <!-- Блок преимуществ -->
-    <MudGrid Class="mt-4" Style="margin-top: 80px">
-        <MudItem xs="12" sm="3">
-            <MudPaper Elevation="10" Class="advantage">
-                <MudIcon Icon="@Icons.Material.Filled.Store" Color="Color.Primary" Size="Size.Large"/>
-                <MudText Typo="Typo.h6" Class="mt-2">Всегда доступная цена и приятные бонусы</MudText>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="3">
-            <MudPaper Elevation="10" Class="advantage">
-                <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Primary" Size="Size.Large"/>
-                <MudText Typo="Typo.h6" Class="mt-2">Высокое качество продукции</MudText>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="3">
-            <MudPaper Elevation="10" Class="advantage">
-                <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Primary" Size="Size.Large"/>
-                <MudText Typo="Typo.h6" Class="mt-2">С нами работают более 1100 клиентов</MudText>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="3">
-            <MudPaper Elevation="10" Class="advantage">
-                <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Color="Color.Primary" Size="Size.Large"/>
-                <MudText Typo="Typo.h6" Class="mt-2">Богатый ассортимент товаров</MudText>
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
+  <!-- Новая секция с товарами -->
+  <div class="homepage-products-preview-section" style="margin-top: 130px; margin-bottom: 10px;">
+    <div style="text-align: center;">
+      <MudText Typo="Typo.h3" Align="Align.Center"
+               Class="homepage-section-title gradient-text homepage-scroll-animate">
+        Что мы предлагаем
+      </MudText>
+    </div>
+  </div>
 </MudContainer>
+
+<!-- Кинематографическая карусель на весь экран -->
+<div class="homepage-full-width-carousel-wrapper">
+  <div class="homepage-carousel-wrapper">
+    <div class="homepage-products-carousel" id="productsCarousel">
+      <div class="homepage-carousel-track">
+        @foreach (var preview in SeamlessProductPreviews)
+        {
+          <MudPaper Elevation="0" Class="homepage-product-category-preview">
+            <div class="homepage-product-icon">@preview.IconEmoji</div>
+            <h4>@preview.Title</h4>
+            <p>@preview.Description</p>
+          </MudPaper>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
 
 @code {
 
-    private List<string> Slides = new()
+  // Records для секции "Почему выбирают нас"
+  private readonly record struct Advantage(string Title, string Description, string Icon, string CssClass);
+
+  private readonly List<Advantage> _advantages =
+  [
+    new("Доступные цены", "Всегда выгодные предложения и приятные бонусы для наших клиентов", Icons.Material.Filled.Store, "homepage-advantage-1"),
+    new("Высокое качество", "Тщательно отобранные товары прямо с Востока", Icons.Material.Filled.Star, "homepage-advantage-2"),
+    new("1100+ клиентов", "Нам доверяют более тысячи довольных покупателей", Icons.Material.Filled.People, "homepage-advantage-3"),
+    new("Широкий ассортимент", "Более 500 уникальных товаров восточной культуры", Icons.Material.Filled.ShoppingCart, "homepage-advantage-4")
+  ];
+
+  // Records для кинематографической карусели (повторяем для бесшовности)
+  private readonly record struct ProductCategoryPreview(string IconEmoji, string Title, string Description);
+
+  private readonly List<ProductCategoryPreview> _productPreviews =
+  [
+    new("🗡️", "Ножи и клинки", "Изысканные коллекции для ценителей"),
+    new("🍯", "Казаны", "Для настоящих кулинарных шедевров"),
+    new("🥜", "Сухофрукты и орехи", "Натуральные и полезные лакомства"),
+    new("🍵", "Чай и напитки", "Отборные сорта для гурманов"),
+    new("🏺", "Восточная посуда", "Изысканные сервизы и чайники"),
+    new("🍬", "Сладости", "Традиционные восточные деликатесы")
+  ];
+
+  // Список дублируется для бесшовной карусели
+  private IEnumerable<ProductCategoryPreview> SeamlessProductPreviews =>
+    _productPreviews.Concat(_productPreviews);
+
+  private List<string> Slides = new()
+  {
+    "/Media/HomeSlides/1.jpg",
+    "/Media/HomeSlides/2.jpg",
+    "/Media/HomeSlides/3.jpg",
+    "/Media/HomeSlides/4.jpg",
+    "/Media/HomeSlides/5.jpg",
+    "/Media/HomeSlides/6.jpg",
+    "/Media/HomeSlides/7.jpg"
+  };
+
+  private List<ProductCategoryResponse>? _popularCategories = new();
+  private List<ShopVm> _shops = new();
+
+  private bool _scrollAnimationsInitialized = false;
+  private bool _dataLoaded = false;
+
+  protected override async Task OnInitializedAsync()
+  {
+    _popularCategories = new();
+    _popularCategories = ((await CategoryService.Get())!).Take(6).ToList();
+
+    _shops = await ShopService.GetShopsVmAsync();
+    _dataLoaded = true;
+  }
+
+  private void NavigateToProducts(string categorySlug)
+  {
+    Navigation.NavigateTo($"/products?category={categorySlug}");
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender)
     {
-        "/Media/HomeSlides/1.jpg",
-        "/Media/HomeSlides/2.jpg",
-        "/Media/HomeSlides/3.jpg",
-        "/Media/HomeSlides/4.jpg",
-        "/Media/HomeSlides/5.jpg",
-        "/Media/HomeSlides/6.jpg",
-        "/Media/HomeSlides/7.jpg"
-    };
-
-    private List<ProductCategoryResponse>? _popularCategories = new();
-    private List<ShopVm> _shops = new();
-
-    protected override async Task OnInitializedAsync()
-    {
-        _popularCategories = new();
-        _popularCategories = ((await CategoryService.Get())!).Take(6).ToList();
-
-        _shops = await ShopService.GetShopsVmAsync();
-        StateHasChanged();
+      await JS.InvokeVoidAsync("initializeProductCarousel");
     }
 
-    private void NavigateToProducts(string categorySlug)
+    if (_dataLoaded && !_scrollAnimationsInitialized)
     {
-        Navigation.NavigateTo($"/products?category={categorySlug}");
+      await JS.InvokeVoidAsync("initializeScrollAnimations");
+      _scrollAnimationsInitialized = true;
     }
+  }
 
 }
 
 <style>
-    html, body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        width: 100%;
+  /* ========== Базовая типографика и сбросы ========== */
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+  }
+
+  /* ========== Общие контейнеры ========== */
+  .mud-container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .homepage-full-width-carousel-container {
+    width: calc(100% + 32px);
+    margin-left: -16px;
+    margin-right: -16px;
+  }
+
+  .homepage-animated-content {
+    animation: homepageFadeIn 1.5s ease-in-out;
+  }
+
+  .homepage-section-wrapper {
+    position: relative;
+    padding: 0;
+  }
+
+  .gradient-text {
+    background: linear-gradient(45deg, #FF6600, #FFCC00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ========== Карусели ========== */
+  .homepage-carousel-banner {
+    height: 100vh;
+    width: 100%;
+    margin-right: 0;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .homepage-carousel-image {
+    width: 100%;
+    height: 100vh;
+  }
+
+  .homepage-full-width-carousel-wrapper {
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    margin-top: -50px;
+    padding: 40px 0;
+  }
+
+  .homepage-carousel-wrapper {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .homepage-products-carousel {
+    position: relative;
+    width: 100%;
+    height: 320px;
+    display: flex;
+    align-items: center;
+  }
+
+  .homepage-carousel-track {
+    display: flex;
+    gap: 30px;
+    animation: homepageScrollRight 50s linear infinite;
+    position: absolute;
+    left: 0;
+  }
+
+  /* ========== Приветственная секция ========== */
+  .homepage-welcome-section {
+    position: relative;
+    padding: 60px 20px;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  .homepage-welcome-content {
+    position: relative;
+    z-index: 2;
+  }
+
+  .homepage-welcome-title {
+    font-weight: 700;
+    margin-bottom: 20px;
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+    line-height: 1.1;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .homepage-welcome-subtitle {
+    font-weight: 300;
+    line-height: 1.6;
+    margin-top: 20px;
+    opacity: 0.8;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .homepage-floating-elements {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .homepage-floating-element {
+    position: absolute;
+    font-size: 2rem;
+    opacity: 0.3;
+    animation: homepageFloat 6s ease-in-out infinite;
+  }
+
+  .homepage-element-1 {
+    top: 20%;
+    left: 10%;
+    animation-delay: 0s;
+  }
+
+  .homepage-element-2 {
+    top: 60%;
+    right: 15%;
+    animation-delay: 1.5s;
+  }
+
+  .homepage-element-3 {
+    top: 30%;
+    right: 25%;
+    animation-delay: 3s;
+  }
+
+  .homepage-element-4 {
+    bottom: 20%;
+    left: 20%;
+    animation-delay: 4.5s;
+  }
+
+  /* ========== Заголовки секций ========== */
+  .homepage-section-title {
+    font-weight: 700;
+    position: relative;
+    margin-bottom: 30px;
+    font-size: 2.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .homepage-title-emoji {
+    display: inline-block;
+    animation: homepageTitleEmojiPulse 2s ease-in-out infinite;
+    font-size: 1.5rem;
+  }
+
+  /* ========== Сетки и элементы категорий ========== */
+  .homepage-category-grid-enhanced {
+    margin-top: 60px;
+    margin-bottom: 50px;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .custom-css-grid {
+    display: grid;
+    gap: 30px;
+    padding: 0 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+
+  @@media (min-width: 700px) {
+    .custom-css-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @@media (min-width: 1100px) {
+    .custom-css-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .custom-css-grid .homepage-category-item-wrapper,
+  .homepage-category-item-wrapper {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .homepage-category-card-enhanced {
+    width: 100%;
+    max-width: 380px;
+    height: 280px;
+    cursor: pointer;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 0;
+    transform: translateY(50px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    border: 2px solid transparent;
+  }
+
+  .homepage-category-card-enhanced:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    border-color: #019934;
+  }
+
+  .homepage-category-image-wrapper {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .homepage-category-card-image-enhanced {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+
+  .homepage-category-card-enhanced:hover .homepage-category-card-image-enhanced {
+    transform: scale(1.1);
+  }
+
+  .homepage-category-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    padding: 15px;
+  }
+
+  .homepage-category-card-enhanced:hover .homepage-category-overlay {
+    opacity: 1;
+  }
+
+  .homepage-category-arrow {
+    color: white;
+    font-size: 24px;
+  }
+
+  .homepage-category-name-overlay {
+    position: absolute;
+    bottom: 35%;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+
+  .homepage-category-name-text {
+    font-weight: 500;
+    color: white;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    font-size: 1.3rem;
+  }
+
+  .homepage-category-card-enhanced:hover .homepage-category-name-overlay {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  .homepage-category-card-enhanced::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255, 102, 0, 0.1) 50%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .homepage-category-card-enhanced:hover::after {
+    opacity: 1;
+  }
+
+  /* ========== Магазины ========== */
+  .homepage-shop-grid-enhanced {
+    margin-top: 60px;
+    margin-bottom: 50px;
+  }
+
+  .homepage-shop-item-wrapper {
+    display: flex;
+    justify-content: center;
+  }
+
+  .homepage-shop-card-enhanced {
+    width: 100%;
+    height: 360px;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.4s ease;
+    opacity: 0;
+    transform: translateY(50px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 2px solid transparent;
+  }
+
+  .homepage-shop-card-enhanced:hover {
+    transform: translateY(-8px) rotateX(5deg);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+    border-color: #019934;
+  }
+
+  .homepage-shop-image-container {
+    position: relative;
+    height: 300px;
+    overflow: hidden;
+  }
+
+  .homepage-shop-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+  }
+
+  .homepage-shop-card-enhanced:hover .homepage-shop-image {
+    transform: scale(1.1) rotate(2deg);
+  }
+
+  .homepage-shop-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+  }
+
+  .homepage-shop-card-enhanced:hover .homepage-shop-badge {
+    transform: translateY(-5px);
+    background: #019934;
+  }
+
+  .homepage-shop-card-content-enhanced {
+    padding: 15px 20px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+  }
+
+  .homepage-shop-info {
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+
+  .homepage-location-icon {
+    color: #019934;
+    margin-right: 10px;
+    font-size: 20px;
+    transition: all 0.3s ease;
+  }
+
+  .homepage-shop-card-enhanced:hover .homepage-location-icon {
+    transform: scale(1.2) rotate(15deg);
+  }
+
+  .homepage-shop-address {
+    flex: 1;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  /* ========== Преимущества ========== */
+  .homepage-advantages-grid .homepage-advantage-item {
+    display: flex;
+    justify-content: center;
+  }
+
+  .homepage-advantage-enhanced {
+    padding: 40px 20px;
+    text-align: center;
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s ease;
+    opacity: 0;
+    transform: translateY(50px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    border: 2px solid transparent;
+    min-height: 250px;
+    max-width: 100%;
+    flex: 1 1 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: 0 auto;
+  }
+
+  .homepage-advantage-enhanced:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    border-color: #019934;
+  }
+
+  .homepage-advantage-enhanced::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 102, 0, 0.1), transparent);
+    transition: left 0.8s ease;
+  }
+
+  .homepage-advantage-enhanced:hover::before {
+    left: 100%;
+  }
+
+  .homepage-advantage-icon-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 25px;
+  }
+
+  .homepage-advantage-icon {
+    color: #FF6600;
+    font-size: 3rem !important;
+    position: relative;
+    z-index: 2;
+  }
+
+  .homepage-icon-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle, rgba(255, 102, 0, 0.2) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: homepageGlow 2s ease-in-out infinite alternate;
+  }
+
+  .homepage-advantage-title {
+    font-weight: 600;
+    margin-bottom: 15px;
+  }
+
+  .homepage-advantage-description {
+    opacity: 0.8;
+    line-height: 1.5;
+    max-width: 200px;
+    margin: 0 auto;
+  }
+
+  /* ========== Превью товаров (кино) ========== */
+  .homepage-product-category-preview {
+    min-width: 300px;
+    text-align: center;
+    padding: 40px 20px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: all 0.4s ease;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .homepage-product-category-preview:hover {
+    transform: translateY(-8px) scale(1.05);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    border-color: #019934;
+  }
+
+  .homepage-product-category-preview::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 102, 0, 0.1), transparent);
+    transition: left 0.8s ease;
+  }
+
+  .homepage-product-category-preview:hover::before {
+    left: 100%;
+  }
+
+  .homepage-product-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    display: block;
+    animation: homepageProductIconFloat 3s ease-in-out infinite;
+  }
+
+  .homepage-product-category-preview:nth-child(odd) .homepage-product-icon {
+    animation-delay: 0.5s;
+  }
+
+  .homepage-product-category-preview:nth-child(even) .homepage-product-icon {
+    animation-delay: 1s;
+  }
+
+  .homepage-product-category-preview h4 {
+    margin: 0 0 15px 0;
+    font-weight: 600;
+  }
+
+  .homepage-product-category-preview p {
+    margin: 0;
+    opacity: 0.8;
+    line-height: 1.5;
+  }
+
+  /* ========== Разделители и микро-переходы ========== */
+  .homepage-custom-divider {
+    background: linear-gradient(90deg, transparent, #FF6600, transparent);
+    height: 2px;
+    border: none;
+  }
+
+  .mud-button, .mud-card, .mud-paper, a, button, .mud-button-root {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .homepage-category-card-enhanced,
+  .homepage-shop-card-enhanced,
+  .homepage-advantage-enhanced,
+  .homepage-product-category-preview {
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+
+  .homepage-scroll-animate {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  }
+
+  .homepage-scroll-animate.homepage-in-view {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ========== Адаптивность ========== */
+  @@media (max-width: 1199px) {
+    .homepage-welcome-title {
+      white-space: normal;
+      font-size: clamp(2rem, 5vw, 2.8rem);
+    }
+  }
+
+  @@media (max-width: 960px) {
+    .homepage-welcome-title {
+      font-size: 2.5rem;
     }
 
-    .shop-text {
-        margin: 0;
-        white-space: normal;
-        word-wrap: break-word;
-        line-height: 1.2;
-        flex: 1;
+    .homepage-section-title {
+      font-size: 2rem;
     }
 
-    .shops-card-content {
-        padding: 5px 0 7px 8px;
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
+    .homepage-floating-element {
+      font-size: 1.5rem;
     }
 
-    .shop-grid {
-        margin-top: 20px;
-        margin-bottom: 100px;
+    .homepage-category-card-enhanced {
+      max-width: 340px;
+      height: 260px;
     }
 
-    .shop-card {
-        width: 100%;
-        height: 320px;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        position: relative;
-        overflow: hidden;
-        display: flex;
-        border-radius: 10px;
-        border: 1px solid transparent;
+    .homepage-advantage-enhanced {
+      min-height: 250px;
     }
 
-    .shop-card:hover {
-        border: 1px solid #019934;
-        box-shadow: 0 0 6px rgba(25, 118, 210, 0.3);
+    .homepage-product-category-preview {
+      min-width: 250px;
+    }
+  }
+
+  @@media (max-width: 600px) {
+    .homepage-welcome-section {
+      padding: 40px 10px;
     }
 
-    .full-width-carousel-container {
-        width: calc(100% + 32px);
-        margin-left: -16px;
-        margin-right: -16px;
+    .homepage-welcome-title {
+      font-size: 2rem;
     }
 
-    .carousel-banner {
-        height: 100vh;
-        width: 100%;
-        margin-right: 0;
-        display: flex;
-        justify-content: center;
-        position: relative;
-        overflow: hidden;
+    .homepage-section-title {
+      font-size: 1.75rem;
+      margin-bottom: 60px;
+      white-space: normal;
     }
 
-    .carousel-image {
-        width: 100%;
-        height: 100vh;
+    .homepage-title-emoji {
+      font-size: 1.5rem;
     }
 
-    .category-grid {
-        margin-top: 20px;
-        margin-bottom: 50px;
-        gap: 40px;
-        display: flex;
-        justify-content: center;
-        flex-wrap: wrap;
+    .homepage-category-card-enhanced {
+      max-width: 300px;
+      height: 240px;
     }
 
-    .mud-carousel .mud-carousel-arrows {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
+    .homepage-category-name-text {
+      font-size: 1.1rem;
     }
 
-    .mud-carousel .mud-carousel-indicators {
-        position: absolute;
-        top: 10px;
-        width: 100%;
-        text-align: center;
+    .homepage-shop-card-enhanced {
+      height: 340px;
     }
 
-    .mud-carousel .mud-carousel-indicators .mud-carousel-indicator {
-        margin: 0 5px;
-        background-color: rgba(255, 255, 255, 0.7);
+    .homepage-shop-image-container {
+      height: 280px;
     }
 
-    .fade-in {
-        animation: fadeIn 1s ease-in-out;
+    .homepage-shop-card-content-enhanced {
+      padding: 10px 15px;
     }
 
-    .animated-content {
-        animation: fadeIn 1.5s ease-in-out;
+    .homepage-advantage-enhanced {
+      padding: 30px 15px;
+      min-height: 220px;
     }
 
-    @@keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    .homepage-product-category-preview {
+      min-width: 220px;
+      padding: 30px 15px;
     }
 
-    .category-card {
-        width: 100%;
-        height: 250px;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        position: relative;
-        overflow: hidden;
-        cursor: pointer;
-        border-radius: 10px;
+    .homepage-product-icon {
+      font-size: 2.5rem;
     }
 
-    .category-card:hover {
-        transform: scale(1.05);
-        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    .homepage-floating-elements {
+      display: block;
     }
+  }
 
-    .category-card:hover .category-card-image {
-        opacity: 0.8;
+  /* ========== Анимации ========== */
+  @@keyframes homepageScrollRight {
+    0% {
+      transform: translateX(-100%);
     }
+    100% {
+      transform: translateX(0);
+    }
+  }
 
-    .category-card-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: opacity 0.3s ease;
+  @@keyframes homepageFadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(50px);
     }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 
-    .category-card-content {
-        position: absolute;
-        bottom: 40%;
-        left: 0;
-        right: 0;
-        background: rgba(0, 0, 0, 0.5);
-        color: white;
-        padding: 10px;
-        text-align: center;
+  @@keyframes homepageFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
     }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 
-    .category-card-text {
-        font-size: 1.5rem;
+  @@keyframes homepageFloat {
+    0%, 100% {
+      transform: translateY(0px) rotate(0deg);
     }
+    33% {
+      transform: translateY(-20px) rotate(120deg);
+    }
+    66% {
+      transform: translateY(10px) rotate(240deg);
+    }
+  }
 
-    .advantage {
-        text-align: center;
-        padding: 1rem;
+  @@keyframes homepageTitleEmojiPulse {
+    0%, 100% {
+      transform: scale(1) rotate(0deg);
     }
+    50% {
+      transform: scale(1.2) rotate(10deg);
+    }
+  }
+
+  @@keyframes homepageProductIconFloat {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+
+  @@keyframes homepageGlow {
+    from {
+      opacity: 0.5;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    to {
+      opacity: 0.8;
+      transform: translate(-50%, -50%) scale(1.2);
+    }
+  }
 </style>

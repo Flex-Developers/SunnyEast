@@ -4,6 +4,15 @@ html, body {
     max-height: 100vh;
 }
 
+/* Цвета брендбука */
+:root {
+    --brand-orange: #FF6600;
+    --brand-yellow: #FFCC00;
+    --brand-brown: #CC9933;
+    --brand-green: #019934;
+    --brand-black: #000000;
+}
+
 /*──────────────────  Co HeadlineCorp  ──────────────────*/
 
 /* Light(200‑300) */

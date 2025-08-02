@@ -3,112 +3,289 @@
 @using Client.Infrastructure.Services.Category
 @inject ICategoryService CategoryService
 
-<MudContainer Class="animated-content">
-    <MudText Typo="Typo.h3" Align="Align.Center" Style="margin-top: 50px;" Class="fade-in title">Категория товаров</MudText>
-    <MudGrid Class="fade-in mt-lg-5 category-grid" Justify="Justify.Center" Spacing="10">
-        @if (_categories != null && _categories.Any())
-        {
-            @foreach (var category in _categories!)
-            {
-                <MudItem xs="12" sm="6" md="6" lg="4">
-                    <MudCard Elevation="15" Class="category-card" @onclick="() => NavigateToProducts(category.Name)">
-                        <MudCardMedia Image="@category.ImageUrl" Class="category-card-image"/>
-                        <MudCardContent Class="category-card-content">
-                            <MudText Class="category-card-text" Typo="Typo.h5">@category.Name</MudText>
-                        </MudCardContent>
-                    </MudCard>
-                </MudItem>
-            }
-        }
-    </MudGrid>
-</MudContainer>
+<div class="category-page-container">
+  <!-- Заголовок -->
+  <div class="category-page-header">
+    <h1 class="category-page-title gradient-text">Категории товаров</h1>
+    <div class="category-page-floating-elements">
+      <div class="category-page-floating-element element-1">☀️</div>
+      <div class="category-page-floating-element element-2">🏺</div>
+      <div class="category-page-floating-element element-4">🔥</div>
+      <div class="category-page-floating-element element-3">🍃</div>
+    </div>
+  </div>
+
+  <!-- Сетка категорий -->
+  <div class="category-page-grid">
+    @if (_categories != null && _categories.Any())
+    {
+    @for (int i = 0; i < _categories.Count; i++)
+    {
+    var category = _categories[i];
+    var delay = i * 0.15;
+    <div class="category-page-item-wrapper">
+      <MudCard Elevation="0"
+               Class=@($"homepage-category-card-enhanced fade-in-up")
+               @onclick="() => NavigateToProducts(category.Name)"
+               Style="@($"animation-delay: {delay:0.##}s")">
+        <div class="homepage-category-image-wrapper">
+          <MudCardMedia Image="@category.ImageUrl" Class="homepage-category-card-image-enhanced"/>
+          <div class="homepage-category-overlay">
+            <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Class="homepage-category-arrow"/>
+          </div>
+          <div class="homepage-category-name-overlay">
+            <MudText Class="homepage-category-name-text" Typo="Typo.h5">@category.Name</MudText>
+          </div>
+        </div>
+      </MudCard>
+    </div>
+    }
+    }
+  </div>
+</div>
 
 @code {
-    private List<ProductCategoryResponse>? _categories;
+private List<ProductCategoryResponse>? _categories;
 
-    protected override async Task OnInitializedAsync()
-    {
-        _categories = (await CategoryService.Get())!.ToList();
-        StateHasChanged();
-    }
+protected override async Task OnInitializedAsync()
+{
+_categories = (await CategoryService.Get())!.ToList();
+}
 
-    private void NavigateToProducts(string categorySlug)
-    {
-        Navigation.NavigateTo($"/products?category={categorySlug}");
-    }
-
+private void NavigateToProducts(string categorySlug)
+{
+Navigation.NavigateTo($"/products?category={categorySlug}");
+}
 }
 
 <style>
-    .category-grid {
-        max-width: 100%;
-        margin: 0 auto; 
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  .category-page-container {
+    padding: 0 16px 80px;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  /* Заголовок с градиентом и эмодзи */
+  .category-page-header {
+    position: relative;
+    margin-top: 50px;
+    margin-bottom: 40px;
+    text-align: center;
+    overflow: visible;
+    animation: fadeInUp 0.8s ease-out forwards;
+  }
+
+  .category-page-title {
+    font-weight: 700;
+    font-size: 3rem;
+    margin: 0;
+    line-height: 1.1;
+    display: inline-block;
+    position: relative;
+  }
+
+  .gradient-text {
+    background: linear-gradient(45deg, #FF6600, #FFCC00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .category-page-floating-elements {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1;
+  }
+
+  .category-page-floating-element {
+    position: absolute;
+    font-size: 2rem;
+    opacity: 0.3;
+    animation: floatEmoji 6s ease-in-out infinite;
+  }
+
+  .element-1 { top: 15%; left: 20%; animation-delay: 0s; }
+  .element-2 { top: 50%; right: 18%; animation-delay: 1.5s; }
+  .element-3 { top: 65%; left: 60%; animation-delay: 3s; }
+  .element-4 { bottom: 10%; left: 45%; animation-delay: 4.5s; }
+
+  /* Сетка категорий */
+  .category-page-grid {
+    display: grid;
+    gap: 30px;
+    padding: 0;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    margin-top: 10px;
+  }
+
+  @@media (min-width: 700px) {
+    .category-page-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+  }
 
-
-    .fade-in {
-        animation: fadeIn 1s ease-in-out;
+  @@media (min-width: 1100px) {
+    .category-page-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
+  }
 
-    .animated-content {
-        animation: fadeIn 1.5s ease-in-out;
+  .category-page-item-wrapper {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  /* Карточки точно как на главной */
+  .homepage-category-card-enhanced {
+    width: 100%;
+    max-width: 380px;
+    height: 280px;
+    cursor: pointer;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 0;
+    transform: translateY(50px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    border: 2px solid transparent;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  .homepage-category-card-enhanced:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    border-color: #019934;
+  }
+
+  .homepage-category-image-wrapper {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .homepage-category-card-image-enhanced {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+    display: block;
+  }
+
+  .homepage-category-card-enhanced:hover .homepage-category-card-image-enhanced {
+    transform: scale(1.1);
+  }
+
+  .homepage-category-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    padding: 15px;
+  }
+
+  .homepage-category-card-enhanced:hover .homepage-category-overlay {
+    opacity: 1;
+  }
+
+  .homepage-category-arrow {
+    color: white;
+    font-size: 24px;
+  }
+
+  .homepage-category-name-overlay {
+    position: absolute;
+    bottom: 35%;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+
+  .homepage-category-name-text {
+    font-weight: 500;
+    color: white;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    font-size: 1.3rem;
+    margin: 0;
+    background: none;
+    -webkit-background-clip: unset;
+    -webkit-text-fill-color: white;
+  }
+
+  .homepage-category-card-enhanced:hover .homepage-category-name-overlay {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  .homepage-category-card-enhanced::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255, 102, 0, 0.1) 50%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .homepage-category-card-enhanced:hover::after {
+    opacity: 1;
+  }
+
+  /* Анимации входа */
+  .fade-in-up {
+    opacity: 0;
+    transform: translateY(50px);
+    animation: fadeInUp 0.8s ease-out forwards;
+  }
+
+  @@keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(50px);
     }
-
-    @@keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
+  }
 
-    .category-card {
-        width: 100%;
-        height: 280px; 
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        position: relative;
-        overflow: hidden;
-        cursor: pointer;
-        border-radius: 10px; 
-        background-color: transparent;
-        max-width: 350px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-    }
+  @@keyframes floatEmoji {
+    0%,100% { transform: translateY(0) rotate(0deg); }
+    33% { transform: translateY(-15px) rotate(120deg); }
+    66% { transform: translateY(10px) rotate(240deg); }
+  }
 
+  /* Адаптивы */
+  @@media (max-width: 960px) {
+    .category-page-title { font-size: 2.5rem; }
+    .homepage-category-name-text { font-size: 1.1rem; }
+    .homepage-category-card-enhanced { height: 260px; }
+  }
 
-    .category-card:hover {
-        transform: scale(1.05);
-        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    .category-card:hover .category-card-image {
-        opacity: 0.8;
-    }
-
-    .category-card-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover; 
-        transition: opacity 0.3s ease;
-    }
-
-    .category-card-content {
-        position: absolute;
-        bottom: 40%;
-        left: 0;
-        right: 0;
-        background: rgba(0, 0, 0, 0.5);
-        color: white;
-        padding: 10px;
-        text-align: center;
-    }
-
-    .category-card-text {
-        font-size: 1.5rem;
-    }
+  @@media (max-width: 600px) {
+    .category-page-title { font-size: 2rem; }
+    .category-page-floating-elements { display: block; }
+    .homepage-category-card-enhanced { height: 240px; }
+  }
 </style>
