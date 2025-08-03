@@ -1,6 +1,7 @@
 @page "/developers"
 
-<div class="developers-page" data-theme="@(IsDarkMode ? "dark" : "light")">
+<MudPaper Class="developers-page" Elevation="0">
+
 
     <!-- Заголовки -->
     <div class="headers-section">
@@ -31,7 +32,7 @@
                 @foreach (var (dev, index) in Team.Select((dev, i) => (dev, i)))
                 {
                     <MudItem xs="12" sm="6" md="6" lg="5" xl="4">
-                        <div class="developer-card @($"animate-card-{index + 1}")">
+                        <MudPaper Class="@($"developer-card animate-card-{index + 1}")" Elevation="0">
                             <div class="card-glow"></div>
                             <div class="card-background"></div>
 
@@ -65,9 +66,9 @@
 
                                 <div class="skills-container">
                                     @{
-                                        var skills = index == 0 
+                                        var skills = index == 0
                                             ? new[] { "C#", ".NET", "Blazor", "LINQ", "UI/UX", "Clean architecture", "CQRS" }
-                                            : new[] { "C#", "Design", "C++", "Backend", "Python", "SignalR"};
+                                            : new[] { "C#", "Design", "C++", "Backend", "Python", "SignalR" };
                                     }
                                     @foreach (var skill in skills)
                                     {
@@ -111,7 +112,7 @@
                                     </MudButton>
                                 }
                             </div>
-                        </div>
+                        </MudPaper>
                     </MudItem>
                 }
             </MudGrid>
@@ -119,7 +120,7 @@
 
         <!-- Секция контактов -->
         <div class="contact-section">
-            <div class="contact-card">
+            <MudPaper Class="contact-card" Elevation="0">
                 <div class="contact-background"></div>
                 <div class="contact-content">
                     <MudIcon Icon="@Icons.Material.Filled.Mail" Size="Size.Large" Class="contact-icon"/>
@@ -142,47 +143,47 @@
                         Ответим в течение суток ⚡
                     </MudText>
                 </div>
-            </div>
+            </MudPaper>
         </div>
 
         <!-- Статистика команды -->
         <div class="team-stats">
             <MudGrid Justify="Justify.Center" Spacing="3">
                 <MudItem xs="6" sm="3">
-                    <div class="stat-card">
+                    <MudPaper Class="stat-card" Elevation="0">
                         <div class="stat-icon">
                             <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large"/>
                         </div>
                         <div class="stat-number">@Team.Count</div>
                         <div class="stat-label">Разработчика</div>
-                    </div>
+                    </MudPaper>
                 </MudItem>
                 <MudItem xs="6" sm="3">
-                    <div class="stat-card">
+                    <MudPaper Class="stat-card" Elevation="0">
                         <div class="stat-icon">
                             <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Large"/>
                         </div>
                         <div class="stat-number">200+</div>
                         <div class="stat-label">Часов кода</div>
-                    </div>
+                    </MudPaper>
                 </MudItem>
                 <MudItem xs="6" sm="3">
-                    <div class="stat-card">
+                    <MudPaper Class="stat-card" Elevation="0">
                         <div class="stat-icon">
                             <MudIcon Icon="@Icons.Material.Filled.Coffee" Size="Size.Large"/>
                         </div>
                         <div class="stat-number">∞</div>
                         <div class="stat-label">Чашек кофе</div>
-                    </div>
+                    </MudPaper>
                 </MudItem>
                 <MudItem xs="6" sm="3">
-                    <div class="stat-card">
+                    <MudPaper Class="stat-card" Elevation="0">
                         <div class="stat-icon">
                             <MudIcon Icon="@Icons.Material.Filled.Favorite" Size="Size.Large"/>
                         </div>
                         <div class="stat-number">1</div>
                         <div class="stat-label">Проект мечты</div>
-                    </div>
+                    </MudPaper>
                 </MudItem>
             </MudGrid>
         </div>
@@ -199,13 +200,9 @@
             <div class="floating-shape shape-5"></div>
         </div>
     </div>
-</div>
+</MudPaper>
 
 @code {
-
-    [CascadingParameter] // приходит от MudThemeProvider
-    private bool IsDarkMode { get; set; }
-
 
     private sealed record Developer(
         string Name,
@@ -233,4 +230,663 @@
             null, // Фото заменено на аватар
             "Team Lead, Solution Architect")
     ];
+
 }
+
+<style>
+    /* ====== БАЗА СТРАНИЦЫ ====== */
+    .developers-page {
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+        /* фон без «ручных» цветов: работает в обеих темах */
+        background: linear-gradient(
+            135deg,
+            var(--mud-palette-background) 0%,
+            var(--mud-palette-surface) 50%,
+            var(--mud-palette-background) 100%
+        );
+    }
+
+    /* ====== HERO ====== */
+    .headers-section {
+        position: relative;
+        padding: 3rem 2rem 2rem;
+        text-align: center;
+        z-index: 2
+    }
+
+    .hero-section {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        z-index: 1;
+        pointer-events: none;
+        overflow: hidden
+    }
+
+    .hero-background {
+        position: absolute;
+        inset: 0;
+        z-index: 1
+    }
+
+    .floating-shape {
+        position: absolute;
+        border-radius: 50%;
+        opacity: .08;
+        animation: float 8s ease-in-out infinite
+    }
+
+    .floating-shape.shape-1 {
+        width: 200px;
+        height: 200px;
+        background: var(--brand-orange);
+        top: 10%;
+        left: 10%;
+        animation-delay: 0s
+    }
+
+    .floating-shape.shape-2 {
+        width: 150px;
+        height: 150px;
+        background: var(--brand-yellow);
+        top: 20%;
+        right: 15%;
+        animation-delay: 2s
+    }
+
+    .floating-shape.shape-3 {
+        width: 300px;
+        height: 300px;
+        background: var(--brand-green);
+        bottom: 20%;
+        left: 5%;
+        animation-delay: 4s
+    }
+
+    .floating-shape.shape-4 {
+        width: 100px;
+        height: 100px;
+        background: var(--brand-brown);
+        top: 60%;
+        right: 30%;
+        animation-delay: 1s
+    }
+
+    .floating-shape.shape-5 {
+        width: 250px;
+        height: 250px;
+        background: var(--brand-orange);
+        bottom: 10%;
+        right: 10%;
+        animation-delay: 3s
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        max-width: 800px;
+        margin: 0 auto
+    }
+
+    .main-title {
+        margin-bottom: 1rem;
+        animation: titleSlideIn 1s ease-out
+    }
+
+    .title-underline {
+        width: 120px;
+        height: 4px;
+        background: linear-gradient(90deg, var(--brand-orange), var(--brand-green));
+        margin: 0 auto 2rem;
+        border-radius: 2px;
+        animation: underlineGrow 1s ease-out .5s both
+    }
+
+    .sub-title {
+        color: var(--mud-palette-text-primary);
+        margin-bottom: 1rem;
+        animation: titleSlideIn 1s ease-out .3s both
+    }
+
+    .hero-description {
+        color: var(--mud-palette-text-secondary);
+        max-width: 600px;
+        margin: 0 auto;
+        animation: titleSlideIn 1s ease-out .6s both
+    }
+
+    /* ====== ОСНОВНОЙ КОНТЕНТ ====== */
+    .main-content {
+        position: relative;
+        z-index: 2;
+        padding: 1rem 0 3rem;
+        background: inherit
+    }
+
+    /* ====== СТАТИСТИКА ====== */
+    .team-stats {
+        margin-bottom: 3rem;
+        animation: fadeInUp 1s ease-out .8s both
+    }
+
+    .stat-card {
+        background: var(--mud-palette-surface);
+        border-radius: 20px;
+        padding: 2rem 1rem;
+        text-align: center;
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--mud-palette-divider);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, .1);
+        transition: all .3s ease;
+        position: relative;
+        overflow: hidden
+    }
+
+    .stat-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        left: -100%;
+        background: linear-gradient(90deg, transparent, rgba(0, 0, 0, .06), transparent);
+        transition: left .5s ease
+    }
+
+    .stat-card:hover::before {
+        left: 100%
+    }
+
+    .stat-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, .15)
+    }
+
+    .stat-icon {
+        color: var(--mud-palette-primary);
+        margin-bottom: 1rem
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: .5rem;
+        background: linear-gradient(135deg, var(--brand-orange), var(--brand-green));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text
+    }
+
+    .stat-label {
+        color: var(--mud-palette-text-secondary);
+        font-weight: 500;
+        font-size: .9rem
+    }
+
+    /* ====== КОМАНДА ====== */
+    .team-section {
+        margin-bottom: 3rem
+    }
+
+    .section-title {
+        margin-bottom: 3rem;
+        color: var(--mud-palette-text-primary);
+        position: relative
+    }
+
+    .section-title::after {
+        content: "";
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 3px;
+        background: linear-gradient(90deg, var(--brand-orange), var(--brand-green));
+        border-radius: 2px
+    }
+
+    .team-grid {
+        animation: fadeInUp 1s ease-out 1s both
+    }
+
+    /* карточка разработчика */
+    .developer-card {
+        position: relative;
+        background: var(--mud-palette-surface);
+        border-radius: 24px;
+        padding: 2.5rem 2rem;
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--mud-palette-divider);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, .1);
+        transition: all .4s cubic-bezier(.175, .885, .32, 1.275);
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        min-height: 600px
+    }
+
+    .animate-card-1 {
+        animation: cardSlideIn .8s ease-out 1.2s both
+    }
+
+    .animate-card-2 {
+        animation: cardSlideIn .8s ease-out 1.4s both
+    }
+
+    .card-glow {
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(var(--mud-palette-primary-rgb), .12) 0%, transparent 70%);
+        opacity: 0;
+        transition: opacity .3s ease;
+        pointer-events: none
+    }
+
+    .developer-card:hover .card-glow {
+        opacity: 1
+    }
+
+    .card-background {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(var(--mud-palette-primary-rgb), .03), rgba(0, 0, 0, .02));
+        opacity: 0;
+        transition: opacity .3s ease;
+        pointer-events: none
+    }
+
+    .developer-card:hover .card-background {
+        opacity: 1
+    }
+
+    .developer-card:hover {
+        transform: translateY(-12px) scale(1.02);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, .18)
+    }
+
+    .card-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        margin-bottom: 2rem;
+        position: relative;
+        border-radius: 20px
+    }
+
+    .photo-container {
+        position: relative;
+        margin-bottom: 1.5rem;
+        flex-shrink: 0
+    }
+
+    .dev-photo, .dev-photo-placeholder {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid rgba(var(--mud-palette-primary-rgb), .2);
+        transition: all .3s ease
+    }
+
+    .dev-photo-placeholder {
+        background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999
+    }
+
+    .developer-card:hover .dev-photo, .developer-card:hover .dev-photo-placeholder {
+        border-color: var(--mud-palette-primary);
+        transform: scale(1.1)
+    }
+
+    .photo-overlay {
+        position: absolute;
+        bottom: 8px;
+        right: 8px
+    }
+
+    .status-indicator {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 3px solid var(--mud-palette-surface);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .2)
+    }
+
+    .status-indicator.online {
+        background: #4CAF50;
+        animation: pulse 2s infinite
+    }
+
+    .dev-info {
+        width: 100%
+    }
+
+    .dev-name {
+        color: var(--mud-palette-text-primary);
+        margin-bottom: .5rem;
+        font-weight: 700;
+        font-size: 1.3rem
+    }
+
+    .dev-role {
+        color: var(--mud-palette-primary);
+        font-weight: 600;
+        font-size: 1rem
+    }
+
+    .developers-page .card-content {
+        flex: 1;
+        margin-bottom: 1.5rem;
+        text-align: center
+    }
+
+    .dev-description {
+        color: var(--mud-palette-text-secondary);
+        line-height: 1.6;
+        margin-bottom: 1.5rem
+    }
+
+    /* скиллы */
+    .skills-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .6rem;
+        margin-bottom: 1rem;
+        justify-content: center
+    }
+
+    .skill-tag {
+        background: linear-gradient(135deg, rgba(var(--mud-palette-primary-rgb), .10), rgba(255, 204, 0, .10));
+        color: var(--mud-palette-primary);
+        padding: .4rem .9rem;
+        border-radius: 14px;
+        font-size: .85rem;
+        font-weight: 600;
+        border: 1px solid rgba(var(--mud-palette-primary-rgb), .25);
+        transition: all .3s ease
+    }
+
+    .developer-card:hover .skill-tag {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(var(--mud-palette-primary-rgb), .2)
+    }
+
+    /* кнопки карточки */
+    .card-actions {
+        display: flex;
+        gap: .75rem;
+        flex-wrap: wrap;
+        justify-content: center
+    }
+
+    .action-btn {
+        border-radius: 12px !important;
+        text-transform: none !important;
+        font-weight: 600 !important;
+        transition: all .3s ease !important;
+        flex: 1;
+        min-width: 120px
+    }
+
+    .primary-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(var(--mud-palette-primary-rgb), .3) !important
+    }
+
+    .secondary-btn:hover {
+        transform: translateY(-2px);
+        background: rgba(var(--mud-palette-primary-rgb), .06) !important
+    }
+
+    .ghost-btn {
+        opacity: .6
+    }
+
+    /* ====== КОНТАКТЫ ====== */
+    .contact-section {
+        margin-bottom: 3rem;
+        animation: fadeInUp 1s ease-out 1.6s both
+    }
+
+    .contact-card {
+        position: relative;
+        background: var(--mud-palette-surface);
+        border-radius: 24px;
+        padding: 3rem 2rem;
+        text-align: center;
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--mud-palette-divider);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, .1);
+        overflow: hidden;
+        max-width: 600px;
+        margin: 0 auto
+    }
+
+    .contact-background {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(var(--mud-palette-primary-rgb), .06), rgba(255, 204, 0, .06));
+        opacity: 0;
+        transition: opacity .3s ease
+    }
+
+    .contact-card:hover .contact-background {
+        opacity: 1
+    }
+
+    .contact-content {
+        position: relative;
+        z-index: 2
+    }
+
+    .contact-icon {
+        color: var(--mud-palette-primary);
+        margin-bottom: 1rem
+    }
+
+    .contact-title {
+        color: var(--mud-palette-text-primary);
+        margin-bottom: 1rem;
+        font-weight: 700
+    }
+
+    .contact-description {
+        color: var(--mud-palette-text-secondary);
+        margin-bottom: 2rem;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto
+    }
+
+    .contact-btn {
+        border-radius: 16px !important;
+        padding: .75rem 2rem !important;
+        font-weight: 600 !important;
+        text-transform: none !important;
+        margin-bottom: 1rem !important;
+        transition: all .3s ease !important
+    }
+
+    .contact-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 24px rgba(var(--mud-palette-primary-rgb), .3) !important
+    }
+
+    .contact-note {
+        color: var(--mud-palette-text-secondary);
+        font-style: italic
+    }
+
+    /* ====== АДАПТИВ ====== */
+    @@media (max-width: 768px) {
+        .hero-section {
+            min-height: 50vh;
+            padding: 2rem 1rem
+        }
+
+        .main-title {
+            font-size: 2rem !important
+        }
+
+        .sub-title {
+            font-size: 1.5rem !important
+        }
+
+        .floating-shape {
+            opacity: .05
+        }
+
+        .developer-card {
+            min-height: 600px
+        }
+
+        .card-header {
+            flex-direction: column;
+            text-align: center
+        }
+
+        .photo-container {
+            margin-bottom: 1rem
+        }
+
+        .dev-photo, .dev-photo-placeholder {
+            width: 180px;
+            height: 180px
+        }
+
+        .card-actions {
+            flex-direction: column
+        }
+
+        .action-btn {
+            width: 100%
+        }
+
+        .contact-card {
+            padding: 2rem 1rem
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .main-title {
+            font-size: 1.75rem !important
+        }
+
+        .developer-card {
+            padding: 2rem 1.5rem;
+            min-height: 400px
+        }
+
+        .stat-card {
+            padding: 1.5rem 1rem
+        }
+
+        .stat-number {
+            font-size: 2rem
+        }
+
+        .dev-photo, .dev-photo-placeholder {
+            width: 160px;
+            height: 160px
+        }
+    }
+
+    /* ====== АНИМАЦИИ ====== */
+    @@keyframes float {
+        0%, 100% {
+            transform: translateY(0) rotate(0) scale(1)
+        }
+        33% {
+            transform: translateY(-30px) rotate(120deg) scale(1.1)
+        }
+        66% {
+            transform: translateY(15px) rotate(240deg) scale(.9)
+        }
+    }
+
+    @@keyframes titleSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(30px)
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    @@keyframes underlineGrow {
+        from {
+            width: 0
+        }
+        to {
+            width: 120px
+        }
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px)
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    @@keyframes cardSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(50px) scale(.9)
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1)
+        }
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            opacity: 1
+        }
+        50% {
+            opacity: .5
+        }
+    }
+
+    /* Градиентный фон страницы разработчиков поверх цвета MudBlazor */
+    .mud-paper.developers-page {
+        /* базовый цвет поверхности + лёгкий градиент-тинт */
+        background: linear-gradient(
+            135deg,
+            rgba(var(--mud-palette-primary-rgb), .04) 0%,
+            rgba(255, 204, 0, .06) 50%,
+            rgba(var(--mud-palette-primary-rgb), .04) 100%
+        ),
+        var(--mud-palette-surface) !important;
+    }
+
+    /* Тёмная тема — очень деликатный градиент поверх фона */
+    body.mud-dark .mud-paper.developers-page {
+        background: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, .02) 0%,
+            rgba(255, 255, 255, .01) 100%
+        ),
+        var(--mud-palette-background) !important;
+    }
+
+</style>
+

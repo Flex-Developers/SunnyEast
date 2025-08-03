@@ -55,6 +55,24 @@ body.mud-dark {
     --mud-palette-drawer-text: rgba(255,255,255,0.5);
 }
 
+.gradient-text {
+    background: linear-gradient(135deg, #FF6600, #FFCC00, #019934);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+    text-shadow: none;
+    animation: gradientShift 3s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% {
+        filter: hue-rotate(0deg);
+    }
+    50% {
+        filter: hue-rotate(30deg);
+    }
+}
 
 /*──────────────────  Co HeadlineCorp  ──────────────────*/
 
