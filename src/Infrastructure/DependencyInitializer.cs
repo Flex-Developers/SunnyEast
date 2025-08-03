@@ -7,6 +7,8 @@ using Domain.Entities;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Contexts;
 using Infrastructure.Services;
+using Infrastructure.Mail;
+using Infrastructure.Services.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -37,6 +39,9 @@ public static class DependencyInitializer
         services.AddSingleton<IDateTimeService, DateTimeService>();
         services.AddSingleton<IVolumeGroupService, VolumeGroupService>();
         services.AddScoped<IPushNotificationService, PushNotificationService>();
+        services.Configure<MailgunOptions>(configurations.GetSection("Mailgun"));
+        services.AddHttpClient<IMailSender, MailgunEmailSender>();
+        services.AddScoped<Application.Auth.IEmailConfirmationSender, IdentityEmailConfirmationSender>();
         services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(identityOptions =>
             {
                 identityOptions.ClaimsIdentity.RoleClaimType = ClaimTypes.Role;

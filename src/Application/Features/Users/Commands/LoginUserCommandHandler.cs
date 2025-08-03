@@ -35,6 +35,9 @@ public class LoginUserCommandHandler(IJwtTokenService jwtTokenService, UserManag
         if (await userManager.CheckPasswordAsync(user, request.Password) == false)
             throw new UnauthorizedAccessException("Неправильный пароль!");
 
+        if (!user.EmailConfirmed && !string.IsNullOrEmpty(user.Email))
+            throw new UnauthorizedAccessException("Email не подтвержден.");
+
 
         var claims = new List<Claim>
         {

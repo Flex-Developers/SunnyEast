@@ -1,5 +1,6 @@
 ﻿using Application.Contract.User.Commands;
 using Application.Contract.User.Responses;
+using Application.Contract.Auth;
 using Client.Infrastructure.Auth;
 using Client.Infrastructure.Services.HttpClient;
 using Microsoft.AspNetCore.Components;
@@ -28,6 +29,18 @@ public class AuthService(IHttpClientService httpClient,
     {
         var response = await httpClient.PostAsJsonAsync("/api/user/register", command);
         return response.Success;
+    }
+
+    public async Task ResendConfirmationAsync(string email)
+    {
+        await httpClient.PostAsJsonAsync("/api/auth/resend-email-confirmation", new { email });
+    }
+
+    public async Task<bool> ConfirmEmailAsync(string userId, string token)
+    {
+        var result = await httpClient.GetFromJsonAsync<ConfirmEmailResult>(
+            $"/api/auth/confirm-email?userId={userId}&token={token}");
+        return result.Success && result.Response?.Status == "success";
     }
 
     public async Task LogoutAsync(bool navigateToHome = false)

@@ -4,6 +4,7 @@ using Application.Common.Exceptions;
 using Application.Common.Interfaces.Contexts;
 using Application.Contract.User.Commands;
 using Domain.Entities;
+using Application.Auth;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,8 @@ namespace Application.Features.Users.Commands;
 
 public class RegisterUserCommandHandler(
     UserManager<ApplicationUser> userManager,
-    IApplicationDbContext context)
+    IApplicationDbContext context,
+    IEmailConfirmationSender emailConfirmationSender)
     : IRequestHandler<RegisterUserCommand, string>
 {
     public async Task<string> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
@@ -62,6 +64,8 @@ public class RegisterUserCommandHandler(
 
         result.ThrowBadRequestIfError();
         await context.SaveChangesAsync(cancellationToken);
+
+        await emailConfirmationSender.SendConfirmationAsync(user, cancellationToken);
 
         return user.UserName!;
     }
