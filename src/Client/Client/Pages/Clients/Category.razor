@@ -19,48 +19,55 @@
   <div class="category-page-grid">
     @if (_categories != null && _categories.Any())
     {
-    @for (int i = 0; i < _categories.Count; i++)
-    {
-    var category = _categories[i];
-    var delay = i * 0.15;
-    <div class="category-page-item-wrapper">
-      <MudCard Elevation="0"
-               Class=@($"homepage-category-card-enhanced fade-in-up")
-               @onclick="() => NavigateToProducts(category.Name)"
-               Style="@($"animation-delay: {delay:0.##}s")">
-        <div class="homepage-category-image-wrapper">
-          <MudCardMedia Image="@category.ImageUrl" Class="homepage-category-card-image-enhanced"/>
-          <div class="homepage-category-overlay">
-            <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Class="homepage-category-arrow"/>
-          </div>
-          <div class="homepage-category-name-overlay">
-            <MudText Class="homepage-category-name-text" Typo="Typo.h5">@category.Name</MudText>
-          </div>
+      @for (int i = 0; i < _categories.Count; i++)
+      {
+        var category = _categories[i];
+        var delay = i * 0.15;
+        <div class="category-page-item-wrapper">
+          <MudCard Elevation="0"
+                   Class=@($"homepage-category-card-enhanced fade-in-up")
+                   @onclick="() => NavigateToProducts(category.Name)"
+                   Style="@($"animation-delay: {delay:0.##}s")">
+            <div class="homepage-category-image-wrapper">
+              <MudCardMedia Image="@category.ImageUrl" Class="homepage-category-card-image-enhanced"/>
+              <div class="homepage-category-overlay">
+                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Class="homepage-category-arrow"/>
+              </div>
+              <div class="homepage-category-name-overlay">
+                <MudText Class="homepage-category-name-text" Typo="Typo.h5">@category.Name</MudText>
+              </div>
+            </div>
+          </MudCard>
         </div>
-      </MudCard>
-    </div>
-    }
+      }
     }
   </div>
 </div>
 
 @code {
-private List<ProductCategoryResponse>? _categories;
+  private List<ProductCategoryResponse>? _categories;
 
-protected override async Task OnInitializedAsync()
-{
-_categories = (await CategoryService.Get())!.ToList();
-}
+  protected override async Task OnInitializedAsync()
+  {
+    _categories = (await CategoryService.Get())!.ToList();
+  }
 
-private void NavigateToProducts(string categorySlug)
-{
-Navigation.NavigateTo($"/products?category={categorySlug}");
-}
+  private void NavigateToProducts(string categorySlug)
+  {
+    Navigation.NavigateTo($"/products?category={categorySlug}");
+  }
+
 }
 
 <style>
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
 
   .category-page-container {
     padding: 0 16px 80px;
@@ -112,10 +119,29 @@ Navigation.NavigateTo($"/products?category={categorySlug}");
     animation: floatEmoji 6s ease-in-out infinite;
   }
 
-  .element-1 { top: 15%; left: 20%; animation-delay: 0s; }
-  .element-2 { top: 50%; right: 18%; animation-delay: 1.5s; }
-  .element-3 { top: 65%; left: 60%; animation-delay: 3s; }
-  .element-4 { bottom: 10%; left: 45%; animation-delay: 4.5s; }
+  .element-1 {
+    top: 15%;
+    left: 20%;
+    animation-delay: 0s;
+  }
+
+  .element-2 {
+    top: 50%;
+    right: 18%;
+    animation-delay: 1.5s;
+  }
+
+  .element-3 {
+    top: 65%;
+    left: 60%;
+    animation-delay: 3s;
+  }
+
+  .element-4 {
+    bottom: 10%;
+    left: 45%;
+    animation-delay: 4.5s;
+  }
 
   /* Сетка категорий */
   .category-page-grid {
@@ -271,21 +297,43 @@ Navigation.NavigateTo($"/products?category={categorySlug}");
   }
 
   @@keyframes floatEmoji {
-    0%,100% { transform: translateY(0) rotate(0deg); }
-    33% { transform: translateY(-15px) rotate(120deg); }
-    66% { transform: translateY(10px) rotate(240deg); }
+    0%, 100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    33% {
+      transform: translateY(-15px) rotate(120deg);
+    }
+    66% {
+      transform: translateY(10px) rotate(240deg);
+    }
   }
 
   /* Адаптивы */
   @@media (max-width: 960px) {
-    .category-page-title { font-size: 2.5rem; }
-    .homepage-category-name-text { font-size: 1.1rem; }
-    .homepage-category-card-enhanced { height: 260px; }
+    .category-page-title {
+      font-size: 2.5rem;
+    }
+
+    .homepage-category-name-text {
+      font-size: 1.1rem;
+    }
+
+    .homepage-category-card-enhanced {
+      height: 260px;
+    }
   }
 
   @@media (max-width: 600px) {
-    .category-page-title { font-size: 2rem; }
-    .category-page-floating-elements { display: block; }
-    .homepage-category-card-enhanced { height: 240px; }
+    .category-page-title {
+      font-size: 2rem;
+    }
+
+    .category-page-floating-elements {
+      display: block;
+    }
+
+    .homepage-category-card-enhanced {
+      height: 240px;
+    }
   }
 </style>
