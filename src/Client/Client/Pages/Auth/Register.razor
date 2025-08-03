@@ -1,4 +1,5 @@
 ﻿@page "/Register"
+@using System.Text.RegularExpressions
 @using Application.Contract.User.Commands
 @using Client.Infrastructure.Services.Auth
 @using Severity = MudBlazor.Severity
@@ -194,8 +195,9 @@
                 if (await AuthService.RegisterAsync(_user))
                 {
                     // --- Переходим на страницу подтверждения кода (UI-демо) ---
-                    var channel = string.IsNullOrWhiteSpace(_user.Email) ? "телефон" : "e-mail";
-                    var destination = string.IsNullOrWhiteSpace(_user.Email) ? MaskPhone(_user.PhoneNumber) : MaskEmail(_user.Email);
+                    var usePhone = !string.IsNullOrWhiteSpace(_user.PhoneNumber);
+                    var channel = usePhone ? "телефон" : "e-mail";
+                    var destination = usePhone ? MaskPhone(_user.PhoneNumber) : MaskEmail(_user.Email);
                     var title = Uri.EscapeDataString("Подтверждение регистрации");
                     var returnUrl = Uri.EscapeDataString("/");
 
@@ -256,14 +258,19 @@
 
     public class RegisterUserValidator : AbstractValidator<RegisterUserCommand>
     {
+        // Компилируем регэкспы один раз (работают с любым алфавитом)
+        private static readonly Regex HasUpper = new(@"\p{Lu}", RegexOptions.Compiled);
+        private static readonly Regex HasLower = new(@"\p{Ll}", RegexOptions.Compiled);
+        private static readonly Regex HasDigit = new(@"\d",    RegexOptions.Compiled);
+
         public RegisterUserValidator()
         {
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage("Имя обязательно.")
-                .Matches(@"^[a-zA-Zа-яА-Я]+$").WithMessage("Имя может содержать только буквы.");
+                .Matches(@"^[\p{L}]+$").WithMessage("Имя может содержать только буквы."); // \p{L} — любая буква Unicode
 
             RuleFor(x => x.Surname)
-                .Matches(@"^[a-zA-Zа-яА-Я]+$").WithMessage("Фамилия может содержать только буквы.")
+                .Matches(@"^[\p{L}]+$").WithMessage("Фамилия может содержать только буквы.")
                 .When(x => !string.IsNullOrWhiteSpace(x.Surname));
 
             RuleFor(x => x.PhoneNumber)
@@ -272,16 +279,15 @@
                 .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber));
 
             RuleFor(x => x.Email)
-                .EmailAddress()
-                .WithMessage("Некорректный формат электронной почты.")
+                .EmailAddress().WithMessage("Некорректный формат электронной почты.")
                 .When(x => !string.IsNullOrWhiteSpace(x.Email));
 
             RuleFor(x => x.Password)
                 .NotEmpty().WithMessage("Пароль обязателен.")
                 .MinimumLength(8).WithMessage("Пароль должен содержать минимум 8 символов.")
-                .Matches(@"[A-Z]").WithMessage("Пароль должен содержать минимум одну заглавную букву.")
-                .Matches(@"[a-z]").WithMessage("Пароль должен содержать минимум одну строчную букву.")
-                .Matches(@"\d").WithMessage("Пароль должен содержать минимум одну цифру.");
+                .Matches(HasUpper).WithMessage("Пароль должен содержать минимум одну заглавную букву.")
+                .Matches(HasLower).WithMessage("Пароль должен содержать минимум одну строчную букву.")
+                .Matches(HasDigit).WithMessage("Пароль должен содержать минимум одну цифру.");
 
             RuleFor(x => x.ConfirmPassword)
                 .NotEmpty().WithMessage("Подтверждение пароля обязательно.")
@@ -290,9 +296,12 @@
 
         public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
         {
-            var result = await ValidateAsync(ValidationContext<RegisterUserCommand>.CreateWithOptions((RegisterUserCommand)model, x => x.IncludeProperties(propertyName)));
+            var result = await ValidateAsync(ValidationContext<RegisterUserCommand>
+                .CreateWithOptions((RegisterUserCommand)model, x => x.IncludeProperties(propertyName)));
+            
             if (result.IsValid)
                 return [];
+            
             return result.Errors.Select(e => e.ErrorMessage);
         };
     }
