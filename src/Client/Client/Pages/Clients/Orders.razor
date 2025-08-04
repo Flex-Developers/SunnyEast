@@ -10,7 +10,7 @@
 @inject IDialogService Dialogs
 @inject AuthenticationStateProvider AuthProvider
 @inject Infrastructure.Realtime.IOrderRealtimeService Realtime
-@implements IDisposable  
+@implements IDisposable
 
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mx-auto">
@@ -20,37 +20,39 @@
         Мои заказы
     </MudText>
 
-        <MudTable Items="_orders"
-                  Hover="true" 
-                  Dense="true"
-                  Elevation="10"
-                  Bordered="true"
-                  Class="border rounded-lg"
-                  Filter="FilterFunc">
+    <MudTable Items="_orders"
+              Hover="true"
+              Dense="true"
+              Elevation="10"
+              Bordered="true"
+              Class="border rounded-lg"
+              Filter="FilterFunc">
 
-            <ToolBarContent>
-                <MudTextField @bind-Value="_search"
-                              Placeholder="Поиск по № заказа / магазину…"
-                              Adornment="Adornment.Start"
-                              AdornmentIcon="@Icons.Material.Filled.Search"
-                              Immediate Class="w-100" />
-            </ToolBarContent>
+        <ToolBarContent>
+            <MudTextField @bind-Value="_search"
+                          Placeholder="Поиск по № заказа / магазину…"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate Class="w-100"/>
+        </ToolBarContent>
 
-            <HeaderContent>
-                <MudTh Class="nowrap text-center">Номер</MudTh>
-                <MudTh Class="text-center">Магазин</MudTh>
-                <MudTh Class="text-center">Статус</MudTh>
-                <MudTh Class="text-center">Сумма</MudTh>
-                <MudTh Class="text-center" Style="width:300px">Действия</MudTh>
-            </HeaderContent>
+        <HeaderContent>
+            <MudTh Class="nowrap text-center">Номер</MudTh>
+            <MudTh Class="text-center">Магазин</MudTh>
+            <MudTh Class="text-center">Статус</MudTh>
+            <MudTh Class="text-center">Сумма</MudTh>
+            <MudTh Class="text-center" Style="width:300px">Действия</MudTh>
+        </HeaderContent>
 
-            <RowTemplate>
-                <MudTd DataLabel="Номер" Class="nowrap text-center">@context.OrderNumber</MudTd>
-                <MudTd DataLabel="Магазин">@(context.Shop?.Address ?? "—")</MudTd>
-                <MudTd DataLabel="Статус" Class="text-center"><OrderStatusChip Status="@context.Status" /></MudTd>
-                <MudTd DataLabel="Сумма"  Class="text-center">@($"{context.Sum:N2} ₽")</MudTd>
-                <MudTd DataLabel="Действия">
-                    <div class="actions-cell">
+        <RowTemplate>
+            <MudTd DataLabel="Номер" Class="nowrap text-center">@context.OrderNumber</MudTd>
+            <MudTd DataLabel="Магазин">@(context.Shop?.Address ?? "—")</MudTd>
+            <MudTd DataLabel="Статус" Class="text-center">
+                <OrderStatusChip Status="@context.Status"/>
+            </MudTd>
+            <MudTd DataLabel="Сумма" Class="text-center">@($"{context.Sum:N2} ₽")</MudTd>
+            <MudTd DataLabel="Действия">
+                <div class="actions-cell">
                     <MudButton Variant="Variant.Outlined"
                                Color="Color.Primary" Size="Size.Small"
                                StartIcon="@Icons.Material.Filled.Visibility"
@@ -64,52 +66,52 @@
                             Отменить
                         </MudButton>
                     }
-                    </div>
-                </MudTd>
-            </RowTemplate>
+                </div>
+            </MudTd>
+        </RowTemplate>
 
-            <NoRecordsContent>
-                @if (string.IsNullOrWhiteSpace(_search))
-                {
-                    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="my-6">
-                        У вас пока нет оформленных заказов.
-                    </MudText>
-                }
-                else
-                {
-                    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="my-6">
-                        Ничего не найдено.
-                    </MudText>
-                }
-            </NoRecordsContent>
+        <NoRecordsContent>
+            @if (string.IsNullOrWhiteSpace(_search))
+            {
+                <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="my-6">
+                    У вас пока нет оформленных заказов.
+                </MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="my-6">
+                    Ничего не найдено.
+                </MudText>
+            }
+        </NoRecordsContent>
 
-            <PagerContent>
-                <MudTablePager
-                    PageSizeOptions="new [] {15}"
-                               HorizontalAlignment="HorizontalAlignment.End"
-                               InfoFormat="@_paginationInfoFormat"
-                               HideRowsPerPage="true"
-                               HidePageNumber="false"
-                               HidePagination="false" />
-            </PagerContent>
-        </MudTable>
+        <PagerContent>
+            <MudTablePager
+                PageSizeOptions="new [] {15}"
+                HorizontalAlignment="HorizontalAlignment.End"
+                InfoFormat="@_paginationInfoFormat"
+                HideRowsPerPage="true"
+                HidePageNumber="false"
+                HidePagination="false"/>
+        </PagerContent>
+    </MudTable>
 </MudContainer>
 
 @code {
     private readonly List<OrderResponse> _orders = new();
     private readonly string _paginationInfoFormat = "{first_item}-{last_item} из {all_items}";
     private string? _search;
-    private bool   _isAuth; 
+    private bool _isAuth;
 
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthProvider.GetAuthenticationStateAsync();
-        _isAuth   = state.User.Identity?.IsAuthenticated == true;
+        _isAuth = state.User.Identity?.IsAuthenticated == true;
 
         // Подписки ДО первой загрузки, чтобы не потерять первое событие
-        Realtime.OnOrderCreated       += HandleCreated;
+        Realtime.OnOrderCreated += HandleCreated;
         Realtime.OnOrderStatusChanged += HandleStatusChanged;
-        Realtime.OnOrderArchived      += HandleArchived;
+        Realtime.OnOrderArchived += HandleArchived;
 
         await RefreshOrders();
         AuthProvider.AuthenticationStateChanged += OnAuthStateChanged;
@@ -119,12 +121,12 @@
     {
         _orders.Clear();
 
-        if (_isAuth)                           
-            _orders.AddRange(await OrderService.GetAllAsync(string.Empty));
+        if (_isAuth)
+            _orders.AddRange(await OrderService.GetCustomerAsync());
 
-        StateHasChanged();                     
+        StateHasChanged();
     }
-    
+
     private async void OnAuthStateChanged(Task<AuthenticationState> task)
     {
         _isAuth = task.Result.User.Identity?.IsAuthenticated == true;
@@ -155,7 +157,7 @@
         if (!(await dialogReference.Result)!.Canceled)
             await CancelOrder(order);
     }
-    
+
     private void HandleCreated(OrderResponse order)
     {
         // Показываем только свои заказы, но с сервера уже приходит только «свои»
@@ -171,9 +173,9 @@
         var existing = _orders.FirstOrDefault(o => o.Slug == order.Slug);
         if (existing is not null)
         {
-            existing.Status     = order.Status;
+            existing.Status = order.Status;
             existing.CanceledAt = order.CanceledAt;
-            existing.ClosedAt   = order.ClosedAt;
+            existing.ClosedAt = order.ClosedAt;
             InvokeAsync(StateHasChanged);
         }
     }
@@ -192,15 +194,15 @@
     {
         AuthProvider.AuthenticationStateChanged -= OnAuthStateChanged;
 
-        Realtime.OnOrderCreated       -= HandleCreated;
+        Realtime.OnOrderCreated -= HandleCreated;
         Realtime.OnOrderStatusChanged -= HandleStatusChanged;
-        Realtime.OnOrderArchived      -= HandleArchived;
+        Realtime.OnOrderArchived -= HandleArchived;
     }
+
 }
 
 <style>
-    .nowrap 
-    { 
+    .nowrap {
         white-space: nowrap;
     }
 
@@ -208,7 +210,7 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
         gap: 8px;
-        
+
     }
 
     .actions-cell .mud-button-root {

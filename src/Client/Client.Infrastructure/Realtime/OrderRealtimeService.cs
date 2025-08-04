@@ -18,20 +18,29 @@ public class OrderRealtimeService(ILocalStorageService storage, IConfiguration c
 
     public async Task StartAsync()
     {
-        // если уже подключены — ничего не делаем
+        // 1) Без токена — вообще ничего не делаем (никаких запросов -> нет 401 в консоли)
+        var token = await storage.GetItemAsync<JwtTokenResponse>("authToken");
+        
+        if (string.IsNullOrWhiteSpace(token?.AccessToken))
+            return;
+
+        // 2) Уже подключены
         if (_connection is { State: HubConnectionState.Connected })
             return;
 
-        // если соединение существует, но отключено — просто стартуем
+        // 3) Если соединение уже создано — просто стартуем
         if (_connection is not null)
         {
-            try
+            if (_connection.State == HubConnectionState.Disconnected)
             {
-                await _connection.StartAsync();
-            }
-            catch
-            {
-                /* ignore */
+                try
+                {
+                    await _connection.StartAsync();
+                }
+                catch
+                {
+                    /* ignore */
+                }
             }
 
             return;
