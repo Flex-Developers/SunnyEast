@@ -2,11 +2,12 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Application.Common.Interfaces.Services;
+using Application.Contract.User.Responses;
+using Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Infrastructure.Services;
-
 
 internal class JwtTokenService(IConfiguration configuration) : IJwtTokenService
 {
@@ -43,5 +44,25 @@ internal class JwtTokenService(IConfiguration configuration) : IJwtTokenService
         string jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
         return jwt;
+    }
+
+    public Task<JwtTokenResponse> GenerateAsync( ApplicationUser user)
+    {
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, user.UserName!),
+            new(ClaimTypes.Name, user.Name ?? user.UserName!),
+            new(ClaimTypes.Email, user.Email ?? string.Empty)
+        };
+
+        var token = CreateTokenByClaims(claims, out var expires);
+        var refresh = CreateRefreshToken(claims);
+
+        return Task.FromResult(new JwtTokenResponse
+        {
+            AccessToken = token,
+            RefreshToken = refresh,
+            AccessTokenValidateTo = expires
+        });
     }
 }

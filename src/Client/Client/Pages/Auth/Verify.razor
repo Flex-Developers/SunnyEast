@@ -1,6 +1,11 @@
 @page "/verify"
+@using Client.Infrastructure.Services.Auth
+@using Client.Infrastructure.Services.Verification
+@using Microsoft.AspNetCore.WebUtilities
 @using Severity = MudBlazor.Severity
 @inject NavigationManager Navigation
+@inject IVerificationService VerifyService
+@inject IAuthService AuthService
 @inject ISnackbar Snackbar
 @inject IJSRuntime JSRuntime
 
@@ -123,8 +128,19 @@
 </div>
 
 @code {
+    [Parameter, SupplyParameterFromQuery] public string? phone { get; set; }
+    [Parameter, SupplyParameterFromQuery] public string? email { get; set; }
+    [Parameter, SupplyParameterFromQuery] public string? password { get; set; }
+    
+    private string _code = "";
+    private int _ttl;
+    private int _cooldown;
+    private bool _busy;
+    private int _ttlSeconds;
+    private int _cooldownSeconds;
+    
     private string _title = "Подтвердите код";
-    private string _channel = "e-mail";
+    private string _channel = "номер телефона";
     private string? _destination;
     private string _purpose = "register";
     private int _codeLength = 6;
@@ -139,9 +155,31 @@
     private ElementReference _codeInputsRef;
 
     private bool IsCodeComplete => _codeValues.All(v => v is { Length: 1 } && char.IsDigit(v[0]));
+    
+    // маленький хелпер
+    private string? GetQuery(string key)
+    {
+        var uri  = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var dict = QueryHelpers.ParseQuery(uri.Query);
+        return dict.TryGetValue(key, out var v) ? v.FirstOrDefault() : null;
+    }
+    
+    protected override void OnParametersSet()   // вызывается ДО первого рендера
+    {
+        // 0. length из query или дефолт 6
+        if (!int.TryParse(GetQuery("len"), out _codeLength) ||
+            _codeLength is < 4 or > 8)
+            _codeLength = 6;
+
+        // 1. массив под нужную длину
+        if (_codeValues.Length != _codeLength)
+            _codeValues = Enumerable.Repeat(string.Empty, _codeLength).ToArray();
+    }
+
 
     protected override void OnInitialized()
     {
+     
         var uri = new Uri(Navigation.Uri);
         var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
 
@@ -159,6 +197,9 @@
 
         if (int.TryParse(query["len"], out var len) && len is >= 4 and <= 8)
             _codeLength = len;
+        
+        int.TryParse(query["ttl"], out _ttlSeconds);
+        int.TryParse(query["cd"],  out _cooldownSeconds);
 
         _codeValues = new string[_codeLength];
         for (int i = 0; i < _codeLength; i++)
@@ -302,19 +343,19 @@
 
         try
         {
-            // Имитация проверки кода
-            await Task.Delay(1500);
+            var result = await VerifyService.ConfirmRegistrationAsync(
+                phone!, code, email!, password!);
 
-            // TODO: Вызов реального API
-            // var result = await VerificationService.VerifyCode(code, _purpose, _channel, _destination);
+            if (!result.Success || result.Token is null)
+                throw new InvalidOperationException("Неверный код");
+
+            await AuthService.LoginWithTokenAsync(result.Token); 
 
             _showSuccess = true;
             StateHasChanged();
 
-            await Task.Delay(1500);
-
             Snackbar.Add("Код успешно подтвержден!", Severity.Success);
-            Navigation.NavigateTo(_returnUrl, forceLoad: false);
+            Navigation.NavigateTo(_returnUrl);
         }
         catch
         {
@@ -341,8 +382,7 @@
 
         try
         {
-            // TODO: Вызов API повторной отправки
-            await Task.Delay(500);
+            var (cooldown, _) = await VerifyService.RequestSmsAsync(phone!, _purpose);
 
             Snackbar.Add("Код отправлен повторно", Severity.Info);
             _canResend = false;
@@ -358,6 +398,7 @@
     private void StartResendTimer()
     {
         _timer?.Dispose();
+        _resendTimer = _cooldownSeconds > 0 ? _cooldownSeconds : 60;
         _timer = new Timer(_ =>
         {
             if (_resendTimer > 0)

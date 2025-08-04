@@ -19,4 +19,5 @@ public interface IApplicationDbContext
     public DbSet<ApplicationUser> Users { get; set; }
     public  DbSet<Staff> Staff { get; set; }
     public DbSet<NotificationSubscription> NotificationSubscriptions { get; set; }
+    public DbSet<PhoneOtp> PhoneOtps { get; set; }
 }

@@ -20,4 +20,5 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<ShopOrder> ShopOrders { get; set; }
     public DbSet<Staff> Staff { get; set; }
     public DbSet<NotificationSubscription> NotificationSubscriptions { get; set; }
+    public DbSet<PhoneOtp> PhoneOtps { get; set; }
 }

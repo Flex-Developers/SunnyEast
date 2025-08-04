@@ -48,4 +48,13 @@ public class AuthService(IHttpClientService httpClient,
         
         snackbar.Add("Вы вышли из аккаунта.", Severity.Success);
     }
+    
+    public async Task LoginWithTokenAsync(JwtTokenResponse token, string? returnUrl = null)
+    {
+        await authStateProvider.MarkUserAsAuthenticated(token);
+        try { await orderRealtime.StartAsync(); } catch { /* ignore */ }
+
+        navigationManager.NavigateTo(string.IsNullOrEmpty(returnUrl) ? "/" : returnUrl);
+    }
+
 }

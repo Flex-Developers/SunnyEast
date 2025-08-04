@@ -2,9 +2,12 @@
 @using System.Text.RegularExpressions
 @using Application.Contract.User.Commands
 @using Client.Infrastructure.Services.Auth
+@using Client.Infrastructure.Services.Verification
 @using Severity = MudBlazor.Severity
 @inject IAuthService AuthService
 @inject ISnackbar Snackbar
+@inject IVerificationService Verify
+@inject NavigationManager Navigation
 
 
 <MudContainer Class="register-container ">
@@ -111,6 +114,17 @@
     private bool isPhoneAndEmailEmpty;
     private string _requiredErrorMessage = "Номер телефона или почта должны быть заполнены.";
 
+
+    private async Task OnRequestSms()
+    {
+        // валидация полей тут...
+        await Verify.RequestSmsAsync(_user.PhoneNumber!, "register");
+        // передаём нужные данные на Verify через querystring
+        var qs = $"?phone={Uri.EscapeDataString(_user.PhoneNumber!)}&email={Uri.EscapeDataString(_user.Email!)}";
+        qs += $"&password={Uri.EscapeDataString(_user.Password)}";
+        Navigation.NavigateTo($"/auth/verify{qs}");
+    }
+
     protected void CheckPhoneAndEmail()
     {
         isPhoneAndEmailEmpty = string.IsNullOrWhiteSpace(_user.PhoneNumber) && string.IsNullOrWhiteSpace(_user.Email);
@@ -154,7 +168,7 @@
             _passwordInput = InputType.Text;
         }
     }
-    
+
     private static string MaskPhone(string? phone)
     {
         var digits = new string((phone ?? string.Empty).Where(char.IsDigit).ToArray()); // "1234567890"
@@ -163,7 +177,7 @@
 
         // показываем только последние 4 цифры (две пары)
         var last2a = digits[^4..^2]; // предпоследние 2 цифры
-        var last2b = digits[^2..];   // последние 2 цифры
+        var last2b = digits[^2..]; // последние 2 цифры
 
         return $"+7-***-***-{last2a}-{last2b}";
     }
@@ -173,52 +187,55 @@
     {
         if (string.IsNullOrWhiteSpace(email))
             return "";
-        
+
         var at = email.IndexOf('@');
-        
-        if (at <= 1) 
+
+        if (at <= 1)
             return $"***{email.Substring(at)}";
-        
+
         return $"{new string(email.Take(3).ToArray())}***{email.Substring(at)}";
     }
 
 
     private async Task SubmitRegister()
     {
+        await _form.Validate();
+        CheckPhoneAndEmail();
+        if (!_form.IsValid || isPhoneAndEmailEmpty)
+        {
+            Snackbar.Add("Правильно заполните данные!", Severity.Warning);
+            return;
+        }
+
         try
         {
-            await _form.Validate();
-            CheckPhoneAndEmail();
+            // 1️⃣  сначала запрашиваем SMS и получаем тайминги
+            var (cooldown, ttl) = await Verify.RequestSmsAsync(
+                _user.PhoneNumber!, "register");
 
-            if (_form.IsValid && isPhoneAndEmailEmpty == false)
-            {
-                if (await AuthService.RegisterAsync(_user))
-                {
-                    // --- Переходим на страницу подтверждения кода (UI-демо) ---
-                    var usePhone = !string.IsNullOrWhiteSpace(_user.PhoneNumber);
-                    var channel = usePhone ? "телефон" : "e-mail";
-                    var destination = usePhone ? MaskPhone(_user.PhoneNumber) : MaskEmail(_user.Email);
-                    var title = Uri.EscapeDataString("Подтверждение регистрации");
-                    var returnUrl = Uri.EscapeDataString("/");
+            // 2️⃣  готовим «маску» номера для красивого вывода
+            var to = MaskPhone(_user.PhoneNumber);
 
-                    var to = Uri.EscapeDataString(destination);
-                    Navigation.NavigateTo($"/verify?purpose=register&channel={channel}&to={to}&title={title}&len=6&returnUrl={returnUrl}");
-                }
-                else
-                {
-                    Snackbar.Add("Ошибка регистрации, Проверьте введенные данные, или попробуйте позже.", Severity.Error);
-                }
-            }
-            else
-            {
-                Snackbar.Add("Правильно заполните данные!", Severity.Warning);
-            }
+            // 3️⃣  собираем query-string
+            var qs = $"?phone={Uri.EscapeDataString(_user.PhoneNumber!)}" +
+                     $"&password={Uri.EscapeDataString(_user.Password)}" +
+                     $"&channel=sms" +
+                     $"&to={Uri.EscapeDataString(to)}" +
+                     $"&cd={cooldown}&ttl={ttl}&len=6";
+
+            if (!string.IsNullOrWhiteSpace(_user.Email))
+                qs += $"&email={Uri.EscapeDataString(_user.Email)}";
+
+            // 4️⃣  переходим на страницу ввода кода
+            Navigation.NavigateTo($"/verify{qs}");
         }
-        catch (Exception exception)
+        catch (Exception ex)
         {
-            Snackbar.Add(exception.Message, Severity.Error);
+            Snackbar.Add(ex.Message, Severity.Error);
         }
     }
+
+
 
     // NEW: единый обработчик Enter для всех полей формы
     private async Task OnKeyUpHandler(KeyboardEventArgs e)
@@ -261,7 +278,7 @@
         // Компилируем регэкспы один раз (работают с любым алфавитом)
         private static readonly Regex HasUpper = new(@"\p{Lu}", RegexOptions.Compiled);
         private static readonly Regex HasLower = new(@"\p{Ll}", RegexOptions.Compiled);
-        private static readonly Regex HasDigit = new(@"\d",    RegexOptions.Compiled);
+        private static readonly Regex HasDigit = new(@"\d", RegexOptions.Compiled);
 
         public RegisterUserValidator()
         {
@@ -298,10 +315,10 @@
         {
             var result = await ValidateAsync(ValidationContext<RegisterUserCommand>
                 .CreateWithOptions((RegisterUserCommand)model, x => x.IncludeProperties(propertyName)));
-            
+
             if (result.IsValid)
                 return [];
-            
+
             return result.Errors.Select(e => e.ErrorMessage);
         };
     }

@@ -52,6 +52,12 @@ public interface IVerificationService
     Task<ResendResponse> ResendAsync(ResendRequest req);
     Task<VerifyResponse> VerifyAsync(VerifyRequest req);
     Task<GetSessionStateResponse> GetStateAsync(string sessionId); // НОВОЕ
+    
+    // New
+    Task<(int cooldown, int ttl)> RequestSmsAsync(string phone, string purpose);
+    Task<ConfirmRegResult> ConfirmRegistrationAsync(string phone, string code, string email, string password, string? fullName = null);
+    Task<bool> ConfirmResetAsync(string phone, string code, string newPassword);
 }
 
 public sealed record VerifyRequest(string SessionId, string Code);
+public sealed record ConfirmRegResult(bool Success, JwtTokenResponse? Token);

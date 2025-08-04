@@ -3,15 +3,19 @@ using System.Security.Claims;
 using System.Text;
 using Application.Common.Interfaces.Contexts;
 using Application.Common.Interfaces.Services;
+using Application.Common.Interfaces.Services.Otp;
 using Domain.Entities;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Contexts;
 using Infrastructure.Services;
+using Infrastructure.Services.Otp;
+using Infrastructure.Services.Sms;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Infrastructure;
@@ -59,17 +63,17 @@ public static class DependencyInitializer
         services.AddAuthentication(o =>
             {
                 o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                o.DefaultChallengeScheme    = JwtBearerDefaults.AuthenticationScheme;
+                o.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
             .AddJwtBearer(op =>
             {
                 op.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey         = new SymmetricSecurityKey(
+                    IssuerSigningKey = new SymmetricSecurityKey(
                         Encoding.UTF8.GetBytes(configurations["JWT:Secret"]!)),
-                    ValidateIssuer           = false,
-                    ValidateAudience         = false
+                    ValidateIssuer = false,
+                    ValidateAudience = false
                 };
 
                 // >>> ВАЖНО: разрешаем токен в query для хаба /hubs/orders
@@ -78,17 +82,31 @@ public static class DependencyInitializer
                     OnMessageReceived = context =>
                     {
                         var accessToken = context.Request.Query["access_token"];
-                        var path        = context.HttpContext.Request.Path;
+                        var path = context.HttpContext.Request.Path;
 
                         if (!string.IsNullOrEmpty(accessToken) &&
                             path.StartsWithSegments("/hubs/orders"))
                         {
                             context.Token = accessToken;
                         }
+
                         return Task.CompletedTask;
                     }
                 };
             });
+
+        services.Configure<SmsIntOptions>(configurations.GetSection(SmsIntOptions.SectionName));
+        services.AddHttpClient<ISmsSender, SmsIntSender>();
+
+        services.AddHttpClient<ISmsSender, SmsIntSender>((sp, client) =>
+        {
+            var cfg = sp.GetRequiredService<IOptions<SmsIntOptions>>().Value;
+            client.BaseAddress = new Uri(cfg.BaseUrl); 
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
+
+        services.Configure<OtpOptions>(configurations.GetSection(OtpOptions.SectionName));
+        services.AddSingleton<IOtpService, OtpService>();
 
         services.AddAuthorization();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
