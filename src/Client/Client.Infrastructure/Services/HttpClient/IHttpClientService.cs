@@ -9,7 +9,7 @@ public interface IHttpClientService
     public Task<ServerResponse<T>> PostAsJsonAsync<T>(string url, object content);
     public Task<ServerResponse> PutAsync(string url);
     public Task<ServerResponse> PutAsJsonAsync(string url, object? content);
-    public Task<ServerResponse> DeleteAsync(string url);
+    public Task<ServerResponse> DeleteAsync(string url, object? content = null);
     public Task<ServerResponse<byte[]>> GetBytesAsync(string url);
     public Task<ServerResponse<object?>> PostAsync(string url, HttpContent content);
 }

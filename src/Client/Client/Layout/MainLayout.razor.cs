@@ -54,7 +54,11 @@ public partial class MainLayout
                 authState.User.IsInRole(ApplicationRoles.SuperAdmin))
             {
                 Console.WriteLine("User is a Salesman, requesting notification permission with dialog.");
-                await NotificationManager.RequestPermissionWithDialogAsync();
+                await NotificationManager.EnableNotificationsAsync();
+            }
+            else
+            {
+                Console.WriteLine("User is not a Salesman, skipping notification permission request.");
             }
         }
     }
