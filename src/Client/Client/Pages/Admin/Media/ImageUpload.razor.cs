@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using MudBlazor;
@@ -83,8 +84,9 @@ public partial class ImageUpload
             if (response.Success)
             {
                 _uploadProgress[file.Name] = 100;
-                var imageUrl = $"{_cdnApiBaseUrl}/api/Images/{file.Name}";
-                _uploadedFiles[file.Name] = imageUrl;
+                var responseContent = await response.Response?.Content.ReadAsStringAsync()!;
+                var url = JsonDocument.Parse(responseContent).RootElement.GetProperty("url").GetString();
+                _uploadedFiles[file.Name] = url!;
                 Snackbar.Add($"Файл {file.Name} успешно загружен", Severity.Success);
             }
             else

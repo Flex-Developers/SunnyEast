@@ -213,16 +213,16 @@ public class HttpClientService(
         };
     }
 
-    public async Task<ServerResponse<object?>> PostAsync(string url, HttpContent content)
+    public async Task<ServerResponse<HttpResponseMessage?>> PostAsync(string url, HttpContent content)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, MakeUrl(url)) { Content = content };
         var response = await SendAsync(request);
 
-        return new ServerResponse<object?>
+        return new ServerResponse<HttpResponseMessage?>
         {
             Success = response?.IsSuccessStatusCode ?? false,
             StatusCode = response?.StatusCode,
-            Response = null
+            Response = response
         };
     }
 
