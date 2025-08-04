@@ -1,3 +1,6 @@
+using System.Runtime.InteropServices;
+using Application.Contract.User.Responses;
+using Blazored.LocalStorage;
 using Client.Infrastructure.Realtime;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -7,6 +10,7 @@ namespace Client;
 public partial class App : IAsyncDisposable
 {
     [Inject] private IOrderRealtimeService RealtimeService { get; set; } = default!;
+    [Inject] private ILocalStorageService Storage { get; set; } = default!;
     [Inject] private AuthenticationStateProvider Auth { get; set; } = default!;
 
     private bool _started;
@@ -22,7 +26,11 @@ public partial class App : IAsyncDisposable
         if (firstRender && !_started)
         {
             _started = true;
-            await TryStartAsync();
+            
+            var token = await Storage.GetItemAsync<JwtTokenResponse>("authToken");
+            
+            if (!string.IsNullOrWhiteSpace(token?.AccessToken))
+                await TryStartAsync();
         }
     }
 
@@ -37,7 +45,15 @@ public partial class App : IAsyncDisposable
 
     private async Task TryStartAsync()
     {
-        await RealtimeService.StartAsync(); // StartAsync сам проверит состояние
+        try
+        {
+            await RealtimeService.StartAsync(); // StartAsync сам проверит состояние
+        }
+        catch (Exception ex)
+        {
+            // не ломать UI, но логировать для отладки
+            Console.WriteLine($"RealtimeService failed to start: {ex.Message}");
+        }
     }
 
     public async ValueTask DisposeAsync()

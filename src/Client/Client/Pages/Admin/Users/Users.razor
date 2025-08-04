@@ -11,6 +11,7 @@
 @inject IStaffService StaffService
 @inject IDialogService Dialogs
 @inject NavigationManager Nav
+@inject ISnackbar Snackbar
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mx-auto">
 
@@ -38,9 +39,8 @@
                 <MudTh class="actions-col">Действия</MudTh>
             </HeaderContent>
 
-
             <RowTemplate>
-                <MudTd DataLabel="Имя фамилия" >@FullName(context)</MudTd>
+                <MudTd DataLabel="Имя фамилия">@FullName(context)</MudTd>
                 <MudTd DataLabel="Email">
                     @if (!string.IsNullOrWhiteSpace(context.Email))
                     {
@@ -48,13 +48,16 @@
                             <span class="email-text ellipsis">@context.Email</span>
                         </MudTooltip>
                     }
-                    else { <span class="muted">—</span> }
+                    else
+                    {
+                        <span class="muted">—</span>
+                    }
                 </MudTd>
                 <MudTd DataLabel="Телефон">@context.Phone</MudTd>
                 <MudTd DataLabel="Дата регистрации" Class="hide-sm">@FormatDate(context.RegisteredAt)</MudTd>
 
                 <MudTd DataLabel="Действия" Class="actions-td">
-                    <div class="actions-cell @(context.IsStaff ? "single" : null)">
+                    <div class="actions-cell @(context.IsStaff ? "triple" : "triple")">
                         <MudButton Variant="Variant.Outlined" Color="Color.Info" Size="Size.Small"
                                    StartIcon="@Icons.Material.Filled.Receipt"
                                    OnClick="@(() => OpenOrders(context))">
@@ -69,6 +72,12 @@
                                 Нанять
                             </MudButton>
                         }
+
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Delete"
+                                   OnClick="@(() => AskDelete(context))">
+                            Удалить
+                        </MudButton>
                     </div>
                 </MudTd>
             </RowTemplate>
@@ -102,7 +111,6 @@
     private static string FormatDate(DateTime? dt)
         => dt.HasValue ? dt.Value.ToLocalTime().ToString("dd.MM.yyyy") : "—";
 
-
     private bool Filter(CustomerResponse u) =>
         string.IsNullOrWhiteSpace(_search)
         || FullName(u).Contains(_search, StringComparison.OrdinalIgnoreCase)
@@ -110,9 +118,7 @@
         || (u.Phone?.Contains(_search, StringComparison.OrdinalIgnoreCase) ?? false);
 
     private static string FullName(CustomerResponse u)
-    {
-        return string.Join(" ", new[] { u.Name, u.Surname }.Where(s => !string.IsNullOrWhiteSpace(s)));
-    }
+        => string.Join(" ", new[] { u.Name, u.Surname }.Where(s => !string.IsNullOrWhiteSpace(s)));
 
     private void OpenOrders(CustomerResponse user)
     {
@@ -146,6 +152,34 @@
         }
     }
 
+    private async Task AskDelete(CustomerResponse user)
+    {
+        var name = FullName(user);
+        var confirmed = await Dialogs.ShowMessageBox(
+            "Удаление пользователя",
+            (MarkupString)$"Удалить пользователя «{name}»? Действие необратимо.",
+            yesText: "Удалить",
+            cancelText: "Отмена",
+            options: new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true }
+        );
+
+        if (confirmed is true)
+        {
+            var ok = await UserService.DeleteAsync(user.Id);
+            if (ok)
+            {
+                _all.RemoveAll(u => u.Id == user.Id);
+                _users.RemoveAll(u => u.Id == user.Id);
+                Snackbar.Add($"Пользователь «{name}» удалён.", Severity.Success);
+                StateHasChanged();
+            }
+            else
+            {
+                Snackbar.Add("Не удалось удалить пользователя.", Severity.Error);
+            }
+        }
+    }
+
 }
 
 <style>
@@ -168,32 +202,27 @@
         }
     }
 
-    /* колонка «Действия» ужимается по содержимому */
     .actions-col {
         width: 1%;
         white-space: nowrap;
     }
 
-    /* сама ячейка не переносит кнопки на новую строку */
     .actions-td {
         white-space: nowrap;
         text-align: right;
     }
 
-    /* компактный контейнер кнопок: ширина = сумме кнопок, без растяжения */
     .actions-cell {
         display: inline-grid;
-        grid-auto-flow: column;          /* кнопки всегда в одну строку */
-        grid-auto-columns: max-content;  /* ширина по содержимому */
+        grid-auto-flow: column;
+        grid-auto-columns: max-content;
         gap: 8px;
-        margin-left: auto;               /* прижать к правому краю ячейки */
+        margin-left: auto;
     }
 
-    /* контролируем ширину кнопок и не даём им растягиваться */
     .actions-cell .mud-button-root {
-        min-width: 100px;       /* подберите 110–140px по вкусу */
-        padding-inline: 12px;   /* чуть компактнее */
-        flex: 0 0 auto; /* не растягивать кнопки */
+        min-width: 100px;
+        padding-inline: 12px;
+        flex: 0 0 auto;
     }
-
 </style>
