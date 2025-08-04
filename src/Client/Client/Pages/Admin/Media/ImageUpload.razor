@@ -1,0 +1,165 @@
+@page "/admin/media/upload"
+@using System.Text.Json
+@using Application.Contract.Identity
+@using Client.Infrastructure.Services.HttpClient
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.Extensions.Configuration
+@inject IHttpClientService HttpClient
+@inject IConfiguration Configuration
+@inject IJSRuntime JSRuntime
+@inject ISnackbar Snackbar
+@attribute [Authorize(Roles = ApplicationRoles.SuperAdmin + "," + ApplicationRoles.Administrator)]
+
+<PageTitle>Загрузка изображений</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">
+        <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Class="mr-2"/>
+        Загрузка изображений
+    </MudText>
+
+    <MudGrid>
+        <MudItem xs="12" md="8">
+            <MudPaper Class="pa-4" Elevation="2">
+                <MudFileUpload T="IReadOnlyList<IBrowserFile>" 
+                              Accept=".png,.jpg,.jpeg,.gif,.webp" 
+                              OnFilesChanged="OnInputFileChanged"
+                              MaximumFileCount="10"
+                              Files="_files"
+                              FilesChanged="FilesChangedHandler">
+                    <ActivatorContent>
+                        <MudButton Variant="Variant.Filled"
+                                  Color="Color.Primary"
+                                  StartIcon="@Icons.Material.Filled.CloudUpload"
+                                  Class="mr-2">
+                            Выберите файлы
+                        </MudButton>
+                        <MudText Typo="Typo.body1" Class="ml-2">
+                            или перетащите файлы сюда
+                        </MudText>
+                    </ActivatorContent>
+                </MudFileUpload>
+
+                <MudPaper Class="d-flex flex-wrap flex-grow-1 mt-4 drop-zone pa-4"
+                         Style="min-height: 200px; border: 2px dashed #ccc; border-radius: 8px;">
+                    @if (!_files.Any())
+                    {
+                        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 150px; width: 100%;">
+                            <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Large" Color="Color.Primary"/>
+                            <MudText Typo="Typo.h6" Color="Color.Primary">Перетащите файлы сюда</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Поддерживаемые форматы: PNG, JPG, JPEG, GIF, WEBP (до 10MB)
+                            </MudText>
+                        </MudStack>
+                    }
+                    else
+                    {
+                        @foreach (var file in _files)
+                        {
+                            <MudCard Class="ma-2" Style="width: 200px;">
+                                <MudCardContent Class="pa-2">
+                                    <MudStack Spacing="2">
+                                        <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start">
+                                            <MudText Typo="Typo.body2" Style="word-break: break-all; flex-grow: 1;">
+                                                @file.Name
+                                            </MudText>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Close" 
+                                                          Size="Size.Small" 
+                                                          OnClick="@(() => RemoveFile(file))"
+                                                          Title="Удалить файл"
+                                                          Disabled="_isUploading"/>
+                                        </MudStack>
+                                        <MudText Typo="Typo.caption">@FormatFileSize(file.Size)</MudText>
+                                        <MudProgressLinear Value="@GetUploadProgress(file)" 
+                                                         Color="Color.Primary" 
+                                                         Class="my-2"
+                                                         Style="@(GetUploadProgress(file) > 0 ? "" : "visibility: hidden;")"/>
+                                        @if (_uploadedFiles.ContainsKey(file.Name))
+                                        {
+                                            <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small"/>
+                                                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" 
+                                                              Size="Size.Small" 
+                                                              OnClick="@(() => CopyUrlToClipboard(_uploadedFiles[file.Name]))"
+                                                              Title="Копировать ссылку"/>
+                                            </MudStack>
+                                        }
+                                    </MudStack>
+                                </MudCardContent>
+                            </MudCard>
+                        }
+                    }
+                </MudPaper>
+
+                @if (_files.Any())
+                {
+                    <MudStack Row Class="mt-4" Justify="Justify.SpaceBetween">
+                        <MudButton Variant="Variant.Outlined" 
+                                  Color="Color.Secondary" 
+                                  StartIcon="@Icons.Material.Filled.Clear"
+                                  OnClick="ClearFiles"
+                                  Disabled="_isUploading">
+                            Очистить
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" 
+                                  Color="Color.Primary" 
+                                  StartIcon="@Icons.Material.Filled.Upload"
+                                  OnClick="UploadFiles"
+                                  Disabled="_isUploading">
+                            @if (_isUploading)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
+                                <text>Загрузка...</text>
+                            }
+                            else
+                            {
+                                <text>Загрузить все (@_files.Count)</text>
+                            }
+                        </MudButton>
+                    </MudStack>
+                }
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4" Elevation="2">
+                <MudText Typo="Typo.h6" Class="mb-3">
+                    Загруженные файлы (@_uploadedFiles.Count)
+                </MudText>
+                @if (_uploadedFiles.Any())
+                {
+                    <MudStack Spacing="2">
+                        @foreach (var file in _uploadedFiles)
+                        {
+                            <MudPaper Class="pa-2" Elevation="1">
+                                <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                    <MudText Typo="Typo.body2" Style="word-break: break-all; flex-grow: 1;">
+                                        @file.Key
+                                    </MudText>
+                                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" 
+                                                  Size="Size.Small" 
+                                                  OnClick="@(() => CopyUrlToClipboard(file.Value))"
+                                                  Title="Копировать ссылку"/>
+                                </MudStack>
+                            </MudPaper>
+                        }
+                    </MudStack>
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Нет загруженных файлов</MudText>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+<style>
+    .drop-zone {
+        transition: all 0.3s ease;
+    }
+    .drop-zone:hover {
+        border-color: var(--mud-palette-primary);
+        background-color: var(--mud-palette-primary-lighten);
+    }
+</style>
