@@ -32,4 +32,12 @@ public class UserController : ApiControllerBase
         var response = await Mediator.Send(query);
         return Ok(response);
     }
+    
+    [Authorize(Roles = ApplicationRoles.SuperAdmin)]
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        await Mediator.Send(new DeleteUserCommand { Id = id });
+        return NoContent();
+    }
 }
