@@ -57,11 +57,11 @@ public class CustomAuthStateProvider(
 
     public async Task MarkUserAsLoggedOut()
     {
+        await notificationManager.DisableNotificationsAsync();
         await localStorageService.RemoveItemAsync("authToken");
         await cartService.ClearAsync();
         var identity = new ClaimsIdentity();
         var principal = new ClaimsPrincipal(identity);
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(principal)));
-        await notificationManager.DisableNotificationsAsync();
     }
 }

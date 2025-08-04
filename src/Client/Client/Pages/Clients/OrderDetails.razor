@@ -176,7 +176,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!await NotificationManager.IsEnabledAsync())
+        if (firstRender && !await NotificationManager.IsEnabledAsync())
         {
             await NotificationManager.EnableNotificationsAsync();
         }
