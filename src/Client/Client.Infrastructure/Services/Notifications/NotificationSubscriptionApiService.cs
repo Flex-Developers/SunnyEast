@@ -31,7 +31,7 @@ public class NotificationSubscriptionApiService(IHttpClientService httpClientSer
         try
         {
             var response =
-                await httpClientService.DeleteAsync("/api/notifications/unsubscribe?endpoint=", unsubscribeEndpoint);
+                await httpClientService.DeleteAsync("/api/notifications/unsubscribe", unsubscribeEndpoint);
             return response.Success;
         }
         catch (Exception)
