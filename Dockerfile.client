@@ -1,0 +1,15 @@
+﻿FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+COPY ["src/Client/Client/Client.csproj", "src/Client/Client/"]
+COPY ["src/Client/Client.Infrastructure/Client.Infrastructure.csproj", "src/Client/Client.Infrastructure/"]
+COPY ["src/Application.Contract/Application.Contract.csproj", "src/Application.Contract/"]
+
+RUN dotnet restore "src/Client/Client/Client.csproj"
+COPY . .
+WORKDIR "/src/src/Client/Client"
+RUN dotnet publish "Client.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+FROM nginx:alpine AS final
+COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf
+EXPOSE 80
