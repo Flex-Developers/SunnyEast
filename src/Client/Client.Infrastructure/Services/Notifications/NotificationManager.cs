@@ -1,3 +1,4 @@
+using Application.Contract.NotificationSubscriptions;
 using Microsoft.Extensions.Logging;
 
 namespace Client.Infrastructure.Services.Notifications;
@@ -5,10 +6,9 @@ namespace Client.Infrastructure.Services.Notifications;
 public interface INotificationManager
 {
     Task InitializeAsync();
-    Task<bool> EnableNotificationsAsync();
     Task<bool> DisableNotificationsAsync();
     Task<bool> IsEnabledAsync();
-    Task<bool> RequestPermissionWithDialogAsync();
+    Task<bool> EnableNotificationsAsync();
 }
 
 public class NotificationManager(
@@ -19,6 +19,7 @@ public class NotificationManager(
     : INotificationManager
 {
     private bool _isInitialized;
+    private CreateNotificationSubscriptionCommand? _currentSubscription;
 
     public async Task InitializeAsync()
     {
@@ -46,51 +47,6 @@ public class NotificationManager(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to initialize notification manager");
-        }
-    }
-
-    public async Task<bool> EnableNotificationsAsync()
-    {
-        if (!_isInitialized)
-        {
-            await InitializeAsync();
-            logger.LogWarning("Notification manager not initialized");
-        }
-
-        try
-        {
-            logger.LogInformation("Enabling push notifications...");
-
-            var requestPermissionResult = await clientService.RequestPermissionAsync();
-            if (!requestPermissionResult)
-            {
-                logger.LogWarning("User denied push notification permission");
-                return false;
-            }
-
-            var subscriptionResult = await clientService.SubscribeAsync();
-
-            if (subscriptionResult != null)
-            {
-                var serverSuccess = await apiService.CreateSubscriptionAsync(subscriptionResult);
-
-                if (!serverSuccess)
-                {
-                    logger.LogWarning("Failed to register subscription with server");
-                    // Don't return false here - the client subscription still works
-                }
-                else
-                {
-                    logger.LogInformation("Successfully registered subscription with server");
-                }
-            }
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to enable push notifications");
-            return false;
         }
     }
 
@@ -130,7 +86,7 @@ public class NotificationManager(
         return await clientService.IsEnabledAsync();
     }
 
-    public async Task<bool> RequestPermissionWithDialogAsync()
+    public async Task<bool> EnableNotificationsAsync()
     {
         if (!_isInitialized)
         {
@@ -140,6 +96,12 @@ public class NotificationManager(
                 logger.LogWarning("Notification manager not initialized");
                 return false;
             }
+        }
+
+        if (_currentSubscription != null)
+        {
+            logger.LogInformation("Notifications already enabled, skipping dialog");
+            return true;
         }
 
         try
@@ -175,6 +137,7 @@ public class NotificationManager(
                 {
                     logger.LogWarning("Failed to register subscription with server");
                 }
+
                 return true;
             }
 
@@ -192,9 +155,10 @@ public class NotificationManager(
         try
         {
             var isEnabled = await clientService.IsEnabledAsync();
-            var status = await clientService.GetSubscriptionAsync();
+            _currentSubscription = await clientService.GetSubscriptionAsync();
 
-            logger.LogInformation("Current notification status: {Status}, Enabled: {IsEnabled}", status, isEnabled);
+            logger.LogDebug("Current notification status: {Status}, Enabled: {IsEnabled}", _currentSubscription,
+                isEnabled);
         }
         catch (Exception ex)
         {

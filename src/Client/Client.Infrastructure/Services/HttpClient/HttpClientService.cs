@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Configuration;
 using MudBlazor;
 using Newtonsoft.Json;
-using System.Text.Json;  
+using System.Text.Json;
 
 namespace Client.Infrastructure.Services.HttpClient;
 
@@ -24,8 +24,8 @@ public class HttpClientService(
 
     private string MakeUrl(string url) =>
         url.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? url : _baseUrl + url;
-    
-    public string? ExceptionMessage { get; private set; } 
+
+    public string? ExceptionMessage { get; private set; }
 
     public async Task<ServerResponse> GetAsync(string url)
     {
@@ -45,7 +45,9 @@ public class HttpClientService(
         {
             Success = response?.IsSuccessStatusCode ?? false,
             StatusCode = response?.StatusCode,
-            Response = response?.IsSuccessStatusCode == true ? await response.Content.ReadFromJsonAsync<T>(HttpJsonOptions.Instance) : default
+            Response = response?.IsSuccessStatusCode == true
+                ? await response.Content.ReadFromJsonAsync<T>(HttpJsonOptions.Instance)
+                : default
         };
     }
 
@@ -53,7 +55,7 @@ public class HttpClientService(
     {
         var response = await SendAsync(new HttpRequestMessage(HttpMethod.Post, _baseUrl + url)
             { Content = JsonContent.Create(content) });
-        
+
         return new ServerResponse
         {
             Success = response?.IsSuccessStatusCode ?? false,
@@ -93,12 +95,12 @@ public class HttpClientService(
 
         return new ServerResponse<T>
         {
-            Success    = response?.IsSuccessStatusCode ?? false,
+            Success = response?.IsSuccessStatusCode ?? false,
             StatusCode = response?.StatusCode,
-            Response   = resultContent
+            Response = resultContent
         };
     }
-    
+
     public async Task<ServerResponse> PutAsync(string url)
     {
         var msg = new HttpRequestMessage(HttpMethod.Put, _baseUrl + url)
@@ -110,11 +112,10 @@ public class HttpClientService(
 
         return new ServerResponse
         {
-            Success    = response?.IsSuccessStatusCode ?? false,
+            Success = response?.IsSuccessStatusCode ?? false,
             StatusCode = response?.StatusCode
         };
     }
-
 
 
     public async Task<ServerResponse> PutAsJsonAsync(string url, object? content)
@@ -128,9 +129,16 @@ public class HttpClientService(
         };
     }
 
-    public async Task<ServerResponse> DeleteAsync(string url)
+    public async Task<ServerResponse> DeleteAsync(string url, object? content = null)
     {
-        var response = await SendAsync(new HttpRequestMessage(HttpMethod.Delete, _baseUrl + url));
+        var request = new HttpRequestMessage(HttpMethod.Delete, _baseUrl + url);
+
+        if (content is not null)
+        {
+            request.Content = JsonContent.Create(content);
+        }
+
+        var response = await SendAsync(request);
         return new ServerResponse
         {
             Success = response?.IsSuccessStatusCode ?? false,
@@ -142,7 +150,7 @@ public class HttpClientService(
     {
         try
         {
-            var token  = await localStorageService.GetItemAsync<JwtTokenResponse>("authToken");
+            var token = await localStorageService.GetItemAsync<JwtTokenResponse>("authToken");
             var client = httpClientFactory.CreateClient(Startup.SunnyEastClientName);
 
             if (token != null)
@@ -152,7 +160,7 @@ public class HttpClientService(
             var response = await client.SendAsync(request);
 
             await CheckForException(response);
-            
+
             if (response?.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
             {
                 snackbar.Add("Пожалуйста, войдите в систему.", Severity.Warning);
@@ -161,9 +169,9 @@ public class HttpClientService(
                 var returnUrl = Uri.EscapeDataString(navigationManager.Uri);
                 navigationManager.NavigateTo($"/login?returnUrl={returnUrl}");
 
-                return null;   
+                return null;
             }
-            
+
             return response;
         }
         catch (Exception e)
@@ -174,34 +182,34 @@ public class HttpClientService(
 
         return null;
     }
-    
+
     public async Task<ServerResponse<byte[]>> GetBytesAsync(string url)
     {
-        var request  = new HttpRequestMessage(HttpMethod.Get, MakeUrl(url));
+        var request = new HttpRequestMessage(HttpMethod.Get, MakeUrl(url));
         var response = await SendAsync(request);
 
         if (response is null)
             return new ServerResponse<byte[]>
             {
-                Success    = false,
+                Success = false,
                 StatusCode = null,
-                Response   = null
+                Response = null
             };
 
         if (!response.IsSuccessStatusCode)
             return new ServerResponse<byte[]>
             {
-                Success    = false,
+                Success = false,
                 StatusCode = response.StatusCode,
-                Response   = null
+                Response = null
             };
 
         var bytes = await response.Content.ReadAsByteArrayAsync();
         return new ServerResponse<byte[]>
         {
-            Success    = true,
+            Success = true,
             StatusCode = response.StatusCode,
-            Response   = bytes
+            Response = bytes
         };
     }
 
@@ -212,9 +220,9 @@ public class HttpClientService(
 
         return new ServerResponse<object?>
         {
-            Success    = response?.IsSuccessStatusCode ?? false,
+            Success = response?.IsSuccessStatusCode ?? false,
             StatusCode = response?.StatusCode,
-            Response   = null
+            Response = null
         };
     }
 
@@ -238,8 +246,8 @@ public class ProblemDetails
 {
     public string? Type { get; set; }
     public string? Title { get; set; }
-    
+
     public int? Status { get; set; }
-    
+
     public string? Detail { get; set; }
 }
