@@ -42,6 +42,6 @@ public static class DependencyInitializer
             .AddScoped<INotificationSubscriptionApiService, NotificationSubscriptionApiService>()
             .AddScoped<INotificationDialogService, NotificationDialogService>()
             .AddScoped<INotificationManager, NotificationManager>()
-            .AddScoped<IVerificationService, VerificationService>();
+            .AddScoped<IVerificationClient, VerificationClient>();
     }
 }

@@ -17,37 +17,33 @@ public class LoginUserCommandHandler(IJwtTokenService jwtTokenService, UserManag
     {
         ApplicationUser user;
 
-        if (string.IsNullOrWhiteSpace(request.Email) == false)
+        if (!string.IsNullOrWhiteSpace(request.Email))
         {
             user = (await userManager.Users.FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken))!;
             _ = user ?? throw new UnauthorizedAccessException("Почта не найдена.");
         }
-        else if (string.IsNullOrWhiteSpace(request.PhoneNumber) == false)
+        else if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
         {
-            user = (await userManager.Users.FirstOrDefaultAsync(u => u.PhoneNumber == request.PhoneNumber,
-                cancellationToken))!;
+            var normalized = NormalizePhoneOrNull(request.PhoneNumber) ?? request.PhoneNumber;
+            user = (await userManager.Users.FirstOrDefaultAsync(u => u.PhoneNumber == normalized, cancellationToken))!;
             _ = user ?? throw new UnauthorizedAccessException("Телефонный номер не найден.");
         }
         else
+        {
             throw new ValidationException("Ошибка, проверьте введенные данные!");
+        }
 
-
-        if (await userManager.CheckPasswordAsync(user, request.Password) == false)
+        if (!await userManager.CheckPasswordAsync(user, request.Password))
             throw new UnauthorizedAccessException("Неправильный пароль!");
-
 
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, user.UserName!), // как и было (для GetUserName())
-            new("uid", user.Id.ToString())                  // НОВЫЙ клейм с GUID
+            new(ClaimTypes.NameIdentifier, user.UserName!),
+            new("uid", user.Id.ToString())
         };
 
         var roles = await userManager.GetRolesAsync(user);
-
-        foreach (var role in roles)
-        {
-            claims.Add(new Claim(ClaimTypes.Role, role));
-        }
+        foreach (var role in roles) claims.Add(new Claim(ClaimTypes.Role, role));
 
         return new JwtTokenResponse
         {
@@ -55,5 +51,20 @@ public class LoginUserCommandHandler(IJwtTokenService jwtTokenService, UserManag
             AccessToken = jwtTokenService.CreateTokenByClaims(claims, out var expireDate),
             AccessTokenValidateTo = expireDate
         };
+    }
+
+    private static string? NormalizePhoneOrNull(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return null;
+        var digits = System.Text.RegularExpressions.Regex.Replace(input, @"\D", "");
+        if (digits.Length == 11 && (digits.StartsWith("8") || digits.StartsWith("7")))
+            digits = "7" + digits[1..];
+        else if (digits.Length == 10 && digits.StartsWith("9"))
+            digits = "7" + digits;
+        else if (!digits.StartsWith("7"))
+            return null;
+
+        return System.Text.RegularExpressions.Regex.Replace(
+            digits, @"^7(\d{3})(\d{3})(\d{2})(\d{2})$", "+7-$1-$2-$3-$4");
     }
 }

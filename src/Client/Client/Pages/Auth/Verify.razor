@@ -1,8 +1,14 @@
 @page "/verify"
+@using Blazored.LocalStorage
+@using Client.Infrastructure.Services.Auth
+@using Client.Infrastructure.Services.Verification
 @using Severity = MudBlazor.Severity
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IJSRuntime JSRuntime
+@inject IVerificationClient VerificationClient
+@inject IAuthService AuthService
+@inject ILocalStorageService LocalStorage
 
 <PageTitle>Подтверждение кода</PageTitle>
 
@@ -127,8 +133,9 @@
     private string _channel = "e-mail";
     private string? _destination;
     private string _purpose = "register";
-    private int _codeLength = 6;
+    private int _codeLength = 4;
     private string _returnUrl = "/";
+    private string _sessionId = "";
 
     private string[] _codeValues = [];
     private bool _isSubmitting = false;
@@ -148,6 +155,7 @@
         _purpose = query["purpose"] ?? _purpose;
         _channel = query["channel"] ?? _channel;
         _destination = query["to"];
+        _sessionId = query["sid"] ?? "";
         _title = query["title"] ?? (_purpose switch
         {
             "register" => "Подтверждение регистрации",
@@ -162,9 +170,7 @@
 
         _codeValues = new string[_codeLength];
         for (int i = 0; i < _codeLength; i++)
-        {
             _codeValues[i] = "";
-        }
 
         StartResendTimer();
     }
@@ -302,32 +308,59 @@
 
         try
         {
-            // Имитация проверки кода
-            await Task.Delay(1500);
+            var verify = await VerificationClient.VerifyAsync(_sessionId, code);
+            if (!verify.Success)
+                throw new Exception("Неверный код.");
 
-            // TODO: Вызов реального API
-            // var result = await VerificationService.VerifyCode(code, _purpose, _channel, _destination);
+            // 1) Достаём черновик регистрации
+            var draft = await LocalStorage.GetItemAsync<Application.Contract.User.Commands.RegisterUserCommand>("pendingRegistration");
+            if (draft is null)
+            {
+                Snackbar.Add("Сессия регистрации не найдена. Начните заново.", Severity.Error);
+                Navigation.NavigateTo("/register");
+                return;
+            }
+
+            // 2) Создаём пользователя (нормализуем телефон под +7-XXX-XXX-XX-XX)
+            var registerCmd = new Application.Contract.User.Commands.RegisterUserCommand
+            {
+                Name = draft.Name,
+                Surname = draft.Surname,
+                Email = string.IsNullOrWhiteSpace(draft.Email) ? null : draft.Email,
+                PhoneNumber = string.IsNullOrWhiteSpace(draft.PhoneNumber) ? null : $"+7-{draft.PhoneNumber}",
+                Password = draft.Password,
+                ConfirmPassword = draft.ConfirmPassword
+            };
+
+            var registered = await AuthService.RegisterAsync(registerCmd);
+            if (!registered)
+                throw new Exception("Ошибка регистрации.");
+
+            // 3) Авто-вход
+            var loginOk = await AuthService.LoginAsync(new Application.Contract.User.Commands.LoginUserCommand
+            {
+                Email = draft.Email ?? "",
+                PhoneNumber = string.IsNullOrWhiteSpace(draft.PhoneNumber) ? "" : $"+7-{draft.PhoneNumber}",
+                Password = draft.Password
+            }, _returnUrl);
+
+            await LocalStorage.RemoveItemAsync("pendingRegistration");
 
             _showSuccess = true;
             StateHasChanged();
 
-            await Task.Delay(1500);
-
-            Snackbar.Add("Код успешно подтвержден!", Severity.Success);
+            await Task.Delay(800);
+            Snackbar.Add("Код подтверждён. Добро пожаловать!", Severity.Success);
             Navigation.NavigateTo(_returnUrl, forceLoad: false);
         }
-        catch
+        catch (Exception ex)
         {
-            Snackbar.Add("Неверный код. Попробуйте еще раз.", Severity.Error);
+            Snackbar.Add(ex.Message, Severity.Error);
 
-            // Очистка полей при ошибке
             for (int i = 0; i < _codeLength; i++)
-            {
                 _codeValues[i] = "";
-            }
 
-            await JSRuntime.InvokeVoidAsync("eval",
-                "document.getElementById('code-input-0')?.focus()");
+            await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('code-input-0')?.focus()");
         }
         finally
         {
@@ -335,25 +368,25 @@
         }
     }
 
+
     private async Task ResendCode()
     {
-        if (!_canResend) return;
+        if (!_canResend || string.IsNullOrWhiteSpace(_sessionId)) return;
 
         try
         {
-            // TODO: Вызов API повторной отправки
-            await Task.Delay(500);
-
+            var r = await VerificationClient.ResendAsync(_sessionId);
             Snackbar.Add("Код отправлен повторно", Severity.Info);
             _canResend = false;
-            _resendTimer = 60;
+            _resendTimer = r.CooldownSeconds;
             StartResendTimer();
         }
-        catch
+        catch (Exception ex)
         {
-            Snackbar.Add("Ошибка при отправке кода", Severity.Error);
+            Snackbar.Add($"Ошибка при отправке кода: {ex.Message}", Severity.Error);
         }
     }
+
 
     private void StartResendTimer()
     {

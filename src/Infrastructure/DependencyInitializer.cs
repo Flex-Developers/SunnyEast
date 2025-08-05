@@ -92,5 +92,11 @@ public static class DependencyInitializer
 
         services.AddAuthorization();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+
+        // >>> ВЕРИФИКАЦИЯ + SMSInt
+        services.AddMemoryCache();
+        services.AddHttpClient<ISmsSenderService, SmsIntService>();
+        services.AddSingleton<IVerificationSessionStore, VerificationSessionStore>();
+
     }
 }
