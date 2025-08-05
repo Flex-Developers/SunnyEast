@@ -27,10 +27,13 @@
                         <MudIcon Icon="@Icons.Material.Filled.Shield" Size="Size.Large"/>
                     </div>
                     <MudText Typo="Typo.h4" Class="title">@_title</MudText>
-                    <MudText Typo="Typo.body1" Class="subtitle">
-                        Мы отправили код подтверждения на
-                    </MudText>
-                    <span class="destination">@(_destination ?? _channel)</span>
+                    @if (!_isExpired)
+                    {
+                        <MudText Typo="Typo.body1" Class="subtitle">
+                            Мы отправили код подтверждения на
+                        </MudText>
+                        <span class="destination">@(_destination ?? _channel)</span>
+                    }
                 </div>
 
                 <div class="code-input-container">
@@ -53,7 +56,7 @@
                                 @onfocus="@(async () => await OnFocus(index))"
                                 placeholder="·"
                                 id="@($"code-input-{index}")"
-                                disabled="@_isSubmitting"/>
+                                disabled="@(_isSubmitting || _isExpired || !_sessionLoaded)"/>
                         }
                     </div>
 
@@ -71,7 +74,7 @@
                         Color="Color.Primary"
                         FullWidth="true"
                         Size="Size.Large"
-                        Disabled="@(!IsCodeComplete || _isSubmitting)"
+                        Disabled="@(!IsCodeComplete || _isSubmitting || _isExpired || !_sessionLoaded)"
                         OnClick="SubmitCode"
                         Class="submit-button">
                         @if (_isSubmitting)
@@ -97,9 +100,18 @@
                         }
                         else
                         {
-                            <MudText Typo="Typo.body2" Class="resend-timer">
-                                Отправить повторно через @_resendTimer сек
-                            </MudText>
+                            @if (_isExpired)
+                            {
+                                <MudText Typo="Typo.body2" Class="resend-timer">
+                                    Сессия истекла.
+                                </MudText>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body2" Class="resend-timer">
+                                    Код действует ещё @_ttl сек
+                                </MudText>
+                            }
                         }
                     </div>
 
@@ -136,6 +148,13 @@
     private int _codeLength = 4;
     private string _returnUrl = "/";
     private string _sessionId = "";
+    
+    private int _ttl;               // секунды до истечения сессии
+    private int _attemptsLeft;
+    private bool _isExpired;
+    private bool _sessionLoaded;
+    private Timer? _tick;
+
 
     private string[] _codeValues = [];
     private bool _isSubmitting = false;
@@ -182,8 +201,51 @@
             // Фокус на первом поле ввода
             await Task.Delay(300); // Ждем анимацию
             await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('code-input-0')?.focus()");
+            await LoadStateAsync();  
         }
     }
+    
+    private async Task LoadStateAsync()
+    {
+        try
+        {
+            var s = await VerificationClient.GetStateAsync(_sessionId);
+            _sessionLoaded = true;
+            _ttl = s.TtlSeconds;
+            _attemptsLeft = s.AttemptsLeft;
+            _canResend = s.CooldownSeconds <= 0;
+            _resendTimer = s.CooldownSeconds;
+
+            // если to/ch не пришли в query — возьмём из ответа
+            _destination ??= s.MaskedPhone ?? s.MaskedEmail;
+
+            StartTick();
+            StateHasChanged();
+        }
+        catch
+        {
+            _isExpired = true;
+            _canResend = false;
+            Snackbar.Add("Сессия не найдена или уже завершена. Начните заново.", Severity.Error);
+        }
+    }
+
+    private void StartTick()
+    {
+        _tick?.Dispose();
+        _tick = new Timer(_ =>
+        {
+            var changed = false;
+
+            if (_ttl > 0) { _ttl--; changed = true; }
+            if (_resendTimer > 0) { _resendTimer--; changed = true; }
+
+            if (_ttl <= 0 && !_isExpired) { _isExpired = true; _canResend = false; changed = true; }
+
+            if (changed) InvokeAsync(StateHasChanged);
+        }, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+    }
+
 
     private async Task OnCodeInput(int index, string value)
     {
@@ -301,14 +363,35 @@
 
     private async Task SubmitCode()
     {
-        if (!IsCodeComplete || _isSubmitting) return;
-
+        if (!IsCodeComplete || _isSubmitting || _isExpired || !_sessionLoaded) 
+            return;
+        
         _isSubmitting = true;
-        var code = string.Join("", _codeValues);
+        
 
         try
         {
+            // Актуализируем состояние
+            var st = await VerificationClient.GetStateAsync(_sessionId);
+            _ttl = st.TtlSeconds;
+            _attemptsLeft = st.AttemptsLeft;
+            
+            if (_ttl <= 0) 
+            { 
+                _isExpired = true;
+                Snackbar.Add("Сессия истекла. Запросите новый код.", Severity.Warning);
+                return; 
+            }
+
+            if (_attemptsLeft <= 0)
+            {
+                Snackbar.Add("Исчерпаны попытки. Начните заново.", Severity.Error); 
+                return;
+            }
+
+            var code = string.Join("", _codeValues);
             var verify = await VerificationClient.VerifyAsync(_sessionId, code);
+            
             if (!verify.Success)
                 throw new Exception("Неверный код.");
 
@@ -371,21 +454,26 @@
 
     private async Task ResendCode()
     {
-        if (!_canResend || string.IsNullOrWhiteSpace(_sessionId)) return;
+        if (!_canResend || _isExpired || string.IsNullOrWhiteSpace(_sessionId)) return;
 
         try
         {
+            // Проверим, что сессия ещё жива
+            var st = await VerificationClient.GetStateAsync(_sessionId);
+            if (st.TtlSeconds <= 0) { _isExpired = true; _canResend = false; Snackbar.Add("Сессия истекла. Начните заново.", Severity.Warning); return; }
+
             var r = await VerificationClient.ResendAsync(_sessionId);
             Snackbar.Add("Код отправлен повторно", Severity.Info);
             _canResend = false;
             _resendTimer = r.CooldownSeconds;
-            StartResendTimer();
         }
         catch (Exception ex)
         {
+            _canResend = false;            // не запускаем новый локальный отсчёт по ошибке
             Snackbar.Add($"Ошибка при отправке кода: {ex.Message}", Severity.Error);
         }
     }
+
 
 
     private void StartResendTimer()
@@ -415,6 +503,7 @@
     public void Dispose()
     {
         _timer?.Dispose();
+        _tick?.Dispose();
     }
 
 }
