@@ -1,18 +1,27 @@
 @page "/verify"
+@using Application.Contract.User.Commands
+@using Application.Contract.Verification.Responses
+@using Client.Infrastructure.Services.Auth
+@using Client.Infrastructure.Services.Verification
+@using Client.Infrastructure.Services.Verification.Register
 @using Severity = MudBlazor.Severity
+
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IJSRuntime JSRuntime
+@inject IRegistrationDraftService DraftService
+@inject IVerificationClient VerificationClient
+@inject IAuthService AuthService
+@implements IDisposable
 
 <PageTitle>Подтверждение кода</PageTitle>
 
 <div class="verify-wrapper">
-
     <MudContainer Gutters="false" MaxWidth="MaxWidth.False" Class="verify-container">
         <MudPaper Class="@($"verify-card {(_showSuccess ? "success" : string.Empty)}")"
                   Elevation="8"
                   Square="false"
-                  @onkeyup="OnKeyUp">
+                  @onkeyup="OnKeyUpAsync">
 
             @if (!_showSuccess)
             {
@@ -21,10 +30,12 @@
                         <MudIcon Icon="@Icons.Material.Filled.Shield" Size="Size.Large"/>
                     </div>
                     <MudText Typo="Typo.h4" Class="title">@_title</MudText>
-                    <MudText Typo="Typo.body1" Class="subtitle">
-                        Мы отправили код подтверждения на
-                    </MudText>
-                    <span class="destination">@(_destination ?? _channel)</span>
+
+                    @if (!_isExpired)
+                    {
+                        <MudText Typo="Typo.body1" Class="subtitle">Мы отправили код подтверждения на</MudText>
+                        <span class="destination">@(_destination ?? _channel)</span>
+                    }
                 </div>
 
                 <div class="code-input-container">
@@ -32,22 +43,21 @@
                         @for (int i = 0; i < _codeLength; i++)
                         {
                             var index = i;
-                            <input
-                                type="text"
-                                inputmode="numeric"
-                                pattern="[0-9]*"
-                                autocomplete="one-time-code"
-                                maxlength="1"
-                                class="code-input @(_codeValues[index].Length > 0 ? "filled" : "")"
-                                value="@_codeValues[index]"
-                                @oninput="@(e => OnCodeInput(index, e.Value?.ToString() ?? ""))"
-                                @onkeydown="@(e => OnKeyDown(index, e))"
-                                @onkeyup="@(e => OnKeyUp(e))"
-                                @onpaste="@(async e => await OnPaste(e))"
-                                @onfocus="@(async () => await OnFocus(index))"
-                                placeholder="·"
-                                id="@($"code-input-{index}")"
-                                disabled="@_isSubmitting"/>
+                            <input type="text"
+                                   inputmode="numeric"
+                                   pattern="[0-9]*"
+                                   autocomplete="one-time-code"
+                                   maxlength="1"
+                                   class="code-input @(_codeValues[index].Length > 0 ? "filled" : "")"
+                                   value="@_codeValues[index]"
+                                   @oninput="@(e => OnCodeInputAsync(index, e.Value?.ToString() ?? ""))"
+                                   @onkeydown="@(e => OnKeyDownAsync(index, e))"
+                                   @onkeyup="@(e => OnKeyUpAsync(e))"
+                                   @onpaste="@(async e => await OnPasteAsync(e))"
+                                   @onfocus="@(async () => await OnFocusAsync(index))"
+                                   placeholder="·"
+                                   id="@($"code-input-{index}")"
+                                   disabled="@(!CanInteract)"/>
                         }
                     </div>
 
@@ -60,14 +70,13 @@
                 </div>
 
                 <div class="actions">
-                    <MudButton
-                        Variant="Variant.Filled"
-                        Color="Color.Primary"
-                        FullWidth="true"
-                        Size="Size.Large"
-                        Disabled="@(!IsCodeComplete || _isSubmitting)"
-                        OnClick="SubmitCode"
-                        Class="submit-button">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               FullWidth="true"
+                               Size="Size.Large"
+                               Disabled="@(!CanSubmit)"
+                               OnClick="SubmitCodeAsync"
+                               Class="submit-button">
                         @if (_isSubmitting)
                         {
                             <span>Проверяем...</span>
@@ -79,29 +88,32 @@
                     </MudButton>
 
                     <div class="resend-section">
-                        @if (_canResend)
+                        @if (_resendBlockedForToday)
                         {
-                            <MudButton
-                                Variant="Variant.Text"
-                                Color="Color.Primary"
-                                OnClick="ResendCode"
-                                Class="resend-button">
+                            <MudText Typo="Typo.body2" Class="resend-timer">Повторная отправка недоступна сегодня.
+                            </MudText>
+                        }
+                        else if (_canResend)
+                        {
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="ResendCodeAsync"
+                                       Class="resend-button">
                                 Отправить код повторно
                             </MudButton>
+                        }
+                        else if (_isExpired)
+                        {
+                            <MudText Typo="Typo.body2" Class="resend-timer">Сессия истекла.</MudText>
                         }
                         else
                         {
                             <MudText Typo="Typo.body2" Class="resend-timer">
-                                Отправить повторно через @_resendTimer сек
+                                Повторная отправка через @_resendTimer сек
                             </MudText>
                         }
                     </div>
 
-                    <MudButton
-                        Variant="Variant.Outlined"
-                        Color="Color.Default"
-                        OnClick="Cancel"
-                        Class="cancel-button">
+
+                    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="Cancel" Class="cancel-button">
                         Отмена
                     </MudButton>
                 </div>
@@ -113,34 +125,76 @@
                         <MudIcon Icon="@Icons.Material.Filled.CheckCircle"/>
                     </div>
                     <MudText Typo="Typo.h5" Class="success-title">Успешно!</MudText>
-                    <MudText Typo="Typo.body1" Class="success-message">
-                        Код подтвержден. Перенаправляем вас...
-                    </MudText>
+                    <MudText Typo="Typo.body1" Class="success-message">Код подтвержден. Перенаправляем вас...</MudText>
                 </div>
             }
         </MudPaper>
     </MudContainer>
 </div>
 
-@code {
+@code
+{
+    // ======== Константы текстов ========
+    private const string MsgSessionNotFound = "Сессия не найдена или уже завершена. Начните заново.";
+    private const string MsgSessionExpired = "Сессия истекла. Запросите новый код.";
+    private const string MsgAttemptsExhausted = "Исчерпаны попытки. Начните заново.";
+    private const string MsgInvalidCode = "Неверный код.";
+    private const string MsgWelcome = "Вы вошли в систему. Добро пожаловать!";
+    private const string MsgResent = "Код отправлен повторно";
+
+    // ======== Параметры из query ========
     private string _title = "Подтвердите код";
     private string _channel = "e-mail";
     private string? _destination;
     private string _purpose = "register";
-    private int _codeLength = 6;
+    private int _codeLength = 4;
     private string _returnUrl = "/";
+    private string _sessionId = "";
 
+    // ======== Состояние сессии ========
+    private int _ttl;
+    private int _attemptsLeft;
+    private bool _isExpired;
+    private bool _sessionLoaded;
+
+    // ======== UI состояние ========
     private string[] _codeValues = [];
-    private bool _isSubmitting = false;
-    private bool _showSuccess = false;
-    private bool _canResend = false;
-    private int _resendTimer = 60;
-    private Timer? _timer;
+    private bool _isSubmitting;
+    private bool _showSuccess;
+
+    // флаги для resend
+    private bool _resending;
+    private bool _resendBlockedForToday;
+    private bool _canResend;
+    private int _resendTimer;
+    private Timer? _tick;
+
     private ElementReference _codeInputsRef;
 
+    // ======== Вычисляемые свойства ========
     private bool IsCodeComplete => _codeValues.All(v => v is { Length: 1 } && char.IsDigit(v[0]));
+    private bool CanInteract => !_isSubmitting && !_resending && !_isExpired && _sessionLoaded;
+    private bool CanSubmit => IsCodeComplete && CanInteract;
 
+    // ======== Жизненный цикл ========
     protected override void OnInitialized()
+    {
+        ReadQueryParameters();
+        InitCodeArray();
+        _resendTimer = 60; // стартовое ожидание до загрузки состояния
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        await Task.Delay(300);
+        await FocusInputAsync(0);
+        await LoadStateAsync();
+    }
+
+    // ======== Инициализация ========
+    private void ReadQueryParameters()
     {
         var uri = new Uri(Navigation.Uri);
         var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
@@ -148,40 +202,100 @@
         _purpose = query["purpose"] ?? _purpose;
         _channel = query["channel"] ?? _channel;
         _destination = query["to"];
-        _title = query["title"] ?? (_purpose switch
+        _sessionId = query["sid"] ?? "";
+
+        _title = query["title"] ?? _purpose switch
         {
             "register" => "Подтверждение регистрации",
             "login" => "Подтверждение входа",
             "reset" => "Подтверждение сброса пароля",
             _ => "Подтвердите код"
-        });
+        };
+
         _returnUrl = query["returnUrl"] ?? "/";
 
         if (int.TryParse(query["len"], out var len) && len is >= 4 and <= 8)
             _codeLength = len;
+    }
 
+    private void InitCodeArray()
+    {
         _codeValues = new string[_codeLength];
-        for (int i = 0; i < _codeLength; i++)
-        {
-            _codeValues[i] = "";
-        }
-
-        StartResendTimer();
+        for (int i = 0; i < _codeLength; i++) _codeValues[i] = "";
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private async Task LoadStateAsync()
     {
-        if (firstRender)
+        try
         {
-            // Фокус на первом поле ввода
-            await Task.Delay(300); // Ждем анимацию
-            await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('code-input-0')?.focus()");
+            var s = await VerificationClient.GetStateAsync(_sessionId);
+            _sessionLoaded = true;
+
+            _ttl = s.TtlSeconds;
+            _attemptsLeft = s.AttemptsLeft;
+            _canResend = s.CooldownSeconds <= 0 && !_resendBlockedForToday;
+            _resendTimer = s.CooldownSeconds;
+
+            _destination ??= s.MaskedPhone ?? s.MaskedEmail;
+
+            StartTick();
+            StateHasChanged();
+        }
+        catch
+        {
+            _isExpired = true;
+            _canResend = false; 
+            ShowSnack(MsgSessionNotFound, Severity.Error);
         }
     }
 
-    private async Task OnCodeInput(int index, string value)
+    // ======== Таймер ========
+    private void StartTick()
     {
-        // Берём только последнюю введённую цифру
+        StopTick();
+
+        _tick = new Timer(_ =>
+        {
+            var changed = false;
+
+            if (_ttl > 0)
+            {
+                _ttl--;
+                changed = true;
+            }
+
+            if (_resendTimer > 0)
+            {
+                _resendTimer--;
+                changed = true;
+            }
+
+            if (_ttl <= 0 && !_isExpired)
+            {
+                _isExpired = true;
+                _canResend = false;
+                changed = true;
+            }
+
+            if (_resendTimer <= 0 && !_canResend && !_isExpired && !_resendBlockedForToday)
+            {
+                _canResend = true;
+                changed = true;
+            }
+
+            if (changed) InvokeAsync(StateHasChanged);
+        }, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+    }
+
+    private void StopTick()
+    {
+        _tick?.Dispose();
+        _tick = null;
+    }
+
+    // ======== Обработчики инпутов ========
+    private async Task OnCodeInputAsync(int index, string value)
+    {
         var last = (value ?? string.Empty).Trim().LastOrDefault();
         if (last == default || !char.IsDigit(last))
         {
@@ -192,142 +306,131 @@
 
         _codeValues[index] = last.ToString();
 
-        // Фокус вперёд, если не крайнее поле
         if (index < _codeLength - 1)
-        {
-            await JSRuntime.InvokeVoidAsync(
-                "eval",
-                $"document.getElementById('code-input-{index + 1}')?.focus()");
-        }
+            await FocusInputAsync(index + 1);
     }
 
-
-    private async Task OnKeyDown(int index, KeyboardEventArgs e)
+    private async Task OnKeyDownAsync(int index, KeyboardEventArgs e)
     {
         if (e.Key == "Backspace" && string.IsNullOrEmpty(_codeValues[index]) && index > 0)
         {
-            // Переход к предыдущему полю при удалении
             _codeValues[index - 1] = "";
-            await JSRuntime.InvokeVoidAsync("eval",
-                $"document.getElementById('code-input-{index - 1}')?.focus()");
+            await FocusInputAsync(index - 1);
         }
         else if (e.Key == "ArrowLeft" && index > 0)
         {
-            await JSRuntime.InvokeVoidAsync("eval",
-                $"document.getElementById('code-input-{index - 1}')?.focus()");
+            await FocusInputAsync(index - 1);
         }
         else if (e.Key == "ArrowRight" && index < _codeLength - 1)
         {
-            await JSRuntime.InvokeVoidAsync("eval",
-                $"document.getElementById('code-input-{index + 1}')?.focus()");
+            await FocusInputAsync(index + 1);
         }
     }
 
-    private async Task OnKeyUp(KeyboardEventArgs e)
+    private async Task OnKeyUpAsync(KeyboardEventArgs e)
     {
         if (_isSubmitting) return;
 
-        if ((e.Key == "Enter" || e.Code == "Enter" || e.Key == "NumpadEnter") &&
-            !e.ShiftKey && !e.CtrlKey && !e.AltKey && !e.MetaKey)
-        {
-            await SubmitCode();
-        }
+        var isPlainEnter = e is not null
+                           && (e.Key is "Enter" or "NumpadEnter" || e.Code == "Enter")
+                           && !e.ShiftKey && !e.CtrlKey && !e.AltKey && !e.MetaKey;
+
+        if (isPlainEnter)
+            await SubmitCodeAsync();
     }
 
-
-    private async Task OnPaste(ClipboardEventArgs e)
+    private async Task OnPasteAsync(ClipboardEventArgs _)
     {
-        // Получаем вставленный текст через JS
         var pastedText = await JSRuntime.InvokeAsync<string>("eval", "navigator.clipboard.readText()");
-
-
         if (!string.IsNullOrEmpty(pastedText))
-        {
-            await HandlePastedCode(pastedText);
-        }
+            await HandlePastedCodeAsync(pastedText);
     }
 
-    private async Task HandlePastedCode(string pastedText)
+    private async Task HandlePastedCodeAsync(string pastedText)
     {
         var cleanCode = new string((pastedText ?? string.Empty).Where(char.IsDigit).ToArray());
 
         for (int i = 0; i < Math.Min(cleanCode.Length, _codeLength); i++)
             _codeValues[i] = cleanCode[i].ToString();
 
-        // Фокус на первом пустом поле или на последнем занятом
         var firstEmpty = Array.FindIndex(_codeValues, v => string.IsNullOrEmpty(v));
         var focusIndex = firstEmpty >= 0 ? firstEmpty : _codeLength - 1;
 
-        await JSRuntime.InvokeVoidAsync(
-            "eval",
-            $"document.getElementById('code-input-{focusIndex}')?.focus()");
-
+        await FocusInputAsync(focusIndex);
         StateHasChanged();
     }
 
-
-    private async Task HandleMultipleCharacters(int startIndex, string value)
+    private async Task OnFocusAsync(int index)
     {
-        var cleanValue = new string((value ?? string.Empty).Where(char.IsDigit).ToArray());
-
-        for (int i = 0; i < cleanValue.Length && startIndex + i < _codeLength; i++)
-            _codeValues[startIndex + i] = cleanValue[i].ToString();
-
-        var firstEmpty = Array.FindIndex(_codeValues, v => string.IsNullOrEmpty(v));
-        var focusIndex = firstEmpty >= 0 ? firstEmpty : Math.Min(startIndex + cleanValue.Length - 1, _codeLength - 1);
-
-        await JSRuntime.InvokeVoidAsync(
-            "eval",
-            $"document.getElementById('code-input-{focusIndex}')?.focus()");
-
-        StateHasChanged();
-    }
-
-
-    private async Task OnFocus(int index)
-    {
-        // Небольшая задержка даёт шанс виртуальной клавиатуре «вскрыться»
         await Task.Delay(50);
         await JSRuntime.InvokeVoidAsync("eval",
             $"document.getElementById('code-input-{index}')?.scrollIntoView({{ behavior:'smooth', block:'center', inline:'center' }})");
     }
 
+    private Task FocusInputAsync(int index)
+        => JSRuntime.InvokeVoidAsync("eval", $"document.getElementById('code-input-{index}')?.focus()").AsTask();
 
-    private async Task SubmitCode()
+    private void ResetInputs()
     {
-        if (!IsCodeComplete || _isSubmitting) return;
+        for (int i = 0; i < _codeLength; i++) _codeValues[i] = "";
+    }
+
+    // ======== Сабмит ========
+    private async Task SubmitCodeAsync()
+    {
+        if (!CanSubmit) return;
 
         _isSubmitting = true;
-        var code = string.Join("", _codeValues);
 
         try
         {
-            // Имитация проверки кода
-            await Task.Delay(1500);
+            // обновим состояние с сервера перед верификацией
+            if (!await RefreshStateAsync()) return;
 
-            // TODO: Вызов реального API
-            // var result = await VerificationService.VerifyCode(code, _purpose, _channel, _destination);
+            var code = string.Join("", _codeValues);
+            var verify = await TryVerifyAsync(_sessionId, code);
 
-            _showSuccess = true;
-            StateHasChanged();
-
-            await Task.Delay(1500);
-
-            Snackbar.Add("Код успешно подтвержден!", Severity.Success);
-            Navigation.NavigateTo(_returnUrl, forceLoad: false);
-        }
-        catch
-        {
-            Snackbar.Add("Неверный код. Попробуйте еще раз.", Severity.Error);
-
-            // Очистка полей при ошибке
-            for (int i = 0; i < _codeLength; i++)
+            if (verify is null || !verify.Success)
             {
-                _codeValues[i] = "";
+                await HandleVerifyFailureAsync();
+                return;
             }
 
-            await JSRuntime.InvokeVoidAsync("eval",
-                "document.getElementById('code-input-0')?.focus()");
+            var publicPart = await DraftService.GetPublicAsync();
+            var (pwd, confirm) = DraftService.GetPassword();
+
+            if (publicPart is null || string.IsNullOrEmpty(pwd) || string.IsNullOrEmpty(confirm))
+            {
+                ShowSnack("Сессия регистрации не найдена. Начните заново.", Severity.Error);
+                Navigation.NavigateTo("/register");
+                return;
+            }
+
+            if (!await RegisterAsync(publicPart, pwd, confirm))
+                throw new Exception("Ошибка регистрации.");
+
+
+            var loginOk = await LoginAsync(publicPart, pwd);
+            if (loginOk)
+            {
+                await DraftService.ClearAllAsync();
+                await ShowSuccessAndNavigateAsync();
+            }
+            else
+            {
+                await DraftService.ClearPublicAsync(); 
+
+                ShowSnack("Регистрация выполнена, но войти не удалось. Введите пароль вручную.", Severity.Warning);
+                Navigation.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(_returnUrl)}", forceLoad: false);
+                return; 
+            }
+
+        }
+        catch (Exception ex)
+        {
+            ShowSnack(ex.Message, Severity.Error);
+            ResetInputs();
+            await FocusInputAsync(0);
         }
         finally
         {
@@ -335,55 +438,225 @@
         }
     }
 
-    private async Task ResendCode()
+    private async Task<bool> RefreshStateAsync()
     {
-        if (!_canResend) return;
+        var st = await VerificationClient.GetStateAsync(_sessionId);
+        _ttl = st.TtlSeconds;
+        _attemptsLeft = st.AttemptsLeft;
 
+        if (_ttl <= 0)
+        {
+            _isExpired = true;
+            ShowSnack(MsgSessionExpired, Severity.Warning);
+            return false;
+        }
+
+        if (_attemptsLeft <= 0)
+        {
+            ShowSnack(MsgAttemptsExhausted, Severity.Error);
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task<VerifyResponse?> TryVerifyAsync(string sessionId, string code)
+    {
         try
         {
-            // TODO: Вызов API повторной отправки
-            await Task.Delay(500);
+            return await VerificationClient.VerifyAsync(sessionId, code);
+        }
+        catch (Exception httpEx)
+        {
+            ShowSnack(httpEx.Message, Severity.Error);
+            return null;
+        }
+    }
 
-            Snackbar.Add("Код отправлен повторно", Severity.Info);
-            _canResend = false;
-            _resendTimer = 60;
-            StartResendTimer();
+    private async Task HandleVerifyFailureAsync()
+    {
+        ShowSnack(MsgInvalidCode, Severity.Error);
+        try
+        {
+            var st2 = await VerificationClient.GetStateAsync(_sessionId);
+            _attemptsLeft = st2.AttemptsLeft;
+            _ttl = st2.TtlSeconds;
+            if (_ttl <= 0)
+            {
+                _isExpired = true;
+                _canResend = false;
+            }
         }
         catch
         {
-            Snackbar.Add("Ошибка при отправке кода", Severity.Error);
+            /* ignore */
         }
+
+        ResetInputs();
+        await FocusInputAsync(0);
     }
 
-    private void StartResendTimer()
+    private Task<bool> RegisterAsync(RegisterUserCommand publicPart, string pwd, string confirm)
     {
-        _timer?.Dispose();
-        _timer = new Timer(_ =>
+        var cmd = new RegisterUserCommand
         {
-            if (_resendTimer > 0)
-            {
-                _resendTimer--;
-                InvokeAsync(StateHasChanged);
-            }
-            else
-            {
-                _canResend = true;
-                _timer?.Dispose();
-                InvokeAsync(StateHasChanged);
-            }
-        }, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+            Name = publicPart.Name,
+            Surname = publicPart.Surname,
+            Email = string.IsNullOrWhiteSpace(publicPart.Email) ? null : publicPart.Email,
+            PhoneNumber = string.IsNullOrWhiteSpace(publicPart.PhoneNumber) ? null : $"+7-{publicPart.PhoneNumber}",
+            Password = pwd,
+            ConfirmPassword = confirm
+        };
+
+        return AuthService.RegisterAsync(cmd);
     }
 
-    private void Cancel()
+
+    private Task<bool> LoginAsync(RegisterUserCommand publicPart, string pwd)
     {
+        var login = new LoginUserCommand
+        {
+            Email = publicPart.Email ?? "",
+            PhoneNumber = string.IsNullOrWhiteSpace(publicPart.PhoneNumber) ? "" : $"+7-{publicPart.PhoneNumber}",
+            Password = pwd
+        };
+        return AuthService.LoginAsync(login, _returnUrl, false);
+    }
+
+    private async Task ShowSuccessAndNavigateAsync()
+    {
+        _showSuccess = true;
+        StateHasChanged();
+
+        await Task.Delay(1500);
+        ShowSnack(MsgWelcome, Severity.Success);
         Navigation.NavigateTo(_returnUrl, forceLoad: false);
     }
 
-    public void Dispose()
+    // ======== Повторная отправка ========
+    private async Task ResendCodeAsync()
     {
-        _timer?.Dispose();
+        if (!_canResend || _isExpired || string.IsNullOrWhiteSpace(_sessionId) || _resending)
+            return;
+
+        _resending = true;
+        _canResend = false; // блокируем мгновенно
+        StateHasChanged();
+
+        try
+        {
+            // 1) перед отправкой синхронизируемся с сервером
+            GetSessionStateResponse? st;
+            try
+            {
+                st = await VerificationClient.GetStateAsync(_sessionId);
+            }
+            catch (Exception ex)
+            {
+                ShowSnack(ex.Message, Severity.Error);
+                _isExpired = true;
+                return;
+            }
+
+            if (st is null)
+            {
+                ShowSnack("Сессия не найдена.", Severity.Error);
+                _isExpired = true;
+                return;
+            }
+
+            if (st.TtlSeconds <= 0)
+            {
+                _isExpired = true;
+                ShowSnack("Сессия истекла. Начните заново.", Severity.Warning);
+                return;
+            }
+
+            if (st.CooldownSeconds > 0)
+            {
+                _resendTimer = st.CooldownSeconds;
+                _canResend = false;
+                return;
+            }
+
+            ResendResponse? r = null;
+            try
+            {
+                r = await VerificationClient.ResendAsync(_sessionId);
+            }
+            catch (Exception ex)
+            {
+                var msg = ex.Message ?? string.Empty;
+
+                if (msg.Contains("доступна позднее", StringComparison.OrdinalIgnoreCase))
+                {
+                    await RefreshResendStateFromServerSafe();
+                }
+                else if (msg.Contains("Превышен дневной лимит", StringComparison.OrdinalIgnoreCase))
+                {
+                    _resendBlockedForToday = true;
+                    _resendTimer = 0;
+                    _canResend = false;
+                    ShowSnack("Превышен дневной лимит отправки SMS. Попробуйте завтра.", Severity.Warning);
+                }
+                else
+                {
+                    ShowSnack($"Ошибка при отправке кода: {msg}", Severity.Error);
+                    await RefreshResendStateFromServerSafe();
+                }
+
+                return; // обязательно: после ошибки выходим
+            }
+
+            // доп. защита от неожиданного null (на всякий случай)
+            if (r is null)
+            {
+                await RefreshResendStateFromServerSafe();
+                return;
+            }
+
+            _resendTimer = r.CooldownSeconds;
+            _canResend = false;
+            ShowSnack("Код отправлен повторно", Severity.Info);
+        }
+        finally
+        {
+            _resending = false;
+        }
     }
 
+
+    private async Task RefreshResendStateFromServerSafe()
+    {
+        try
+        {
+            var s = await VerificationClient.GetStateAsync(_sessionId);
+            if (s is null)
+                return;
+
+            _ttl = s.TtlSeconds;
+            _attemptsLeft = s.AttemptsLeft;
+            _resendTimer = s.CooldownSeconds;
+            _canResend = s.CooldownSeconds <= 0 && !_resendBlockedForToday && !_isExpired;
+        }
+        catch
+        {
+            /* игнор */
+        }
+    }
+
+
+    // ======== Разное ========
+    private async Task Cancel()
+    {
+        await DraftService.ClearAllAsync();   // очистит и публичное, и пароль
+        Navigation.NavigateTo(_returnUrl, forceLoad: false);
+    }
+
+
+    private void ShowSnack(string message, Severity severity) => Snackbar.Add(message, severity);
+
+    public void Dispose() => StopTick();
 }
 
 <style>

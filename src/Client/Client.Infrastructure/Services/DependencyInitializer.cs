@@ -14,6 +14,7 @@ using Client.Infrastructure.Realtime;
 using Client.Infrastructure.Services.Database;
 using Client.Infrastructure.Services.Notifications;
 using Client.Infrastructure.Services.Verification;
+using Client.Infrastructure.Services.Verification.Register;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Client.Infrastructure.Services;
@@ -42,6 +43,7 @@ public static class DependencyInitializer
             .AddScoped<INotificationSubscriptionApiService, NotificationSubscriptionApiService>()
             .AddScoped<INotificationDialogService, NotificationDialogService>()
             .AddScoped<INotificationManager, NotificationManager>()
-            .AddScoped<IVerificationService, VerificationService>();
+            .AddScoped<IRegistrationDraftService, RegistrationDraftService>()
+            .AddScoped<IVerificationClient, VerificationClient>();
     }
 }
