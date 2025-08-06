@@ -50,7 +50,7 @@ public class RegisterUserCommandHandler(
             PhoneNumber = request.PhoneNumber, // уже нормализован или null
             Name = request.Name,
             Surname = request.Surname,
-            UserName = "User" + context.Users.Count()
+            UserName = request.Name + request.Surname + context.Users.Count()
         };
 
         var result = await userManager.CreateAsync(user, request.Password);
