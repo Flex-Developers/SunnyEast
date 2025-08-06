@@ -4,7 +4,7 @@ using Application.Common.Interfaces.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Infrastructure.Services;
+namespace Infrastructure.Services.Verification;
 
 public sealed class SmsIntService : ISmsSenderService
 {

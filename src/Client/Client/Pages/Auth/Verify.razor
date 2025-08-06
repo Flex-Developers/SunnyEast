@@ -1,4 +1,5 @@
 @page "/verify"
+@using Application.Contract.Verification.Responses
 @using Blazored.LocalStorage
 @using Client.Infrastructure.Services.Auth
 @using Client.Infrastructure.Services.Verification
@@ -90,30 +91,24 @@
                     <div class="resend-section">
                         @if (_canResend)
                         {
-                            <MudButton
-                                Variant="Variant.Text"
-                                Color="Color.Primary"
-                                OnClick="ResendCode"
-                                Class="resend-button">
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="ResendCode" Class="resend-button">
                                 Отправить код повторно
                             </MudButton>
                         }
+                        else if (_isExpired)
+                        {
+                            <MudText Typo="Typo.body2" Class="resend-timer">
+                                Сессия истекла.
+                            </MudText>
+                        }
                         else
                         {
-                            @if (_isExpired)
-                            {
-                                <MudText Typo="Typo.body2" Class="resend-timer">
-                                    Сессия истекла.
-                                </MudText>
-                            }
-                            else
-                            {
-                                <MudText Typo="Typo.body2" Class="resend-timer">
-                                    Код действует ещё @_ttl сек
-                                </MudText>
-                            }
+                            <MudText Typo="Typo.body2" Class="resend-timer">
+                                Повторная отправка через @_resendTimer сек
+                            </MudText>
                         }
                     </div>
+
 
                     <MudButton
                         Variant="Variant.Outlined"
@@ -389,10 +384,36 @@
             }
 
             var code = string.Join("", _codeValues);
-            var verify = await VerificationClient.VerifyAsync(_sessionId, code);
-            
-            if (!verify.Success)
-                throw new Exception("Неверный код.");
+            VerifyResponse? verify = null;
+            try
+            {
+                verify = await VerificationClient.VerifyAsync(_sessionId, code);
+            }
+            catch (Exception httpEx)
+            {
+                // Сервер вернул ошибку (например, 400): покажем её и обработаем как неуспех
+                Snackbar.Add(httpEx.Message, Severity.Error);
+            }
+
+            if (verify is null || !verify.Success)
+            {
+                Snackbar.Add("Неверный код.", Severity.Error);
+
+                // Обновим состояние: уменьшатся попытки, TTL и т.д.
+                try
+                {
+                    var st2 = await VerificationClient.GetStateAsync(_sessionId);
+                    _attemptsLeft = st2.AttemptsLeft;
+                    _ttl = st2.TtlSeconds;
+                    if (_ttl <= 0) { _isExpired = true; _canResend = false; }
+                }
+                catch { /* игнорируем */ }
+
+                // Сбросим инпуты и вернём фокус
+                for (int i = 0; i < _codeLength; i++) _codeValues[i] = "";
+                await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('code-input-0')?.focus()");
+                return;
+            }
 
             // 1) Достаём черновик регистрации
             var draft = await LocalStorage.GetItemAsync<Application.Contract.User.Commands.RegisterUserCommand>("pendingRegistration");
@@ -472,8 +493,6 @@
             Snackbar.Add($"Ошибка при отправке кода: {ex.Message}", Severity.Error);
         }
     }
-
-
 
     private void StartResendTimer()
     {

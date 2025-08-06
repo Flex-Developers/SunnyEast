@@ -8,7 +8,8 @@ namespace Application.Features.Verification.Commands;
 
 public sealed class ResendCodeCommandHandler(
     IVerificationSessionStore store,
-    ISmsSenderService sms
+    ISmsSenderService sms,
+    ISmsDailyQuotaService quota                  // <-- ДОБАВИТЬ
 ) : IRequestHandler<ResendCodeCommand, ResendResponse>
 {
     public async Task<ResendResponse> Handle(ResendCodeCommand request, CancellationToken ct)
@@ -20,10 +21,15 @@ public sealed class ResendCodeCommandHandler(
             throw new BadRequestException("Сессия истекла.");
 
         if (s.NextResendAt.HasValue && s.NextResendAt.Value > DateTime.UtcNow)
-            throw new BadRequestException($"Повторная отправка будет доступна позднее.");
+            throw new BadRequestException("Повторная отправка будет доступна позднее.");
 
         if (string.IsNullOrWhiteSpace(s.Phone))
             throw new BadRequestException("Для этой сессии недоступен канал SMS.");
+
+        // проверка квоты
+        var ok = await quota.TryConsumeAsync(s.Phone, ct);
+        if (!ok)
+            throw new BadRequestException("Превышен дневной лимит отправки SMS. Попробуйте завтра.");
 
         var text = $"Ваш код подтверждения для регистрации на сайте Solnechny-vostok.ru: {s.Code}";
         var recipient = s.Phone.Replace("+7-", "+7 ").Replace("-", " ");

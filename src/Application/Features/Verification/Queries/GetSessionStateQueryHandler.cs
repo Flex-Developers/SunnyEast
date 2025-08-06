@@ -33,15 +33,16 @@ public sealed class GetSessionStateQueryHandler(IVerificationSessionStore store)
         return new GetSessionStateResponse(
             s.SessionId, available, s.Selected,
             s.Phone is null ? null : MaskPhone(s.Phone),
-            s.Email is null ? null : MaskEmail(s.Email),
+            s.Email,
             4, cooldown, ttl, s.AttemptsLeft
         );
     }
 
-    private static string MaskPhone(string phone) => $"+7-***-***-**-{phone[^2..]}";
-    private static string MaskEmail(string email)
+    private static string MaskPhone(string phone) // "+7-901-123-45-67" -> "+7-***-***-45-67"
     {
-        var i = email.IndexOf('@'); if (i <= 1) return $"***{email[i..]}";
-        return $"{email[..Math.Min(3, i)]}***{email[i..]}";
+        // Предполагаем формат "+7-XXX-XXX-XX-XX"
+        var last2a = phone[^4..^2]; // "45"
+        var last2b = phone[^2..];   // "67"
+        return $"+7-***-***-{last2a}-{last2b}";
     }
 }
