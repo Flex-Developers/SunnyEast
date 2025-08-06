@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using MudBlazor.Services;
+using Blazored.SessionStorage;
 
 namespace Client.Infrastructure;
 
@@ -22,6 +23,7 @@ public static class Startup
         services
             .AddLocalization(options => options.ResourcesPath = "Resources")
             .AddBlazoredLocalStorage()
+            .AddBlazoredSessionStorage()
             .AddMudServices(configuration =>
             {
                 configuration.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight;

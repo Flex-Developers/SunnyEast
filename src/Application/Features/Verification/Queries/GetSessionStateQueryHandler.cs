@@ -1,5 +1,6 @@
 using Application.Common.Exceptions;
 using Application.Common.Interfaces.Services;
+using Application.Common.Utils;
 using Application.Contract.Verification.Enums;
 using Application.Contract.Verification.Queries;
 using Application.Contract.Verification.Responses;
@@ -32,17 +33,9 @@ public sealed class GetSessionStateQueryHandler(IVerificationSessionStore store)
 
         return new GetSessionStateResponse(
             s.SessionId, available, s.Selected,
-            s.Phone is null ? null : MaskPhone(s.Phone),
+            s.Phone is null ? null : PhoneMasking.MaskPhoneLast4(s.Phone),
             s.Email,
             4, cooldown, ttl, s.AttemptsLeft
         );
-    }
-
-    private static string MaskPhone(string phone) // "+7-901-123-45-67" -> "+7-***-***-45-67"
-    {
-        // Предполагаем формат "+7-XXX-XXX-XX-XX"
-        var last2a = phone[^4..^2]; // "45"
-        var last2b = phone[^2..];   // "67"
-        return $"+7-***-***-{last2a}-{last2b}";
     }
 }

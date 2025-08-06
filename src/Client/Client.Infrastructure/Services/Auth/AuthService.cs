@@ -14,21 +14,22 @@ public class AuthService(IHttpClientService httpClient,
     ISnackbar snackbar,
     IOrderRealtimeService orderRealtime) : IAuthService
 {
-    public async Task<bool> LoginAsync(LoginUserCommand command, string? returnUrl = null)
+    public async Task<bool> LoginAsync(LoginUserCommand command, string? returnUrl = null, bool navigate = true)
     {
         var loginResponse = await httpClient.PostAsJsonAsync<JwtTokenResponse>("/api/user/login", command);
-        if (loginResponse.Success)
-        {
-            await authStateProvider.MarkUserAsAuthenticated(loginResponse.Response!);
-            
-            // теперь можно безопасно стартовать SignalR (токен доступен)
-            try { await orderRealtime.StartAsync(); } catch { /* тихо игнорируем, автопереподключение позже */ }
-            
-            navigationManager.NavigateTo(string.IsNullOrEmpty(returnUrl) ? "/" : returnUrl);
-        }
+        if (!loginResponse.Success) return false;
 
-        return loginResponse.Success;
+        await authStateProvider.MarkUserAsAuthenticated(loginResponse.Response!);
+
+        try { await orderRealtime.StartAsync(); } catch { /* ignore */ }
+
+        // ВАЖНО: навигация ТОЛЬКО если разрешили
+        if (navigate)
+            navigationManager.NavigateTo(string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl, forceLoad: false);
+
+        return true;
     }
+
 
     public async Task<bool> RegisterAsync(RegisterUserCommand command, string? returnUrl = null)
     {

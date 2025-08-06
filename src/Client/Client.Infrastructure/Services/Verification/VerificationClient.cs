@@ -13,7 +13,17 @@ public sealed class VerificationClient(IHttpClientService http) : IVerificationC
         => (await http.PostAsJsonAsync<StartVerificationResponse>("/api/verification/start", req)).Response!;
 
     public async Task<ResendResponse> ResendAsync(string sessionId)
-        => (await http.PostAsJsonAsync<ResendResponse>("/api/verification/resend", new ResendCodeCommand { SessionId = sessionId })).Response!;
+    {
+        var res = await http.PostAsJsonAsync<ResendResponse>(
+            "/api/verification/resend",
+            new ResendCodeCommand { SessionId = sessionId });
+
+        if (res.Response is null)
+            throw new InvalidOperationException("Пустой ответ сервера при resend.");
+
+        return res.Response;
+    }
+
 
     public async Task<VerifyResponse> VerifyAsync(string sessionId, string code)
         => (await http.PostAsJsonAsync<VerifyResponse>("/api/verification/verify", new VerifyCodeCommand { SessionId = sessionId, Code = code })).Response!;

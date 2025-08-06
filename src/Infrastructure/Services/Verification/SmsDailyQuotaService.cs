@@ -30,13 +30,34 @@ public sealed class SmsDailyQuotaService(IMemoryCache cache, IConfiguration conf
 
     private static (string key, TimeSpan ttl) BuildKeyAndTtl(string phone)
     {
-        var digits = Regex.Replace(phone ?? "", @"\D", ""); // 79001234567
+        // ключ — по цифрам, чтобы одинаково работало для +7..., 8..., с дефисами и т.п.
+        var digits = Regex.Replace(phone ?? "", @"\D", "");
         var key = $"smsq:{digits}";
 
-        var now = DateTimeOffset.UtcNow;
-        var midnight = now.Date.AddDays(1);              // сбрасываем в полночь UTC
-        var ttl = midnight - now;
+        // Берём московский часовой пояс кроссплатформенно
+        static TimeZoneInfo GetMoscowTz()
+        {
+            // Linux/macOS: "Europe/Moscow", Windows: "Russian Standard Time"
+            foreach (var id in new[] { "Europe/Moscow", "Russian Standard Time" })
+            {
+                try { return TimeZoneInfo.FindSystemTimeZoneById(id); } catch { /* try next */ }
+            }
+            throw new InvalidOperationException("MSK timezone not found");
+        }
+
+        var tz = GetMoscowTz();
+
+        // Текущее время в МСК
+        var nowUtc = DateTimeOffset.UtcNow;
+        var nowMsk = TimeZoneInfo.ConvertTime(nowUtc, tz);
+
+        // Следующая полночь в МСК
+        var nextMidnightMsk = nowMsk.Date.AddDays(1);
+
+        // TTL до следующей полуночи МСК
+        var ttl = nextMidnightMsk - nowMsk;
 
         return (key, ttl);
     }
+
 }

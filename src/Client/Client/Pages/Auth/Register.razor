@@ -5,18 +5,20 @@
 @using Blazored.LocalStorage
 @using Client.Infrastructure.Services.Auth
 @using Client.Infrastructure.Services.Verification
+@using Client.Infrastructure.Services.Verification.Register
 @using Severity = MudBlazor.Severity
+
 @inject IAuthService AuthService
 @inject ISnackbar Snackbar
+@inject IRegistrationDraftService DraftService
 @inject IVerificationClient VerificationClient
 @inject ILocalStorageService LocalStorage
 
-
-<MudContainer Class="register-container ">
-    <MudPaper Class="register-paper rounded pa-4 shadow-md" Elevation="3" @onkeyup="OnKeyUpHandler">
-
+<MudContainer Class="register-container">
+    <MudPaper Class="register-paper rounded pa-4 shadow-md" Elevation="3" @onkeyup="OnFormKeyUpAsync">
         <MudForm Model="_user" @ref="_form" Validation="@(_userValidator.ValidateValue)" ValidationDelay="0"
                  Class="register-form d-flex flex-column gap-0">
+
             <MudCardHeader Class="text-center justify-center align-center">
                 <MudText Typo="Typo.h4" Align="Align.Center" Class="centered-text">Регистрация</MudText>
             </MudCardHeader>
@@ -26,20 +28,21 @@
                           For="() => _user.Name"
                           Variant="Variant.Outlined"
                           Immediate="true"
-                          OnKeyUp="OnKeyUpHandler"/>
+                          OnKeyUp="OnFormKeyUpAsync"/>
 
             <MudTextField @bind-Value="_user.Surname"
                           Label="Фамилия"
                           For="() => _user.Surname"
                           Variant="Variant.Outlined"
                           Immediate="true"
-                          OnKeyUp="OnKeyUpHandler"/>
+                          OnKeyUp="OnFormKeyUpAsync"/>
+
             <MudTextField T="string"
-                          ValueChanged="@(value => PhoneNumberChanged(value))"
-                          OnBlur="CheckPhoneAndEmail"
-                          OnKeyUp="OnKeyUpHandler"
-                          Error="isPhoneAndEmailEmpty"
-                          ErrorText="@_requiredErrorMessage"
+                          ValueChanged="@(value => OnPhoneChanged(value))"
+                          OnBlur="ValidateContactChoice"
+                          OnKeyUp="OnFormKeyUpAsync"
+                          Error="_isContactEmpty"
+                          ErrorText="@_contactRequiredMessage"
                           Immediate="true"
                           Label="Номер телефона"
                           For="() => _user.PhoneNumber!"
@@ -49,11 +52,11 @@
                           AdornmentText="+7"/>
 
             <MudTextField T="string"
-                          ValueChanged="@(value => EmailChanged(value))"
-                          OnBlur="CheckPhoneAndEmail"
-                          OnKeyUp="OnKeyUpHandler"
-                          Error="isPhoneAndEmailEmpty"
-                          ErrorText="@_requiredErrorMessage"
+                          ValueChanged="@(value => OnEmailChanged(value))"
+                          OnBlur="ValidateContactChoice"
+                          OnKeyUp="OnFormKeyUpAsync"
+                          Error="_isContactEmpty"
+                          ErrorText="@_contactRequiredMessage"
                           Immediate="true"
                           Label="Электронная почта"
                           For="() => _user.Email!"
@@ -65,76 +68,58 @@
                           For="@(() => _user.Password)"
                           Variant="Variant.Outlined"
                           InputType="@_passwordInput"
-                          OnKeyUp="OnKeyUpHandler"
+                          OnKeyUp="OnFormKeyUpAsync"
                           Adornment="Adornment.End"
                           AdornmentIcon="@_passwordInputIcon"
-                          OnAdornmentClick="ShowOrHidePassword"/>
+                          OnAdornmentClick="TogglePasswordVisibility"/>
 
             <MudTextField @bind-Value="_user.ConfirmPassword"
                           Label="Подтвердите пароль"
                           For="@(() => _user.ConfirmPassword)"
                           Variant="Variant.Outlined"
                           InputType="@_passwordInput"
-                          OnKeyUp="OnKeyUpHandler"
+                          OnKeyUp="OnFormKeyUpAsync"
                           Adornment="Adornment.End"
                           AdornmentIcon="@_passwordInputIcon"
-                          OnAdornmentClick="ShowOrHidePassword"/>
+                          OnAdornmentClick="TogglePasswordVisibility"/>
 
             <MudCheckBox @bind-Value="_agreeForPersonalDataProcessing"
                          Label="Согласен с обработкой данных."
                          Style="margin-left: -13px"
-                         Color="Color.Primary">
-            </MudCheckBox>
+                         Color="Color.Primary"/>
 
             <MudButton Variant="Variant.Filled"
-                       Disabled="!_agreeForPersonalDataProcessing"
                        Color="Color.Primary"
                        Class="register-button"
-                       @onclick="SubmitRegister">
+                       Disabled="@(!_agreeForPersonalDataProcessing || _isSubmitting)"
+                       @onclick="SubmitRegisterAsync">
                 Зарегистрироваться
             </MudButton>
 
             <MudCardActions Class="d-flex flex-column align-center">
                 <MudText Typo="Typo.body2" Style="padding-top: 20px">Уже регистрировались?</MudText>
-                <MudLink Style="padding-top: 10px; margin-bottom: -10px" Class="text-primary" OnClick="@Login">
+                <MudLink Style="padding-top: 10px; margin-bottom: -10px" Class="text-primary" OnClick="NavigateToLogin">
                     Войти
                 </MudLink>
             </MudCardActions>
+
         </MudForm>
     </MudPaper>
 </MudContainer>
 
-@code {
+@code
+{
+    // ======== Константы текстов ========
+    private const string MsgFillFormProperly = "Правильно заполните данные!";
+    private const string MsgConfirmPersonalData = "Подтвердите согласие на обработку данных.";
+    private const string MsgPhoneTaken = "Телефон уже занят. Выполните вход.";
+    private const string MsgEmailTaken = "Почта уже занята. Выполните вход.";
 
-    private MudForm _form = null!;
-    private bool _isPasswordVisible;
-    private bool _agreeForPersonalDataProcessing;
-    private bool _isSubmitting; // NEW: защита от повторного сабмита
-    private InputType _passwordInput = InputType.Password;
-    private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
-    private RegisterUserValidator _userValidator = new RegisterUserValidator();
-    private bool isPhoneAndEmailEmpty;
-    private string _requiredErrorMessage = "Номер телефона или почта должны быть заполнены.";
+    // ======== Поля состояния ========
+    private MudForm _form = default!;
+    private readonly RegisterUserValidator _userValidator = new();
 
-    protected void CheckPhoneAndEmail()
-    {
-        isPhoneAndEmailEmpty = string.IsNullOrWhiteSpace(_user.PhoneNumber) && string.IsNullOrWhiteSpace(_user.Email);
-        StateHasChanged();
-    }
-
-    private void PhoneNumberChanged(string phone)
-    {
-        _user.PhoneNumber = phone;
-        isPhoneAndEmailEmpty = string.IsNullOrWhiteSpace(_user.PhoneNumber) && string.IsNullOrWhiteSpace(_user.Email);
-    }
-
-    private void EmailChanged(string email)
-    {
-        _user.Email = email;
-        isPhoneAndEmailEmpty = string.IsNullOrWhiteSpace(_user.PhoneNumber) && string.IsNullOrWhiteSpace(_user.Email);
-    }
-
-    RegisterUserCommand _user = new()
+    private RegisterUserCommand _user = new()
     {
         Name = "",
         Surname = "",
@@ -144,143 +129,155 @@
         ConfirmPassword = ""
     };
 
-    private void ShowOrHidePassword()
+    private bool _isSubmitting;
+    private bool _agreeForPersonalDataProcessing;
+    private bool _isPasswordVisible;
+    private bool _isContactEmpty;
+
+    private InputType _passwordInput = InputType.Password;
+    private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+    private readonly string _contactRequiredMessage = "Номер телефона или почта должны быть заполнены.";
+
+    // ======== Вычисляемые свойства ========
+    private bool IsContactProvided => !string.IsNullOrWhiteSpace(_user.PhoneNumber) || !string.IsNullOrWhiteSpace(_user.Email);
+
+    // ======== Обработчики формы ========
+    private async Task SubmitRegisterAsync()
     {
-        if (_isPasswordVisible)
-        {
-            _isPasswordVisible = false;
-            _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
-            _passwordInput = InputType.Password;
-        }
-        else
-        {
-            _isPasswordVisible = true;
-            _passwordInputIcon = Icons.Material.Filled.Visibility;
-            _passwordInput = InputType.Text;
-        }
-    }
+        if (_isSubmitting) return;
 
-    private static string MaskPhone(string? phone)
-    {
-        var digits = new string((phone ?? string.Empty).Where(char.IsDigit).ToArray()); // "1234567890"
-        if (digits.Length < 10)
-            return "+7-***-***-**-**";
-
-        // показываем только последние 4 цифры (две пары)
-        var last2a = digits[^4..^2]; // предпоследние 2 цифры
-        var last2b = digits[^2..]; // последние 2 цифры
-
-        return $"+7-***-***-{last2a}-{last2b}";
-    }
-
-
-    private static string MaskEmail(string? email)
-    {
-        if (string.IsNullOrWhiteSpace(email))
-            return "";
-
-        var at = email.IndexOf('@');
-
-        if (at <= 1)
-            return $"***{email.Substring(at)}";
-
-        return $"{new string(email.Take(3).ToArray())}***{email.Substring(at)}";
-    }
-
-
-    private async Task SubmitRegister()
-    {
         try
         {
+            _isSubmitting = true;
+
             await _form.Validate();
-            CheckPhoneAndEmail();
+            ValidateContactChoice();
 
-            if (!(_form.IsValid && isPhoneAndEmailEmpty == false))
+            if (!_form.IsValid || _isContactEmpty)
             {
-                Snackbar.Add("Правильно заполните данные!", Severity.Warning);
+                ShowSnack(MsgFillFormProperly, Severity.Warning);
                 return;
             }
 
-            // 1) Проверить доступность (чтобы не тратить SMS)
-            var availability = await VerificationClient.CheckAvailabilityAsync(_user.Email,
-                string.IsNullOrWhiteSpace(_user.PhoneNumber) ? null : $"+7-{_user.PhoneNumber}");
-            if (!availability.PhoneAvailable && !string.IsNullOrWhiteSpace(_user.PhoneNumber))
-            {
-                Snackbar.Add($"Телефон уже занят. Выполните вход.", Severity.Error);
+            if (!await CheckAvailabilityAsync())
                 return;
-            }
 
-            if (!availability.EmailAvailable && !string.IsNullOrWhiteSpace(_user.Email))
-            {
-                Snackbar.Add($"Почта уже занята. Выполните вход.", Severity.Error);
-                return;
-            }
-
-            // 2) Старт верификации (приоритет — телефон)
-            var start = await VerificationClient.StartAsync(new StartVerificationCommand
-            {
-                Purpose = "register",
-                Phone = string.IsNullOrWhiteSpace(_user.PhoneNumber) ? null : $"+7-{_user.PhoneNumber}",
-                Email = string.IsNullOrWhiteSpace(_user.Email) ? null : _user.Email
-            });
-
-            // 3) Сохраняем черновик регистрации (для Verify.razor)
-            await LocalStorage.SetItemAsync("pendingRegistration", _user);
-
-            // 4) Идём на /verify
-            var channel = start.Selected.ToString(); // "phone" | "email"
-            var to = Uri.EscapeDataString(start.MaskedPhone ?? start.MaskedEmail ?? "");
-            var title = Uri.EscapeDataString("Подтверждение регистрации");
-            var returnUrl = Uri.EscapeDataString("/");
-
-            Navigation.NavigateTo($"/verify?purpose=register&channel={channel}&to={to}&title={title}&len={start.CodeLength}&sid={start.SessionId}&returnUrl={returnUrl}", replace:true);
+            await StartVerificationAsync();
         }
         catch (Exception ex)
         {
-            Snackbar.Add(ex.Message, Severity.Error);
+            ShowSnack(ex.Message, Severity.Error);
         }
-    }
-
-
-    // NEW: единый обработчик Enter для всех полей формы
-    private async Task OnKeyUpHandler(KeyboardEventArgs e)
-    {
-        if (_isSubmitting)
-            return;
-
-        // Триггерим только чистый Enter (включая NumpadEnter), без модификаторов
-        if (e is not null &&
-            (e.Key == "Enter" || e.Code == "Enter" || e.Key == "NumpadEnter") &&
-            !e.ShiftKey && !e.CtrlKey && !e.AltKey && !e.MetaKey)
+        finally
         {
-            // Уважим бизнес-правило: без согласия — не сабмитим
-            if (!_agreeForPersonalDataProcessing)
-            {
-                Snackbar.Add("Подтвердите согласие на обработку данных.", Severity.Warning);
-                return;
-            }
-
-            try
-            {
-                _isSubmitting = true;
-                // На OnKeyUp биндинг уже завершился, это безопасный момент для сабмита
-                await SubmitRegister();
-            }
-            finally
-            {
-                _isSubmitting = false;
-            }
+            _isSubmitting = false;
         }
     }
 
-    private void Login()
+    private async Task OnFormKeyUpAsync(KeyboardEventArgs e)
     {
-        Navigation.NavigateTo("/login");
+        if (_isSubmitting) return;
+
+        var isPlainEnter = e is not null
+                           && (e.Key is "Enter" or "NumpadEnter" || e.Code == "Enter")
+                           && !e.ShiftKey && !e.CtrlKey && !e.AltKey && !e.MetaKey;
+
+        if (!isPlainEnter) return;
+
+        if (!_agreeForPersonalDataProcessing)
+        {
+            ShowSnack(MsgConfirmPersonalData, Severity.Warning);
+            return;
+        }
+
+        await SubmitRegisterAsync();
     }
 
+    // ======== Хелперы: проверка и запуск верификации ========
+    private void ValidateContactChoice()
+    {
+        _isContactEmpty = !IsContactProvided;
+        StateHasChanged();
+    }
+
+    private void OnPhoneChanged(string phone)
+    {
+        _user.PhoneNumber = phone;
+        _isContactEmpty = !IsContactProvided;
+    }
+
+    private void OnEmailChanged(string email)
+    {
+        _user.Email = email;
+        _isContactEmpty = !IsContactProvided;
+    }
+
+    private async Task<bool> CheckAvailabilityAsync()
+    {
+        var phone = string.IsNullOrWhiteSpace(_user.PhoneNumber) ? null : $"+7-{_user.PhoneNumber}";
+        var availability = await VerificationClient.CheckAvailabilityAsync(_user.Email, phone);
+
+        if (!availability.PhoneAvailable && !string.IsNullOrWhiteSpace(_user.PhoneNumber))
+        {
+            ShowSnack(MsgPhoneTaken, Severity.Error);
+            return false;
+        }
+
+        if (!availability.EmailAvailable && !string.IsNullOrWhiteSpace(_user.Email))
+        {
+            ShowSnack(MsgEmailTaken, Severity.Error);
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task StartVerificationAsync()
+    {
+        var cmd = new StartVerificationCommand
+        {
+            Purpose = "register",
+            Phone = string.IsNullOrWhiteSpace(_user.PhoneNumber) ? null : $"+7-{_user.PhoneNumber}",
+            Email = string.IsNullOrWhiteSpace(_user.Email) ? null : _user.Email
+        };
+
+        var start = await VerificationClient.StartAsync(cmd);
+
+        DraftService.SetPassword(_user.Password, _user.ConfirmPassword);
+
+        var publicPart = new RegisterUserCommand
+        {
+            Name = _user.Name,
+            Surname = _user.Surname,
+            PhoneNumber = _user.PhoneNumber,
+            Email = _user.Email,
+            Password = "", ConfirmPassword = "" // намеренно пусто
+        };
+        await DraftService.SavePublicAsync(publicPart);
+
+        var channel = start.Selected.ToString(); // "phone" | "email"
+        var to = Uri.EscapeDataString(start.MaskedPhone ?? start.MaskedEmail ?? "");
+        var title = Uri.EscapeDataString("Подтверждение регистрации");
+        var returnUrl = Uri.EscapeDataString("/");
+
+        Navigation.NavigateTo($"/verify?purpose=register&channel={channel}&to={to}&title={title}&len={start.CodeLength}&sid={start.SessionId}&returnUrl={returnUrl}", replace: true);
+    }
+
+    // ======== Хелперы UI ========
+    private void TogglePasswordVisibility()
+    {
+        _isPasswordVisible = !_isPasswordVisible;
+        _passwordInputIcon = _isPasswordVisible ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff;
+        _passwordInput = _isPasswordVisible ? InputType.Text : InputType.Password;
+    }
+
+    private void NavigateToLogin() => Navigation.NavigateTo("/login");
+
+    private void ShowSnack(string message, Severity severity) => Snackbar.Add(message, severity);
+
+    // ======== Валидация пароля ========
     public class RegisterUserValidator : AbstractValidator<RegisterUserCommand>
     {
-        // Компилируем регэкспы один раз (работают с любым алфавитом)
         private static readonly Regex HasUpper = new(@"\p{Lu}", RegexOptions.Compiled);
         private static readonly Regex HasLower = new(@"\p{Ll}", RegexOptions.Compiled);
         private static readonly Regex HasDigit = new(@"\d", RegexOptions.Compiled);
@@ -289,15 +286,14 @@
         {
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage("Имя обязательно.")
-                .Matches(@"^[\p{L}]+$").WithMessage("Имя может содержать только буквы."); // \p{L} — любая буква Unicode
+                .Matches(@"^[\p{L}]+$").WithMessage("Имя может содержать только буквы.");
 
             RuleFor(x => x.Surname)
                 .Matches(@"^[\p{L}]+$").WithMessage("Фамилия может содержать только буквы.")
                 .When(x => !string.IsNullOrWhiteSpace(x.Surname));
 
             RuleFor(x => x.PhoneNumber)
-                .Matches(@"^\d{3}-\d{3}-\d{2}-\d{2}$")
-                .WithMessage("Некорректный формат номера телефона.")
+                .Matches(@"^\d{3}-\d{3}-\d{2}-\d{2}$").WithMessage("Некорректный формат номера телефона.")
                 .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber));
 
             RuleFor(x => x.Email)
@@ -321,13 +317,9 @@
             var result = await ValidateAsync(ValidationContext<RegisterUserCommand>
                 .CreateWithOptions((RegisterUserCommand)model, x => x.IncludeProperties(propertyName)));
 
-            if (result.IsValid)
-                return [];
-
-            return result.Errors.Select(e => e.ErrorMessage);
+            return result.IsValid ? [] : result.Errors.Select(e => e.ErrorMessage);
         };
     }
-
 }
 
 <style>
