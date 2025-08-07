@@ -13,6 +13,7 @@
 @inject IRegistrationDraftService DraftService
 @inject IVerificationClient VerificationClient
 @inject ILocalStorageService LocalStorage
+@inject NavigationManager Navigation
 
 <MudContainer Class="register-container">
     <MudPaper Class="register-paper rounded pa-4 shadow-md" Elevation="3" @onkeyup="OnFormKeyUpAsync">

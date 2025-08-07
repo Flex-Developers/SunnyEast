@@ -10,8 +10,9 @@ namespace Application.Features.Verification.Commands;
 
 public sealed class StartVerificationCommandHandler(
     ISmsSenderService sms,
+    IEmailSenderService email,
     IVerificationSessionStore store,
-    ISmsDailyQuotaService quota 
+    ISmsDailyQuotaService quota
 ) : IRequestHandler<StartVerificationCommand, StartVerificationResponse>
 {
     private const int CodeLength = 4;
@@ -25,6 +26,8 @@ public sealed class StartVerificationCommandHandler(
         var selected = usePhone ? OtpChannel.phone : OtpChannel.email;
 
         string? phoneE164 = null;
+        string? emailTo   = null;
+
         if (selected == OtpChannel.phone && request.Phone is not null)
         {
             phoneE164 = PhoneMasking.NormalizeE164(request.Phone);
@@ -32,11 +35,13 @@ public sealed class StartVerificationCommandHandler(
             if (!ok)
                 throw new BadRequestException("Превышен дневной лимит отправки SMS. Попробуйте завтра.");
         }
-
+        else
+        {
+            emailTo = request.Email ?? throw new BadRequestException("E-mail обязателен.");
+        }
 
         var sessionId = Guid.NewGuid().ToString("N");
         var code = GenerateNumericCode(CodeLength);
-
         var expiresAt = DateTime.UtcNow.Add(Ttl);
 
         var session = new VerificationSession(
@@ -44,18 +49,25 @@ public sealed class StartVerificationCommandHandler(
             Purpose: request.Purpose,
             Selected: selected,
             Phone: phoneE164,
-            Email: request.Email,
+            Email: emailTo,
             Code: code,
             ExpiresAt: expiresAt,
             AttemptsLeft: Attempts,
             NextResendAt: DateTime.UtcNow.Add(Cooldown)
         );
 
-        if (selected == OtpChannel.phone && request.Phone is not null)
+        if (selected == OtpChannel.phone)
         {
             var smsText = $"Ваш код подтверждения для регистрации на сайте Solnechny-vostok.ru: {code}";
             var recipient = PhoneMasking.ToSmsIntRecipient(phoneE164);
             await sms.SendTextAsync("Sol-vostok", recipient, smsText, ct);
+        }
+        else
+        {
+            var subject = "Код подтверждения Solnechny-vostok.ru";
+            var text    = $"Ваш код подтверждения: {code}";
+            var html    = $"<div style=\"font-family:Arial,sans-serif;font-size:16px\">Ваш код подтверждения: <b>{code}</b></div>";
+            await email.SendAsync(emailTo!, subject, text, html, ct);
         }
 
         await store.SaveAsync(session, ct);
@@ -67,7 +79,7 @@ public sealed class StartVerificationCommandHandler(
                 : usePhone ? new[] { OtpChannel.phone } : new[] { OtpChannel.email },
             Selected: selected,
             MaskedPhone: request.Phone is null ? null : PhoneMasking.MaskPhoneLast4(phoneE164),
-            MaskedEmail: request.Email,
+            MaskedEmail: emailTo is null ? null : MaskEmail(emailTo),
             CodeLength: CodeLength,
             CooldownSeconds: (int)Cooldown.TotalSeconds,
             TtlSeconds: (int)Ttl.TotalSeconds,
@@ -81,5 +93,14 @@ public sealed class StartVerificationCommandHandler(
         var chars = new char[len];
         for (int i = 0; i < len; i++) chars[i] = (char)('0' + rnd.Next(0, 10));
         return new string(chars);
+    }
+
+    private static string MaskEmail(string email)
+    {
+        var at = email.IndexOf('@');
+        if (at <= 1) return email;
+        var name = email[..at];
+        var masked = name[..1] + new string('*', Math.Max(1, name.Length - 2)) + name[^1];
+        return masked + email[at..];
     }
 }

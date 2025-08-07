@@ -3,7 +3,7 @@ using Application.Common.Interfaces.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 
-namespace Infrastructure.Services.Verification;
+namespace Infrastructure.Services.Sms;
 
 public sealed class SmsDailyQuotaService(IMemoryCache cache, IConfiguration config) : ISmsDailyQuotaService
 {
