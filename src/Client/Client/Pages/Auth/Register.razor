@@ -256,12 +256,17 @@
         };
         await DraftService.SavePublicAsync(publicPart);
 
-        var channel = start.Selected.ToString(); // "phone" | "email"
-        var to = Uri.EscapeDataString(start.MaskedPhone ?? start.MaskedEmail ?? "");
+        // канал выбран сервером; подставляем соответствующее «кому»
+        var channel = start.Selected.ToString();           // "phone" | "email"
+        var toRaw   = channel == "email" ? start.MaskedEmail : start.MaskedPhone;
+        var to      = Uri.EscapeDataString(toRaw ?? "");
+
         var title = Uri.EscapeDataString("Подтверждение регистрации");
         var returnUrl = Uri.EscapeDataString("/");
+        Navigation.NavigateTo(
+            $"/verify?purpose=register&channel={channel}&to={to}&title={title}&len={start.CodeLength}&sid={start.SessionId}&returnUrl={returnUrl}",
+            replace: true);
 
-        Navigation.NavigateTo($"/verify?purpose=register&channel={channel}&to={to}&title={title}&len={start.CodeLength}&sid={start.SessionId}&returnUrl={returnUrl}", replace: true);
     }
 
     // ======== Хелперы UI ========
