@@ -30,6 +30,11 @@ jobs:
           CUSTOM_TAG: ${{ env.version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Create a new release for created tag
         id: create_release
@@ -39,21 +44,24 @@ jobs:
         with:
           tag_name: ${{ env.version }}
           release_name: Release ${{ env.version }}
-      
+
       - name: Build api docker
         run: |
           docker build -t isruf/se-api:${{ env.version }} .
-        
+          docker tag isruf/se-api:${{ env.version }} isruf/se-api:latest
+
       - name: Build client docker
         working-directory: src
         run: |
           docker build -t isruf/se-client:${{ env.version }} .
-          
+          docker tag isruf/se-client:${{ env.version }} isruf/se-client:latest
+
       - name: Push api docker
         run: |
+          docker push isruf/se-api:${{ env.version }}
           docker push isruf/se-api:latest
-      
+
       - name: Push client docker
-        working-directory: src
         run: |
+          docker push isruf/se-client:${{ env.version }}
           docker push isruf/se-client:latest
