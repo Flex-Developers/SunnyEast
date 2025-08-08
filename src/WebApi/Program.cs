@@ -16,7 +16,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("Client",
         p => p
-            .WithOrigins("http://localhost:5289") // адрес вашего Blazor WASM клиента
+            .WithOrigins("http://localhost:5289", "http://5.35.84.91",
+                "https://solnechny-vostok.ru",
+                "http://solnechny-vostok.ru",
+                "http://sol-vostok.ru",
+                "https://sol-vostok.ru")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials()); // нужно для SignalR с токеном
@@ -43,6 +47,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 app.UseRouting();
 
 // app.UseHttpsRedirection();

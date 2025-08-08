@@ -1,0 +1,59 @@
+name: SunnyEast CD Pipeline
+
+on:
+  push:
+    branches:
+      - production
+
+jobs:
+  version-build-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine next version (dry run)
+        id: taggerDryRun
+        uses: anothrNick/github-tag-action@1
+        env:
+          DRY_RUN: true
+          DEFAULT_BUMP: PATCH
+          INITIAL_VERSION: 1.0.6
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Store generated version as environment variable
+        if: ${{ github.event_name == 'push' }}
+        run: echo "version=${{ steps.taggerDryRun.outputs.new_tag }}" >> $GITHUB_ENV
+
+      - name: Push new tag to repository using version from environment
+        uses: anothrNick/github-tag-action@1
+        env:
+          CUSTOM_TAG: ${{ env.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+      - name: Create a new release for created tag
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.version }}
+          release_name: Release ${{ env.version }}
+      
+      - name: Build api docker
+        run: |
+          docker build -t isruf/se-api:${{ env.version }} .
+        
+      - name: Build client docker
+        working-directory: src
+        run: |
+          docker build -t isruf/se-client:${{ env.version }} .
+          
+      - name: Push api docker
+        run: |
+          docker push isruf/se-api:latest
+      
+      - name: Push client docker
+        working-directory: src
+        run: |
+          docker push isruf/se-client:latest
