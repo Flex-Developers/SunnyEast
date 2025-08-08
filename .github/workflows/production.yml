@@ -45,6 +45,13 @@ jobs:
           tag_name: ${{ env.version }}
           release_name: Release ${{ env.version }}
 
+      - name: Replace appsettings values
+        run: |
+          python3 scripts/update-config.py
+        env:
+          API_URL: ${{ secrets.API_BASE_URL }}
+          VERSION_TAG: ${{ env.version }}
+
       - name: Build api docker
         run: |
           docker build -t isruf/se-api:${{ env.version }} .
