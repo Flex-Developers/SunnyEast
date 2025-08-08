@@ -9,18 +9,19 @@ using MudBlazor;
 
 namespace Client.Infrastructure.Services.Account;
 
-public sealed class AccountService(IHttpClientService http, CustomAuthStateProvider auth, ISnackbar snackbar) : IAccountService
+public sealed class AccountService(IHttpClientService http, CustomAuthStateProvider auth, ISnackbar snackbar)
+    : IAccountService
 {
     public async Task<MyAccountResponse?> GetAsync()
     {
         var res = await http.GetFromJsonAsync<MyAccountResponse>("/api/account/me");
-        
-        if (res.Success) 
+
+        if (res.Success)
             return res.Response;
-        
-        if (res.StatusCode == HttpStatusCode.Unauthorized) 
+
+        if (res.StatusCode == HttpStatusCode.Unauthorized)
             snackbar.Add("Требуется вход в систему.", Severity.Error);
-        
+
         return null;
     }
 
@@ -47,7 +48,7 @@ public sealed class AccountService(IHttpClientService http, CustomAuthStateProvi
         var res = await http.PutAsJsonAsync("/api/account/password", request);
         return res.Success;
     }
-    
+
     public async Task<bool> DeleteAccountAsync()
     {
         var res = await http.DeleteAsync("/api/account");
@@ -57,10 +58,23 @@ public sealed class AccountService(IHttpClientService http, CustomAuthStateProvi
     public async Task<JwtTokenResponse?> RefreshTokenAsync()
     {
         var res = await http.PostAsJsonAsync<JwtTokenResponse>("/api/account/refresh-token", new { });
-        if (!res.Success) 
+        if (!res.Success)
             return null;
-        
+
         await auth.MarkUserAsAuthenticated(res.Response!);
         return res.Response;
+    }
+
+    public async Task<bool> ResetPasswordAsync(string sessionId, string newPassword, string confirm)
+    {
+        var cmd = new ResetPasswordCommand
+        {
+            SessionId = sessionId,
+            NewPassword = newPassword,
+            ConfirmPassword = confirm
+        };
+        
+        var resp = await http.PostAsJsonAsync("/api/account/reset-password", cmd);
+        return resp.Success;
     }
 }

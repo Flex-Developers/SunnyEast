@@ -395,36 +395,43 @@
                 await HandleVerifyFailureAsync();
                 return;
             }
-
-            var publicPart = await DraftService.GetPublicAsync();
-            var (pwd, confirm) = DraftService.GetPassword();
-
-            if (publicPart is null || string.IsNullOrEmpty(pwd) || string.IsNullOrEmpty(confirm))
+            
+            if (_purpose == "register")
             {
-                ShowSnack("Сессия регистрации не найдена. Начните заново.", Severity.Error);
-                Navigation.NavigateTo("/register");
-                return;
+                var publicPart = await DraftService.GetPublicAsync();
+                var (pwd, confirm) = DraftService.GetPassword();
+
+                if (publicPart is null || string.IsNullOrEmpty(pwd) || string.IsNullOrEmpty(confirm))
+                {
+                    ShowSnack("Сессия регистрации не найдена. Начните заново.", Severity.Error);
+                    Navigation.NavigateTo("/register");
+                    return;
+                }
+
+                if (!await RegisterAsync(publicPart, pwd, confirm))
+                    throw new Exception("Ошибка регистрации.");
+                
+                var loginOk = await LoginAsync(publicPart, pwd);
+                if (loginOk)
+                {
+                    await DraftService.ClearAllAsync();
+                    await ShowSuccessAndNavigateAsync();
+                }
+                else
+                {
+                    await DraftService.ClearPublicAsync(); 
+
+                    ShowSnack("Регистрация выполнена, но войти не удалось. Введите пароль вручную.", Severity.Warning);
+                    Navigation.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(_returnUrl)}", forceLoad: false);
+                    return; 
+                }
+                
             }
-
-            if (!await RegisterAsync(publicPart, pwd, confirm))
-                throw new Exception("Ошибка регистрации.");
-
-
-            var loginOk = await LoginAsync(publicPart, pwd);
-            if (loginOk)
+            else if (_purpose == "reset")
             {
-                await DraftService.ClearAllAsync();
-                await ShowSuccessAndNavigateAsync();
+                await ShowSuccessAndNavigateAsync(); // вернёт на returnUrl
             }
-            else
-            {
-                await DraftService.ClearPublicAsync(); 
-
-                ShowSnack("Регистрация выполнена, но войти не удалось. Введите пароль вручную.", Severity.Warning);
-                Navigation.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(_returnUrl)}", forceLoad: false);
-                return; 
-            }
-
+            
         }
         catch (Exception ex)
         {

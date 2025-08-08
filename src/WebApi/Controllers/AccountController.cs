@@ -60,4 +60,12 @@ public sealed class AccountController : ApiControllerBase
         await Mediator.Send(new DeleteMyAccountCommand());
         return NoContent();
     }
+
+    [AllowAnonymous]
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommand cmd)
+    {
+        await Mediator.Send(cmd);
+        return NoContent();
+    }
 }

@@ -27,7 +27,18 @@ public sealed class VerifyCodeCommandHandler(IVerificationSessionStore store)
             throw new BadRequestException("Неверный код.");
         }
 
-        await store.RemoveAsync(s.SessionId, ct);
+        if (s.Purpose == "reset")
+        {
+            // помечаем как подтверждённую «сессию сброса»
+            var verified = s with { IsVerified = true, Code = string.Empty };
+            await store.UpdateAsync(verified, ct);
+        }
+        else
+        {
+            // register / login → чистим
+            await store.RemoveAsync(s.SessionId, ct);
+        }
+
         return new VerifyResponse(true, "/");
     }
 }

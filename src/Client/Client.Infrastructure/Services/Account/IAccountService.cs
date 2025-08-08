@@ -20,4 +20,6 @@ public interface IAccountService
 
     // Вспомогательно для «тихого» обновления клейм после успешных операций
     Task<JwtTokenResponse?> RefreshTokenAsync();
+    
+    Task<bool> ResetPasswordAsync(string sessionId, string newPassword, string confirm);
 }
