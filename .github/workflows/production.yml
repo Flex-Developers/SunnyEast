@@ -8,8 +8,13 @@ on:
 jobs:
   version-build-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Determine next version (dry run)
         id: taggerDryRun
