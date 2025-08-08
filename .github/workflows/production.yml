@@ -40,6 +40,31 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Find and update appsettings files
+        run: |
+          echo "Finding appsettings.json files:"
+          find . -name "appsettings.json" -type f
+          
+          CLIENT_CONFIG=$(find . -path "*Client*" -name "appsettings.json" | head -1)
+          API_CONFIG=$(find . -path "*WebApi*" -name "appsettings.json" | head -1)
+          
+          echo "Client config: $CLIENT_CONFIG"
+          echo "API config: $API_CONFIG"
+          
+          if [ -f "$CLIENT_CONFIG" ]; then
+            jq '.HttpClient.SunnyEast = "${{ secrets.API_BASE_URL }}"' "$CLIENT_CONFIG" > tmp.json && mv tmp.json "$CLIENT_CONFIG"
+            echo "✅ Updated client config"
+          else
+            echo "❌ Client config not found"
+          fi
+          
+          if [ -f "$API_CONFIG" ]; then
+            jq '.ServerVersion = "${{ env.version }}"' "$API_CONFIG" > tmp.json && mv tmp.json "$API_CONFIG"
+            echo "✅ Updated API config"
+          else
+            echo "❌ API config not found"
+          fi
+
       - name: Create a new release for created tag
         id: create_release
         uses: actions/create-release@v1
