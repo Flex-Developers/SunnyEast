@@ -82,8 +82,8 @@ jobs:
       - name: Build client docker
         working-directory: src
         run: |
-          docker build -t isruf/se-client:${{ env.version }} .
-          docker tag isruf/se-client:${{ env.version }} isruf/se-client:latest
+          docker build -t isruf/se-cl:${{ env.version }} .
+          docker tag isruf/se-cl:${{ env.version }} isruf/se-cl:latest
 
       - name: Push api docker
         run: |
@@ -92,5 +92,5 @@ jobs:
 
       - name: Push client docker
         run: |
-          docker push isruf/se-client:${{ env.version }}
-          docker push isruf/se-client:latest
+          docker push isruf/se-cl:${{ env.version }}
+          docker push isruf/se-cl:latest
