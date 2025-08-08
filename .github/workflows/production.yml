@@ -26,7 +26,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Store generated version as environment variable
-        if: ${{ github.event_name == 'push' }}
         run: echo "version=${{ steps.taggerDryRun.outputs.new_tag }}" >> $GITHUB_ENV
 
       - name: Push new tag to repository using version from environment
