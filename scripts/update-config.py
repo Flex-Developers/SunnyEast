@@ -6,7 +6,7 @@ import sys
 def replace_appsettings_values(api_url, version_tag):
    try:
        # Client appsettings.json
-       client_path = "src/Client/Client/appsettings.json"
+       client_path = "../src/Client/Client/appsettings.json"
        with open(client_path, 'r', encoding='utf-8') as f:
            client_config = json.load(f)
        
@@ -18,7 +18,7 @@ def replace_appsettings_values(api_url, version_tag):
        print(f"✅ Updated {client_path}: HttpClient.SunnyEast = {api_url}")
        
        # WebApi appsettings.json  
-       api_path = "src/WebApi/appsettings.json"
+       api_path = "../src/WebApi/appsettings.json"
        with open(api_path, 'r', encoding='utf-8') as f:
            api_config = json.load(f)
        
