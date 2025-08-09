@@ -1,6 +1,7 @@
 @page "/verify"
 @using Application.Contract.User.Commands
 @using Application.Contract.Verification.Responses
+@using Client.Infrastructure.Services.Account
 @using Client.Infrastructure.Services.Auth
 @using Client.Infrastructure.Services.Verification
 @using Client.Infrastructure.Services.Verification.Register
@@ -12,6 +13,8 @@
 @inject IRegistrationDraftService DraftService
 @inject IVerificationClient VerificationClient
 @inject IAuthService AuthService
+@inject IAccountService AccountService
+
 @implements IDisposable
 
 <PageTitle>Подтверждение кода</PageTitle>
@@ -431,6 +434,19 @@
             {
                 await ShowSuccessAndNavigateAsync(); // вернёт на returnUrl
             }
+            else if (_purpose == "link")
+            {
+                // 1) говорим серверу «код подтверждён, можно привязывать»
+                var linked = await AccountService.ConfirmLinkAsync(_sessionId);
+                if (!linked)
+                    throw new Exception("Сервер не подтвердил привязку контакта.");
+
+                // 2) обновляем клеймы (e-mail/телефон) тихо, без выхода из сессии
+                await AccountService.RefreshTokenAsync();
+
+                await ShowSuccessAndNavigateAsync();   // вернёт на returnUrl ( /account )
+            }
+
             
         }
         catch (Exception ex)
