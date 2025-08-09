@@ -60,4 +60,26 @@ public sealed class AccountController : ApiControllerBase
         await Mediator.Send(new DeleteMyAccountCommand());
         return NoContent();
     }
+    
+    [HttpPost("link-contact")]
+    public async Task<IActionResult> LinkContact([FromBody] LinkContactCommand cmd)
+    {
+        var result = await Mediator.Send(cmd);
+        return Ok(result);
+    }
+
+    [HttpPost("confirm-link")]
+    public async Task<IActionResult> ConfirmLink([FromBody] ConfirmLinkCommand cmd)
+    {
+        await Mediator.Send(cmd);
+        return NoContent();
+    }
+
+    [AllowAnonymous]
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommand cmd)
+    {
+        await Mediator.Send(cmd);
+        return NoContent();
+    }
 }

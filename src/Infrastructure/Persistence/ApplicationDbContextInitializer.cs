@@ -35,27 +35,8 @@ public sealed class ApplicationDbContextInitializer(
             password: "Admin@123");
         await EnsureUserInRoleAsync(superAdmin, ApplicationRoles.SuperAdmin, exclusive: true);
 
-        var admin = await EnsureUserAsync(
-            phoneNumber: "+7-999-123-45-67",
-            email: "admin@gmail.com",
-            displayName: "Admin Adminovich",
-            password: "Admin@123");
-        await EnsureUserInRoleAsync(admin, ApplicationRoles.Administrator, exclusive: true);
-
-        var salesman = await EnsureUserAsync(
-            phoneNumber: "+7-999-123-45-67",
-            email: "salesman@gmail.com",
-            displayName: "Salesman Salesmanov",
-            password: "SalesMan@123");
-        await EnsureUserInRoleAsync(salesman, ApplicationRoles.Salesman, exclusive: true);
-        
-        await EnsureStaffRecordAsync(admin);
-        await EnsureStaffRecordAsync(salesman);
-
         // Пример: при необходимости можно добавить универсальный e-mail claim
         await EnsureEmailClaimAsync(superAdmin);
-        await EnsureEmailClaimAsync(admin);
-        await EnsureEmailClaimAsync(salesman);
     }
 
     /// <summary>
@@ -101,7 +82,8 @@ public sealed class ApplicationDbContextInitializer(
     private async Task<ApplicationUser> EnsureUserAsync(string email,string phoneNumber, string displayName, string password)
     {
         var user = await userManager.FindByEmailAsync(email);
-        if (user != null) return user;
+        if (user != null) 
+            return user;
 
         user = new ApplicationUser
         {
@@ -128,7 +110,8 @@ public sealed class ApplicationDbContextInitializer(
         if (!currentRoles.Contains(requiredRole, StringComparer.OrdinalIgnoreCase))
             await userManager.AddToRoleAsync(user, requiredRole);
 
-        if (!exclusive) return;
+        if (!exclusive) 
+            return;
 
         var rolesToRemove = currentRoles
             .Where(r => !string.Equals(r, requiredRole, StringComparison.OrdinalIgnoreCase))
@@ -174,7 +157,7 @@ public sealed class ApplicationDbContextInitializer(
         var staff = await db.Staff.FirstOrDefaultAsync(s => s.UserId == user.Id);
         if (staff is null)
         {
-            await db.Staff.AddAsync(new Domain.Entities.Staff
+            await db.Staff.AddAsync(new Staff
             {
                 UserId    = user.Id,
                 StaffRole = role.Value, // доменный enum

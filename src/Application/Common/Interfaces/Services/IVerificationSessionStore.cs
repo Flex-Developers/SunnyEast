@@ -19,5 +19,5 @@ public sealed record VerificationSession(
     string Code,        // "1234"
     DateTime ExpiresAt,
     int AttemptsLeft,
-    DateTime? NextResendAt
-);
+    DateTime? NextResendAt,
+    bool IsVerified = false );

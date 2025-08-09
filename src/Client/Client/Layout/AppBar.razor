@@ -25,8 +25,8 @@
 
                         <MudMenuItem OnClick="@(() => Navigation.NavigateTo("/category"))">Категория</MudMenuItem>
                         <MudMenuItem OnClick="@(() => Navigation.NavigateTo("/products"))">Продукты</MudMenuItem>
+                        <MudMenuItem OnClick="@(() => Navigation.NavigateTo("/orders"))">Заказы</MudMenuItem>
                         <MudMenuItem OnClick="@(() => Navigation.NavigateTo("/about"))">О нас</MudMenuItem>
-                        <MudMenuItem OnClick="@(() => Navigation.NavigateTo("/contact"))">Контакты</MudMenuItem>
 
                     </MudMenu>
                 </MudHidden>
@@ -45,7 +45,6 @@
         <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/products"))">Продукты</MudButton>
         <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/orders"))">Заказы</MudButton>
         <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/about"))">О нас</MudButton>
-        <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo("/contact"))">Контакты</MudButton>
     </MudHidden>
 
     <MudSpacer/>

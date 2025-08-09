@@ -13,6 +13,7 @@
 @inject IRegistrationDraftService DraftService
 @inject IVerificationClient VerificationClient
 @inject ILocalStorageService LocalStorage
+@inject NavigationManager Navigation
 
 <MudContainer Class="register-container">
     <MudPaper Class="register-paper rounded pa-4 shadow-md" Elevation="3" @onkeyup="OnFormKeyUpAsync">
@@ -38,30 +39,50 @@
                           OnKeyUp="OnFormKeyUpAsync"/>
 
             <MudTextField T="string"
-                          ValueChanged="@(value => OnPhoneChanged(value))"
-                          OnBlur="ValidateContactChoice"
-                          OnKeyUp="OnFormKeyUpAsync"
-                          Error="_isContactEmpty"
-                          ErrorText="@_contactRequiredMessage"
-                          Immediate="true"
+                          @bind-Value="_user.PhoneNumber" @bind-Value:event="oninput"
+                          ValueChanged="@(v =>
+                                        {
+                                            _user.PhoneNumber = v ?? string.Empty;
+                                            _isContactEmpty = !IsContactProvided;
+                                        })"
                           Label="Номер телефона"
                           For="() => _user.PhoneNumber!"
                           Variant="Variant.Outlined"
+                          Immediate="true"
+                          InputType="InputType.Telephone"
                           Mask="@(new PatternMask("000-000-00-00"))"
                           Adornment="Adornment.Start"
-                          AdornmentText="+7"/>
+                          AdornmentText="+7"
+                          InputAttributes="@(new Dictionary<string, object>
+                                           {
+                                               ["inputmode"] = "numeric",
+                                               ["dir"] = "ltr",
+                                               ["autocomplete"] = "tel",
+                                               ["autocorrect"] = "off",
+                                               ["autocapitalize"] = "off"
+                                           })"/>
+
 
             <MudTextField T="string"
-                          ValueChanged="@(value => OnEmailChanged(value))"
-                          OnBlur="ValidateContactChoice"
-                          OnKeyUp="OnFormKeyUpAsync"
-                          Error="_isContactEmpty"
-                          ErrorText="@_contactRequiredMessage"
-                          Immediate="true"
+                          @bind-Value="_user.Email" @bind-Value:event="oninput"
+                          ValueChanged="@(v =>
+                                        {
+                                            _user.Email = v ?? string.Empty;
+                                            _isContactEmpty = !IsContactProvided;
+                                        })"
                           Label="Электронная почта"
                           For="() => _user.Email!"
                           Variant="Variant.Outlined"
-                          Mask="RegexMask.Email()"/>
+                          Immediate="true"
+                          InputType="InputType.Email"
+                          InputAttributes="@(new Dictionary<string, object>
+                                           {
+                                               ["inputmode"] = "email",
+                                               ["dir"] = "ltr",
+                                               ["autocomplete"] = "email",
+                                               ["autocorrect"] = "off",
+                                               ["autocapitalize"] = "off"
+                                           })"/>
 
             <MudTextField @bind-Value="_user.Password"
                           Label="Пароль"
@@ -95,6 +116,11 @@
                        @onclick="SubmitRegisterAsync">
                 Зарегистрироваться
             </MudButton>
+
+            @if (_isSubmitting)
+            {
+                <MudProgressLinear Indeterminate="true" Class="mt-2" Color="Color.Primary"/>
+            }
 
             <MudCardActions Class="d-flex flex-column align-center">
                 <MudText Typo="Typo.body2" Style="padding-top: 20px">Уже регистрировались?</MudText>
@@ -144,7 +170,8 @@
     // ======== Обработчики формы ========
     private async Task SubmitRegisterAsync()
     {
-        if (_isSubmitting) return;
+        if (_isSubmitting)
+            return;
 
         try
         {
@@ -176,13 +203,15 @@
 
     private async Task OnFormKeyUpAsync(KeyboardEventArgs e)
     {
-        if (_isSubmitting) return;
+        if (_isSubmitting)
+            return;
 
         var isPlainEnter = e is not null
                            && (e.Key is "Enter" or "NumpadEnter" || e.Code == "Enter")
                            && !e.ShiftKey && !e.CtrlKey && !e.AltKey && !e.MetaKey;
 
-        if (!isPlainEnter) return;
+        if (!isPlainEnter)
+            return;
 
         if (!_agreeForPersonalDataProcessing)
         {
@@ -255,12 +284,16 @@
         };
         await DraftService.SavePublicAsync(publicPart);
 
+        // канал выбран сервером; подставляем соответствующее «кому»
         var channel = start.Selected.ToString(); // "phone" | "email"
-        var to = Uri.EscapeDataString(start.MaskedPhone ?? start.MaskedEmail ?? "");
+        var toRaw = channel == "email" ? start.MaskedEmail : start.MaskedPhone;
+        var to = Uri.EscapeDataString(toRaw ?? "");
+
         var title = Uri.EscapeDataString("Подтверждение регистрации");
         var returnUrl = Uri.EscapeDataString("/");
-
-        Navigation.NavigateTo($"/verify?purpose=register&channel={channel}&to={to}&title={title}&len={start.CodeLength}&sid={start.SessionId}&returnUrl={returnUrl}", replace: true);
+        Navigation.NavigateTo(
+            $"/verify?purpose=register&channel={channel}&to={to}&title={title}&len={start.CodeLength}&sid={start.SessionId}&returnUrl={returnUrl}",
+            replace: true);
     }
 
     // ======== Хелперы UI ========
