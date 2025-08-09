@@ -1,0 +1,12 @@
+User-agent: *
+Disallow: /login
+Disallow: /register
+Disallow: /verify
+Disallow: /account
+Disallow: /cart
+Disallow: /checkout
+Disallow: /admin
+Disallow: /forgot-password
+Disallow: /forbidden
+
+Sitemap: https://solnechny-vostok.ru/sitemap.xml
