@@ -53,6 +53,7 @@ public sealed class ConfirmLinkCommandHandler(
 
                 // Переносим заказы/данные
                 await MergeUserDataAsync(db, other.Id, me.Id, ct);
+                await DeleteUserCompletelyAsync(db, um, other, ct);
             }
 
             // Теперь назначаем e-mail текущему
@@ -76,6 +77,7 @@ public sealed class ConfirmLinkCommandHandler(
                     me.CreatedAt = other.CreatedAt;
 
                 await MergeUserDataAsync(db, other.Id, me.Id, ct);
+                await DeleteUserCompletelyAsync(db, um, other, ct);
             }
 
             me.PhoneNumber = dashed;
@@ -160,5 +162,17 @@ public sealed class ConfirmLinkCommandHandler(
         }
 
         await ef.SaveChangesAsync(ct);
+    }
+    
+    static async Task DeleteUserCompletelyAsync(IApplicationDbContext db, UserManager<ApplicationUser> um, ApplicationUser other, CancellationToken ct)
+    {
+        var staff = await db.Staff.Where(s => s.UserId == other.Id).ToListAsync(ct);
+        if (staff.Count > 0) db.Staff.RemoveRange(staff);
+
+        var subs = await db.NotificationSubscriptions.Where(s => s.UserId == other.Id).ToListAsync(ct);
+        if (subs.Count > 0) db.NotificationSubscriptions.RemoveRange(subs);
+
+        await db.SaveChangesAsync(ct);
+        await um.DeleteAsync(other);
     }
 }
