@@ -52,14 +52,14 @@ jobs:
           echo "API config: $API_CONFIG"
           
           if [ -f "$CLIENT_CONFIG" ]; then
-            jq '.HttpClient.SunnyEast = "${{ secrets.API_BASE_URL }}"' "$CLIENT_CONFIG" > tmp.json && mv tmp.json "$CLIENT_CONFIG"
+          jq '.HttpClient.SunnyEast = "${{ secrets.API_BASE_URL }}" | .CdnApi.BaseUrl = "${{ secrets.CDN_BASE_URL }}"' "$CLIENT_CONFIG" > tmp.json && mv tmp.json "$CLIENT_CONFIG"
             echo "✅ Updated client config"
           else
             echo "❌ Client config not found"
           fi
           
           if [ -f "$API_CONFIG" ]; then
-            jq '.ServerVersion = "${{ env.version }}"' "$API_CONFIG" > tmp.json && mv tmp.json "$API_CONFIG"
+            jq '.ServerVersion = "${{ env.version }}" | .CdnApi.BaseUrl = "${{ secrets.CDN_BASE_URL }}"' "$API_CONFIG" > tmp.json && mv tmp.json "$API_CONFIG"
             echo "✅ Updated API config"
           else
             echo "❌ API config not found"
