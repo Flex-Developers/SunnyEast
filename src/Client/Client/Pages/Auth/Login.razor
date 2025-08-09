@@ -7,9 +7,9 @@
 
 @inject IAuthService AuthService
 
-<div class="d-flex justify-center align-center full-height">
+<div class="d-flex justify-center align-center full-height page-gutters">
     <MudForm Model="_loginCommand" @ref="_form">
-        <MudCard Elevation="5" Class="rounded pa-4 shadow-md responsive-width">
+        <MudCard Elevation="5" Class="rounded pa-4 shadow-md auth-card">
             <MudCardHeader Class="text-center">
                 <MudText Typo="Typo.h4" Align="Align.Center" Class="centered-text">Вход в аккаунт</MudText>
             </MudCardHeader>
@@ -234,6 +234,18 @@
 }
 
 <style>
+    .page-gutters{
+        width: 100%;
+        box-sizing: border-box;
+        padding-inline: max(10px, env(safe-area-inset-left), env(safe-area-inset-right));
+    }
+
+    .auth-card{
+        box-sizing: border-box;
+        width: min(450px, calc(100vw - 40px)); 
+        margin-inline: auto;
+    }
+
     .full-height {
         height: 80vh;
     }
