@@ -247,7 +247,7 @@
         catch
         {
             _isExpired = true;
-            _canResend = false; 
+            _canResend = false;
             ShowSnack(MsgSessionNotFound, Severity.Error);
         }
     }
@@ -398,7 +398,7 @@
                 await HandleVerifyFailureAsync();
                 return;
             }
-            
+
             if (_purpose == "register")
             {
                 var publicPart = await DraftService.GetPublicAsync();
@@ -413,7 +413,7 @@
 
                 if (!await RegisterAsync(publicPart, pwd, confirm))
                     throw new Exception("Ошибка регистрации.");
-                
+
                 var loginOk = await LoginAsync(publicPart, pwd);
                 if (loginOk)
                 {
@@ -422,13 +422,12 @@
                 }
                 else
                 {
-                    await DraftService.ClearPublicAsync(); 
+                    await DraftService.ClearPublicAsync();
 
                     ShowSnack("Регистрация выполнена, но войти не удалось. Введите пароль вручную.", Severity.Warning);
                     Navigation.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(_returnUrl)}", forceLoad: false);
-                    return; 
+                    return;
                 }
-                
             }
             else if (_purpose == "reset")
             {
@@ -444,10 +443,8 @@
                 // 2) обновляем клеймы (e-mail/телефон) тихо, без выхода из сессии
                 await AccountService.RefreshTokenAsync();
 
-                await ShowSuccessAndNavigateAsync();   // вернёт на returnUrl ( /account )
+                await ShowSuccessAndNavigateAsync(); // вернёт на returnUrl ( /account )
             }
-
-            
         }
         catch (Exception ex)
         {
@@ -545,16 +542,27 @@
         };
         return AuthService.LoginAsync(login, _returnUrl, false);
     }
-
+    
     private async Task ShowSuccessAndNavigateAsync()
     {
         _showSuccess = true;
         StateHasChanged();
 
-        await Task.Delay(1500);
-        ShowSnack(MsgWelcome, Severity.Success);
-        Navigation.NavigateTo(_returnUrl, forceLoad: false);
+        await Task.Delay(1200);
+
+        var msg = _purpose switch
+        {
+            "register" => "Регистрация подтверждена.",
+            "login" => "Вход подтверждён.",
+            "reset" => "Код подтверждён. Введите новый пароль.",
+            "link" => "Контакт подтверждён.",
+            _ => "Готово."
+        };
+
+        ShowSnack(msg, Severity.Success);
+        Navigation.NavigateTo(_returnUrl);
     }
+
 
     // ======== Повторная отправка ========
     private async Task ResendCodeAsync()
@@ -672,7 +680,7 @@
     // ======== Разное ========
     private async Task Cancel()
     {
-        await DraftService.ClearAllAsync();   // очистит и публичное, и пароль
+        await DraftService.ClearAllAsync(); // очистит и публичное, и пароль
         Navigation.NavigateTo(_returnUrl, forceLoad: false);
     }
 

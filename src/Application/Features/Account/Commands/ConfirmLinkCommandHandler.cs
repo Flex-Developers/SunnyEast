@@ -163,16 +163,23 @@ public sealed class ConfirmLinkCommandHandler(
 
         await ef.SaveChangesAsync(ct);
     }
-    
-    static async Task DeleteUserCompletelyAsync(IApplicationDbContext db, UserManager<ApplicationUser> um, ApplicationUser other, CancellationToken ct)
+
+    static async Task DeleteUserCompletelyAsync(IApplicationDbContext db, UserManager<ApplicationUser> um,
+        ApplicationUser other, CancellationToken ct)
     {
         var staff = await db.Staff.Where(s => s.UserId == other.Id).ToListAsync(ct);
-        if (staff.Count > 0) db.Staff.RemoveRange(staff);
+        if (staff.Count > 0)
+            db.Staff.RemoveRange(staff);
 
         var subs = await db.NotificationSubscriptions.Where(s => s.UserId == other.Id).ToListAsync(ct);
-        if (subs.Count > 0) db.NotificationSubscriptions.RemoveRange(subs);
+        if (subs.Count > 0)
+            db.NotificationSubscriptions.RemoveRange(subs);
 
         await db.SaveChangesAsync(ct);
-        await um.DeleteAsync(other);
+
+        // вот это важно — перечитать пользователя под контекстом UserManager
+        var otherAgain = await um.FindByIdAsync(other.Id.ToString());
+        if (otherAgain != null)
+            await um.DeleteAsync(otherAgain);
     }
 }
