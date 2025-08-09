@@ -64,8 +64,8 @@ public sealed class AccountController : ApiControllerBase
     [HttpPost("link-contact")]
     public async Task<IActionResult> LinkContact([FromBody] LinkContactCommand cmd)
     {
-        await Mediator.Send(cmd);
-        return NoContent();
+        var result = await Mediator.Send(cmd);
+        return Ok(result);
     }
 
     [HttpPost("confirm-link")]
@@ -74,7 +74,6 @@ public sealed class AccountController : ApiControllerBase
         await Mediator.Send(cmd);
         return NoContent();
     }
-
 
     [AllowAnonymous]
     [HttpPost("reset-password")]

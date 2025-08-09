@@ -4,6 +4,8 @@ using Application.Common.Interfaces.Contexts;
 using Application.Common.Interfaces.Services;
 using Application.Contract.Account.Commands;
 using Application.Contract.Verification.Commands;
+using Application.Contract.Verification.Responses;
+using Application.Common.Utils;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,46 +15,61 @@ public sealed class LinkContactCommandHandler(
     ICurrentUserService current,
     IApplicationDbContext db,
     IMediator bus)
-    : IRequestHandler<LinkContactCommand, Unit>
+    : IRequestHandler<LinkContactCommand, StartVerificationResponse>
 {
-    public async Task<Unit> Handle(LinkContactCommand req, CancellationToken ct)
+    public async Task<StartVerificationResponse> Handle(LinkContactCommand req, CancellationToken ct)
     {
+        // 1) Текущий пользователь
         var userName = current.GetType().GetMethod("GetUserName")?.Invoke(current, null) as string
                        ?? (current.GetType().GetProperty("UserName")?.GetValue(current) as string)
                        ?? throw new UnauthorizedAccessException();
 
-        var user = await db.Users.FirstAsync(u => u.UserName == userName, ct);
+        var me = await db.Users.FirstAsync(u => u.UserName == userName, ct);
 
-        if (req.Channel == "email")
+        // 2) Валидации + проверка уникальности
+        if (string.Equals(req.Channel, "email", StringComparison.OrdinalIgnoreCase))
         {
-            if (string.IsNullOrWhiteSpace(req.Value))
+            var email = (req.Value ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(email))
                 throw new ValidationException("E-mail обязателен.");
 
-            var exists = await db.Users.AnyAsync(u => u.Email != null && u.Email == req.Value, ct);
-            if (exists) throw new ExistException("Этот e-mail уже используется.");
+            var exists = await db.Users.AsNoTracking()
+                .AnyAsync(u => u.Id != me.Id &&
+                               u.Email != null &&
+                               u.Email.ToLower() == email.ToLower(), ct);
+            if (exists)
+                throw new ExistException("Этот e-mail уже используется.");
 
-            // стартуем верификацию
-            await bus.Send(new StartVerificationCommand
+            // 3) Стартуем верификацию через шину и возвращаем ответ
+            return await bus.Send(new StartVerificationCommand
             {
                 Purpose = "link",
-                Email = req.Value
+                Email = email
             }, ct);
         }
-        else /* phone */
+        else if (string.Equals(req.Channel, "phone", StringComparison.OrdinalIgnoreCase))
         {
-            if (string.IsNullOrWhiteSpace(req.Value))
+            var phoneRaw = (req.Value ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(phoneRaw))
                 throw new ValidationException("Телефон обязателен.");
 
-            var exists = await db.Users.AnyAsync(u => u.PhoneNumber == req.Value, ct);
-            if (exists) throw new ExistException("Этот телефон уже используется.");
+            // В БД телефон хранится в формате +7-XXX-XXX-XX-XX,
+            // для корректной проверки приводим к E.164 и сравниваем по E.164.
+            var exists = await db.Users.AsNoTracking()
+                .AnyAsync(u => u.Id != me.Id &&
+                               u.PhoneNumber != null &&
+                               PhoneMasking.NormalizeE164(u.PhoneNumber) ==
+                               PhoneMasking.NormalizeE164(phoneRaw), ct);
+            if (exists)
+                throw new ExistException("Этот телефон уже используется.");
 
-            await bus.Send(new StartVerificationCommand
+            return await bus.Send(new StartVerificationCommand
             {
                 Purpose = "link",
-                Phone = req.Value
+                Phone = phoneRaw
             }, ct);
         }
 
-        return Unit.Value;
+        throw new ValidationException("Поддерживаются только каналы 'email' или 'phone'.");
     }
 }

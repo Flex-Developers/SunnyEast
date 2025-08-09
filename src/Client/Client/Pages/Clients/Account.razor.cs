@@ -269,6 +269,16 @@ public partial class Account
     // --- Email: сохранить = показать подсказку, а не сразу слать код ---
     private async Task SaveEmail()
     {
+        var newMail = (_email.NewEmail ?? "").Trim();
+        var oldMail = (_account?.Email ?? "").Trim();
+
+        if (string.Equals(newMail, oldMail, StringComparison.OrdinalIgnoreCase))
+        {
+            Snackbar.Add("Этот e-mail уже привязан к вашему аккаунту.", Severity.Info);
+            _editEmail = false;
+            return;
+        }
+        
         _savingEmail = true;
         try
         {
@@ -293,21 +303,28 @@ public partial class Account
 
     private async Task StartSendEmailCodeAsync()
     {
-        if (string.IsNullOrWhiteSpace(_email.NewEmail)) return;
+        var newMail = (_email.NewEmail ?? "").Trim();
+        var oldMail = (_account?.Email ?? "").Trim();
+        if (string.Equals(newMail, oldMail, StringComparison.OrdinalIgnoreCase))
+        {
+            Snackbar.Add("E-mail не изменился.", Severity.Info);
+            return;
+        }
+
+        
+        if (string.IsNullOrWhiteSpace(_email.NewEmail)) 
+            return;
 
         _sendingEmailCode = true;
         try
         {
-            var start = await VerificationClient.StartAsync(new StartVerificationCommand
-            {
-                Purpose = "link",
-                Email = _email.NewEmail
-            });
+            var start = await AccountService.StartLinkEmailAsync(_email.NewEmail);
 
+            var ch = start.Selected.ToString(); // "email"
             var to = Uri.EscapeDataString(start.MaskedEmail ?? _email.NewEmail);
 
             Nav.NavigateTo(
-                $"/verify?purpose=link&channel=email&to={to}&title=Подтверждение%20e-mail&len={start.CodeLength}&sid={start.SessionId}&returnUrl=%2Faccount");
+                $"/verify?purpose=link&channel={ch}&to={to}&title=Подтверждение%20e-mail&len={start.CodeLength}&sid={start.SessionId}&returnUrl=%2Faccount");
         }
         catch (Exception ex)
         {
@@ -336,6 +353,14 @@ public partial class Account
     // --- Телефон: сохранить = показать подсказку ---
     private async Task SavePhone()
     {
+        var fullPhone = $"+7-{_phone}";
+        if (string.Equals(fullPhone, _account?.Phone ?? "", StringComparison.Ordinal))
+        {
+            Snackbar.Add("Этот номер уже привязан к вашему аккаунту.", Severity.Info);
+            _editPhone = false;
+            return;
+        }
+
         _savingPhone = true;
         try
         {
@@ -361,19 +386,22 @@ public partial class Account
     private async Task StartSendPhoneCodeAsync()
     {
         var fullPhone = $"+7-{_phone}";
+        if (string.Equals(fullPhone, _account?.Phone ?? "", StringComparison.Ordinal))
+        {
+            Snackbar.Add("Номер телефона не изменился.", Severity.Info);
+            return;
+        }
+
         _sendingPhoneCode = true;
         try
         {
-            var start = await VerificationClient.StartAsync(new StartVerificationCommand
-            {
-                Purpose = "link",
-                Phone = fullPhone
-            });
+            var start = await AccountService.StartLinkPhoneAsync(fullPhone);
 
+            var ch = start.Selected.ToString(); // "phone"
             var to = Uri.EscapeDataString(start.MaskedPhone ?? _phone);
 
             Nav.NavigateTo(
-                $"/verify?purpose=link&channel=phone&to={to}&title=Подтверждение%20телефона&len={start.CodeLength}&sid={start.SessionId}&returnUrl=%2Faccount");
+                $"/verify?purpose=link&channel={ch}&to={to}&title=Подтверждение%20телефона&len={start.CodeLength}&sid={start.SessionId}&returnUrl=%2Faccount");
         }
         catch (Exception ex)
         {

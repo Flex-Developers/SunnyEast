@@ -1,8 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions;
 using Application.Common;
 using Application.Common.Exceptions;
-using Application.Common.Interfaces.Contexts;
 using Application.Common.Interfaces.Services;
 using Application.Contract.Account.Commands;
 using Domain.Entities;
@@ -14,71 +12,60 @@ namespace Application.Features.Account.Commands;
 
 public sealed class ResetPasswordCommandHandler(
     IVerificationSessionStore store,
-    IApplicationDbContext db,
-    UserManager<ApplicationUser> userManager)
+    UserManager<ApplicationUser> userManager) 
     : IRequestHandler<ResetPasswordCommand, Unit>
 {
     public async Task<Unit> Handle(ResetPasswordCommand request, CancellationToken ct)
     {
-        // 1) Сессия
         var session = await store.GetAsync(request.SessionId, ct)
                       ?? throw new BadRequestException("Сессия не найдена или истекла.");
+
         if (!session.IsVerified || session.Purpose != "reset")
             throw new BadRequestException("Код не подтверждён.");
 
-        // 2) Пароль
         if (request.NewPassword != request.ConfirmPassword)
             throw new ValidationException("Пароли не совпадают.");
         if (request.NewPassword.Length < 8
             || !request.NewPassword.Any(char.IsUpper)
             || !request.NewPassword.Any(char.IsLower)
             || !request.NewPassword.Any(char.IsDigit))
-            throw new ValidationException("Пароль должен содержать минимум 8 символов, включая прописные и строчные буквы и цифры.");
+            throw new ValidationException("Пароль не удовлетворяет требованиям.");
 
-        // 3) Ищем пользователя → получаем ТОЛЬКО Id без трекинга
-        Guid? userId = null;
+        // --- 1) Находим пользователя через UserManager.Users ---
+        ApplicationUser? found = null;
 
         if (!string.IsNullOrWhiteSpace(session.Email))
         {
-            userId = await db.Users.AsNoTracking()
-                .Where(u => u.Email == session.Email)
-                .Select(u => (Guid?)u.Id)
-                .FirstOrDefaultAsync(ct);
+            found = await userManager.Users.FirstOrDefaultAsync(u => u.Email == session.Email, ct);
         }
 
-        if (userId is null && !string.IsNullOrWhiteSpace(session.Phone))
+        if (found is null && !string.IsNullOrWhiteSpace(session.Phone))
         {
-            // В сессии телефон хранится в E.164 (+7XXXXXXXXXX) — сравниваем по цифрам
-            var target = Digits(session.Phone);
-            var last4  = target[^4..];
+            var targetE164 = Application.Common.Utils.PhoneMasking.NormalizeE164(session.Phone);
+            var last4 = new string(targetE164.Where(char.IsDigit).ToArray())[^4..];
 
-            var candidates = await db.Users.AsNoTracking()
+            var candidates = await userManager.Users
                 .Where(u => u.PhoneNumber != null && u.PhoneNumber.EndsWith(last4))
-                .Select(u => new { u.Id, u.PhoneNumber })
                 .ToListAsync(ct);
 
-            userId = candidates
-                .FirstOrDefault(c => Digits(c.PhoneNumber!) == target)?
-                .Id;
+            found = candidates.FirstOrDefault(u =>
+                Application.Common.Utils.PhoneMasking.NormalizeE164(u.PhoneNumber!) == targetE164);
         }
 
-        if (userId is null)
+        if (found is null)
             throw new NotFoundException("Пользователь не найден.");
 
-        // 4) Повторно берём пользователя уже через UserManager (его контекст!)
-        var user = await userManager.FindByIdAsync(userId.ToString()!)
+        // --- 2) Берём «трекаемый» инстанс напрямую из UserManager ---
+        var user = await userManager.FindByIdAsync(found.Id.ToString())
                    ?? throw new NotFoundException("Пользователь не найден.");
 
-        // 5) Смена пароля
         var token = await userManager.GeneratePasswordResetTokenAsync(user);
         var res   = await userManager.ResetPasswordAsync(user, token, request.NewPassword);
         res.ThrowBadRequestIfError();
 
-        await userManager.UpdateSecurityStampAsync(user); // инвалидируем остальные логины (если проверяется)
+        await userManager.UpdateSecurityStampAsync(user);
         await store.RemoveAsync(session.SessionId, ct);
 
         return Unit.Value;
     }
-
-    private static string Digits(string? s) => Regex.Replace(s ?? "", @"\D", "");
 }
