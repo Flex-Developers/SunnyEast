@@ -1,0 +1,96 @@
+name: SunnyEast CD Pipeline
+
+on:
+  push:
+    branches:
+      - production
+
+jobs:
+  version-build-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine next version (dry run)
+        id: taggerDryRun
+        uses: anothrNick/github-tag-action@1
+        env:
+          DRY_RUN: true
+          DEFAULT_BUMP: PATCH
+          INITIAL_VERSION: 1.0.6
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Store generated version as environment variable
+        run: echo "version=${{ steps.taggerDryRun.outputs.new_tag }}" >> $GITHUB_ENV
+
+      - name: Push new tag to repository using version from environment
+        uses: anothrNick/github-tag-action@1
+        env:
+          CUSTOM_TAG: ${{ env.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Find and update appsettings files
+        run: |
+          echo "Finding appsettings.json files:"
+          find . -name "appsettings.json" -type f
+          
+          CLIENT_CONFIG=$(find . -path "*Client*" -name "appsettings.json" | head -1)
+          API_CONFIG=$(find . -path "*WebApi*" -name "appsettings.json" | head -1)
+          
+          echo "Client config: $CLIENT_CONFIG"
+          echo "API config: $API_CONFIG"
+          
+          if [ -f "$CLIENT_CONFIG" ]; then
+          jq '.HttpClient.SunnyEast = "${{ secrets.API_BASE_URL }}" | .CdnApi.BaseUrl = "${{ secrets.CDN_BASE_URL }}"' "$CLIENT_CONFIG" > tmp.json && mv tmp.json "$CLIENT_CONFIG"
+            echo "✅ Updated client config"
+          else
+            echo "❌ Client config not found"
+          fi
+          
+          if [ -f "$API_CONFIG" ]; then
+            jq '.ServerVersion = "${{ env.version }}" | .CdnApi.BaseUrl = "${{ secrets.CDN_BASE_URL }}"' "$API_CONFIG" > tmp.json && mv tmp.json "$API_CONFIG"
+            echo "✅ Updated API config"
+          else
+            echo "❌ API config not found"
+          fi
+
+      - name: Create a new release for created tag
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.version }}
+          release_name: Release ${{ env.version }}
+
+      - name: Build api docker
+        run: |
+          docker build -t isruf/se-api:${{ env.version }} .
+          docker tag isruf/se-api:${{ env.version }} isruf/se-api:latest
+
+      - name: Build client docker
+        working-directory: src
+        run: |
+          docker build -t isruf/se-cl:${{ env.version }} .
+          docker tag isruf/se-cl:${{ env.version }} isruf/se-cl:latest
+
+      - name: Push api docker
+        run: |
+          docker push isruf/se-api:${{ env.version }}
+          docker push isruf/se-api:latest
+
+      - name: Push client docker
+        run: |
+          docker push isruf/se-cl:${{ env.version }}
+          docker push isruf/se-cl:latest
