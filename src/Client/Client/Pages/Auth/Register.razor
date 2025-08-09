@@ -96,6 +96,11 @@
                        @onclick="SubmitRegisterAsync">
                 Зарегистрироваться
             </MudButton>
+            
+            @if (_isSubmitting)
+            {
+                <MudProgressLinear Indeterminate="true" Class="mt-2" Color="Color.Primary"/>
+            }
 
             <MudCardActions Class="d-flex flex-column align-center">
                 <MudText Typo="Typo.body2" Style="padding-top: 20px">Уже регистрировались?</MudText>
@@ -145,7 +150,8 @@
     // ======== Обработчики формы ========
     private async Task SubmitRegisterAsync()
     {
-        if (_isSubmitting) return;
+        if (_isSubmitting) 
+            return;
 
         try
         {
@@ -177,13 +183,15 @@
 
     private async Task OnFormKeyUpAsync(KeyboardEventArgs e)
     {
-        if (_isSubmitting) return;
+        if (_isSubmitting) 
+            return;
 
         var isPlainEnter = e is not null
                            && (e.Key is "Enter" or "NumpadEnter" || e.Code == "Enter")
                            && !e.ShiftKey && !e.CtrlKey && !e.AltKey && !e.MetaKey;
 
-        if (!isPlainEnter) return;
+        if (!isPlainEnter) 
+            return;
 
         if (!_agreeForPersonalDataProcessing)
         {

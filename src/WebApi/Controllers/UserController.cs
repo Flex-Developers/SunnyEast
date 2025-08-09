@@ -11,6 +11,7 @@ namespace WebApi.Controllers;
 [CustomExceptionsFilter]
 public class UserController : ApiControllerBase
 {
+    [AllowAnonymous]
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterUserCommand command)
     {
@@ -18,6 +19,7 @@ public class UserController : ApiControllerBase
         return Ok(response);
     }
 
+    [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginUserCommand command)
     {

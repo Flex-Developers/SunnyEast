@@ -186,7 +186,7 @@
             if (await AuthService.LoginAsync(_loginCommand, _returnUrl))
             {
                 // if success
-                Snackbar.Add("Успешный вход.", Severity.Success);
+                Snackbar.Add("Успешный вход. Добро пожаловать!", Severity.Success);
                 StateHasChanged();
             }
             else
@@ -223,6 +223,7 @@
 
     private void ForgotPassword()
     {
+        Navigation.NavigateTo("/forgot-password");
     }
 
     private void Register()

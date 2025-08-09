@@ -25,36 +25,46 @@ public sealed class ResendCodeCommandHandler(
         if (s.ExpiresAt <= DateTime.UtcNow)
             throw new BadRequestException("Сессия истекла.");
 
-        if (s.NextResendAt.HasValue && s.NextResendAt.Value > DateTime.UtcNow)
+        if (s.NextResendAt is { } next && next > DateTime.UtcNow)
             throw new BadRequestException("Повторная отправка будет доступна позднее.");
 
+        // --- отправка -------------------------------------------------------------
         if (s.Selected == OtpChannel.phone)
         {
             if (string.IsNullOrWhiteSpace(s.Phone))
                 throw new BadRequestException("Для этой сессии недоступен канал SMS.");
 
-            var ok = await quota.TryConsumeAsync(s.Phone!, ct);
-            if (!ok)
+            if (!await quota.TryConsumeAsync(s.Phone!, ct))
                 throw new BadRequestException("Превышен дневной лимит отправки SMS. Попробуйте завтра.");
 
-            var text = $"Ваш код подтверждения для регистрации на сайте Solnechny-vostok.ru: {s.Code}";
-            var recipient = PhoneMasking.ToSmsIntRecipient(s.Phone);
-            await sms.SendTextAsync("Sol-vostok", recipient, text, ct);
+            var smsText = s.Purpose == "reset"
+                ? $"Ваш код для сброса пароля: {s.Code}"
+                : $"Ваш код подтверждения: {s.Code}";
+
+            await sms.SendTextAsync("Sol-vostok",
+                PhoneMasking.ToSmsIntRecipient(s.Phone),
+                smsText, ct);
         }
         else
         {
             if (string.IsNullOrWhiteSpace(s.Email))
                 throw new BadRequestException("Для этой сессии недоступен канал e-mail.");
 
-            var subject = "Код подтверждения Solnechny-vostok.ru";
-            var text    = $"Ваш код подтверждения: {s.Code}";
-            var html    = $"<div style=\"font-family:Arial,sans-serif;font-size:16px\">Ваш код подтверждения: <b>{s.Code}</b></div>";
-            await email.SendAsync(s.Email, subject, text, html, ct);
+            var subj = s.Purpose == "reset"
+                ? "Код для сброса пароля (Solnechny-vostok.ru)"
+                : "Код подтверждения Solnechny-vostok.ru";
+
+            var plain = s.Purpose == "reset"
+                ? $"Ваш код для сброса пароля: {s.Code}"
+                : $"Ваш код подтверждения: {s.Code}";
+
+            var html = $"<div style=\"font-family:Arial,sans-serif;font-size:16px\">" +
+                       $"{plain.Split(':')[0]}: <b>{s.Code}</b></div>";
+
+            await email.SendAsync(s.Email, subj, plain, html, ct);
         }
 
-        var updated = s with { NextResendAt = DateTime.UtcNow.Add(Cooldown) };
-        await store.UpdateAsync(updated, ct);
-
+        await store.UpdateAsync(s with { NextResendAt = DateTime.UtcNow.Add(Cooldown) }, ct);
         return new ResendResponse((int)Cooldown.TotalSeconds);
     }
 }
