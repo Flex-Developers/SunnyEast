@@ -8,6 +8,7 @@
 @inject IConfiguration Configuration
 @inject IJSRuntime JSRuntime
 @inject ISnackbar Snackbar
+@inject IDialogService Dialog
 @attribute [Authorize(Roles = ApplicationRoles.SuperAdmin + "," + ApplicationRoles.Administrator)]
 
 <PageTitle>Загрузка изображений</PageTitle>
@@ -56,7 +57,7 @@
                     {
                         @foreach (var file in _files)
                         {
-                            <MudCard Class="ma-2" Style="width: 200px;">
+                            <MudCard Class="ma-2" Style="width: 220px;">
                                 <MudCardContent Class="pa-2">
                                     <MudStack Spacing="2">
                                         <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start">
@@ -119,6 +120,58 @@
                     </MudStack>
                 }
             </MudPaper>
+
+            <!-- ГАЛЕРЕЯ (LocalStorage) -->
+            <MudPaper Class="pa-4 mt-4" Elevation="2">
+                <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
+                    <MudText Typo="Typo.h6">Мои загруженные изображения (сохраняются в браузере)</MudText>
+                    <MudStack Row Spacing="1">
+                        <MudButton Variant="Variant.Outlined" Size="Size.Small"
+                                   OnClick="CopyAllUrls" StartIcon="@Icons.Material.Filled.ContentCopy"
+                                   Disabled="!_gallery.Any()">Копировать все URL</MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                                   OnClick="ClearLocalGallery" StartIcon="@Icons.Material.Filled.DeleteSweep"
+                                   Disabled="!_gallery.Any()">Очистить список</MudButton>
+                    </MudStack>
+                </MudStack>
+
+                @if (!_gallery.Any())
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Здесь будут отображаться все загруженные Вами изображения. Список не пропадёт при переходе между страницами.
+                    </MudText>
+                }
+                else
+                {
+                    <MudGrid>
+                        @foreach (var img in _gallery)
+                        {
+                            <MudItem xs="12" sm="6" md="4" lg="3">
+                                <MudCard Class="mb-3" Style="overflow:hidden;">
+                                    <MudCardMedia Height="160" Image="@img.Url" Class="bg-cover bg-center" />
+                                    <MudCardContent>
+                                        <MudText Typo="Typo.body2" Style="word-break:break-all;">@img.Name</MudText>
+                                        <MudText Typo="Typo.caption">@img.UploadedAt.ToLocalTime()</MudText>
+                                    </MudCardContent>
+                                    <MudCardActions>
+                                        <MudTooltip Text="Копировать ссылку">
+                                            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" OnClick="@(() => CopyUrlToClipboard(img.Url))"/>
+                                        </MudTooltip>
+                                        <MudTooltip Text="Удалить только из списка">
+                                            <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Color="Color.Default"
+                                                           OnClick="@(() => RemoveFromLocalGallery(img))"/>
+                                        </MudTooltip>
+                                        <MudTooltip Text="Удалить на сервере">
+                                            <MudIconButton Icon="@Icons.Material.Filled.DeleteForever" Color="Color.Error"
+                                                           OnClick="@(() => DeleteOnServer(img))"/>
+                                        </MudTooltip>
+                                    </MudCardActions>
+                                </MudCard>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                }
+            </MudPaper>
         </MudItem>
 
         <MudItem xs="12" md="4">
@@ -155,11 +208,9 @@
 </MudContainer>
 
 <style>
-    .drop-zone {
-        transition: all 0.3s ease;
-    }
+    .drop-zone { transition: all 0.3s ease; }
     .drop-zone:hover {
         border-color: var(--mud-palette-primary);
-        background-color: var(--mud-palette-primary-lighten);
+        background-color: var(--mud-palette-primary);
     }
 </style>
