@@ -13,11 +13,11 @@ using System.Text.Json;
 namespace Client.Infrastructure.Services.HttpClient;
 
 public class HttpClientService(
-    IHttpClientFactory httpClientFactory,
-    ISnackbar snackbar,
-    ILocalStorageService localStorageService,
-    IConfiguration configuration,
-    NavigationManager navigationManager)
+        IHttpClientFactory httpClientFactory,
+        ISnackbar snackbar,
+        ILocalStorageService localStorageService,
+        IConfiguration configuration,
+        NavigationManager navigationManager)
     : IHttpClientService
 {
     private readonly string _baseUrl = configuration[Config.ApiBaseUrl]!;
@@ -138,6 +138,17 @@ public class HttpClientService(
             request.Content = JsonContent.Create(content);
         }
 
+        var response = await SendAsync(request);
+        return new ServerResponse
+        {
+            Success = response?.IsSuccessStatusCode ?? false,
+            StatusCode = response?.StatusCode
+        };
+    }
+
+    public async Task<ServerResponse> DeleteAbsoluteUrlAsync(string url)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Delete, url);
         var response = await SendAsync(request);
         return new ServerResponse
         {

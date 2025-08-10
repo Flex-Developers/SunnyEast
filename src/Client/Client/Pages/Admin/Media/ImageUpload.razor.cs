@@ -278,7 +278,7 @@ public partial class ImageUpload
             Console.WriteLine(fileName);
             Console.WriteLine(WebUtility.UrlEncode(fileName));
             Console.WriteLine($"{_cdnApiBaseUrl}/api/Images/{WebUtility.UrlEncode(fileName)}");
-            var resp = await HttpClient.DeleteAsync($"{_cdnApiBaseUrl}/api/Images/{WebUtility.UrlEncode(fileName)}");
+            var resp = await HttpClient.DeleteAbsoluteUrlAsync($"{_cdnApiBaseUrl}/api/Images/{WebUtility.UrlEncode(fileName)}");
 
             if (resp.Success)
             {
