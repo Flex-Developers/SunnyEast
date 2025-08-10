@@ -5,6 +5,7 @@
 @using Client.Infrastructure.Services.User
 @using Client.Infrastructure.Services.Staff
 @using Severity = MudBlazor.Severity
+@using Microsoft.AspNetCore.Components.Authorization
 @attribute [Authorize(Roles = ApplicationRoles.SuperAdmin)]
 
 @inject IUserService UserService
@@ -12,6 +13,8 @@
 @inject IDialogService Dialogs
 @inject NavigationManager Nav
 @inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthState
+
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mx-auto">
 
@@ -57,14 +60,16 @@
                 <MudTd DataLabel="Дата регистрации" Class="hide-sm">@FormatDate(context.RegisteredAt)</MudTd>
 
                 <MudTd DataLabel="Действия" Class="actions-td">
-                    <div class="actions-cell @(context.IsStaff ? "triple" : "triple")">
-                        <MudButton Variant="Variant.Outlined" Color="Color.Info" Size="Size.Small"
+                    <div class="actions-cell">
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Info"
+                                   Size="Size.Small"
                                    StartIcon="@Icons.Material.Filled.Receipt"
                                    OnClick="@(() => OpenOrders(context))">
                             Заказы
                         </MudButton>
 
-                        @if (!context.IsStaff)
+                        @if (!context.IsStaff && !context.IsSuperAdmin && !context.IsCurrentUser)
                         {
                             <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small"
                                        StartIcon="@Icons.Material.Filled.PersonAdd"
@@ -73,11 +78,14 @@
                             </MudButton>
                         }
 
-                        <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
-                                   StartIcon="@Icons.Material.Filled.Delete"
-                                   OnClick="@(() => AskDelete(context))">
-                            Удалить
-                        </MudButton>
+                        @if (!context.IsSuperAdmin && !context.IsCurrentUser)
+                        {
+                            <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.Delete"
+                                       OnClick="@(() => AskDelete(context))">
+                                Удалить
+                            </MudButton>
+                        }
                     </div>
                 </MudTd>
             </RowTemplate>
@@ -101,9 +109,15 @@
     private List<CustomerResponse> _all = new();
     private List<CustomerResponse> _users = new();
     private string? _search;
-
+    private Guid _meId;
+    
+    
     protected override async Task OnInitializedAsync()
     {
+        var auth = await AuthState.GetAuthenticationStateAsync();
+        var idStr = auth.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        Guid.TryParse(idStr, out _meId);
+
         _all = await UserService.GetAllUsersAsync();
         _users = _all.ToList();
     }
@@ -128,6 +142,12 @@
 
     private async Task AskHire(CustomerResponse user)
     {
+        if (user.Id == _meId) 
+        { 
+            Snackbar.Add("Нельзя назначить самого себя.", Severity.Warning); 
+            return;
+        }
+        
         var name = FullName(user);
         var confirmed = await Dialogs.ShowMessageBox(
             "Подтверждение назначения",
@@ -154,6 +174,12 @@
 
     private async Task AskDelete(CustomerResponse user)
     {
+        if (user.Id == _meId)
+        {
+            Snackbar.Add("Нельзя удалить самого себя.", Severity.Warning);
+            return;
+        }
+        
         var name = FullName(user);
         var confirmed = await Dialogs.ShowMessageBox(
             "Удаление пользователя",

@@ -1,6 +1,7 @@
 using Application.Contract.User.Commands;
 using Application.Common.Exceptions;
 using Application.Common.Interfaces.Contexts;
+using Application.Common.Interfaces.Services;
 using Application.Contract.Identity;
 using Domain.Entities;
 using MediatR;
@@ -9,10 +10,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Users.Commands;
 
-public sealed class DeleteUserCommandHandler(UserManager<ApplicationUser> userManager, IApplicationDbContext context) : IRequestHandler<DeleteUserCommand, Unit>
+public sealed class DeleteUserCommandHandler(UserManager<ApplicationUser> userManager, IApplicationDbContext context, ICurrentUserService currentUser)
+    : IRequestHandler<DeleteUserCommand, Unit>
 {
     public async Task<Unit> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
     {
+        if (currentUser.GetUserId() == request.Id) 
+            throw new ForbiddenException("Нельзя удалить самого себя.");
+        
         // 1) Найдём пользователя
         var user = await userManager.Users.FirstOrDefaultAsync(u => u.Id == request.Id, cancellationToken);
         if (user is null)
