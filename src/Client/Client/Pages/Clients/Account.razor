@@ -165,7 +165,8 @@ else
                             {
                                 <MudDivider Class="my-2"/>
                                 <MudText Typo="Typo.body2">
-                                    Мы отправим письмо с кодом подтверждения на <b>@_email.NewEmail</b>. Подтвердите адрес — и он
+                                    Мы отправим письмо с кодом подтверждения на <b>@_email.NewEmail</b>. Подтвердите
+                                    адрес — и он
                                     будет добавлен к вашему аккаунту.
                                 </MudText>
 
@@ -236,7 +237,8 @@ else
                             {
                                 <MudDivider Class="my-2"/>
                                 <MudText Typo="Typo.body2">
-                                    Мы отправим SMS с кодом подтверждения на <b>+7-@_phone</b>. Подтвердите номер — и он будет
+                                    Мы отправим SMS с кодом подтверждения на <b>+7-@_phone</b>. Подтвердите номер — и он
+                                    будет
                                     добавлен к вашему аккаунту.
                                 </MudText>
 
@@ -322,7 +324,6 @@ else
                     <MudPaper Class="pa-3" Elevation="5">
                         <MudStack AlignItems="AlignItems.Center" Spacing="2">
                             <MudText Typo="Typo.h6" Align="Align.Center">Сессии</MudText>
-
                             <MudGrid Class="w-100">
                                 <MudItem xs="12" sm="6" Class="minw0">
                                     <MudButton Color="Color.Error"
@@ -330,10 +331,16 @@ else
                                                Size="Size.Medium"
                                                FullWidth="true"
                                                StartIcon="@Icons.Material.Filled.DeleteForever"
-                                               Disabled="_deletingAccount"
+                                               Disabled="@(_deletingAccount || _isSuperAdmin)"
                                                OnClick="@ConfirmDeleteAccount">
                                         Удалить аккаунт
                                     </MudButton>
+                                    @if (_isSuperAdmin)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Warning">
+                                            Учетная запись супер-администратора не может быть удалена.
+                                        </MudText>
+                                    }
                                 </MudItem>
 
                                 <MudItem xs="12" sm="6" Class="minw0">
