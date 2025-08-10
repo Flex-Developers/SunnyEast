@@ -148,9 +148,7 @@
                         {
                             <MudItem xs="12" sm="6" md="4" lg="3">
                                 <MudCard Class="mb-3" Style="overflow:hidden;">
-                                    <MudCardMedia Height="160">
-                                        <img src="@img.Url" alt="@img.Name" style="width:100%;height:160px;object-fit:cover;" />
-                                    </MudCardMedia>
+                                    <MudCardMedia Height="160" Image="@img.Url" Class="bg-cover bg-center" />
                                     <MudCardContent>
                                         <MudText Typo="Typo.body2" Style="word-break:break-all;">@img.Name</MudText>
                                         <MudText Typo="Typo.caption">@img.UploadedAt.ToLocalTime()</MudText>
