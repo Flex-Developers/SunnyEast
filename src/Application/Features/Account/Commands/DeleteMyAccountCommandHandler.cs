@@ -2,6 +2,7 @@ using Application.Common;
 using Application.Common.Exceptions;
 using Application.Common.Interfaces.Services;
 using Application.Contract.Account.Commands;
+using Application.Contract.Identity;
 using Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -23,6 +24,9 @@ public sealed class DeleteMyAccountCommandHandler(
 
         var user = await userManager.FindByNameAsync(userName)
                    ?? throw new NotFoundException("Пользователь не найден.");
+        
+        if (await userManager.IsInRoleAsync(user, ApplicationRoles.SuperAdmin))
+            throw new ForbiddenException("Нельзя удалить аккаунт супер-администратора.");
 
         var res = await userManager.DeleteAsync(user);
         res.ThrowBadRequestIfError();

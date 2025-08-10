@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Application.Contract.Account.Commands;
 using Application.Contract.Account.Responses;
+using Application.Contract.Identity;
 using Application.Contract.Verification.Commands;
 using Client.Infrastructure.Auth;
 using Client.Infrastructure.Services.Verification;
@@ -48,7 +49,8 @@ public partial class Account
     // Подсказки/прогресс по отправке кодов
     private bool _promptEmailConfirm, _promptPhoneConfirm;
     private bool _sendingEmailCode, _sendingPhoneCode;
-
+    private bool _isSuperAdmin;
+    
     protected override async Task OnInitializedAsync()
     {
         var myAccountResponse = await AccountService.GetAsync();
@@ -59,6 +61,9 @@ public partial class Account
         }
 
         _account = myAccountResponse;
+        
+        var auth = await AuthState.GetAuthenticationStateAsync();
+        _isSuperAdmin = auth.User.IsInRole(ApplicationRoles.SuperAdmin);
 
         // Уже заполненные значения в TextField-ах
         _profile.Name = myAccountResponse.Name;
