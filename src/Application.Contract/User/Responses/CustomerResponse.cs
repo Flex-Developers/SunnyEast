@@ -10,4 +10,6 @@ public record CustomerResponse
     public string? Email { get; set; }
     public DateTime? RegisteredAt { get; set; }
     public bool IsStaff { get; set; }
+    public bool IsSuperAdmin { get; set; }   // NEW
+    public bool IsCurrentUser { get; set; }  // NEW
 }

@@ -229,15 +229,35 @@ public class HttpClientService(
     private async Task CheckForException(HttpResponseMessage? response)
     {
         ExceptionMessage = null;
+
+        if (response is null) return;
+
         if (!response.IsSuccessStatusCode)
         {
-            var errorMessage = await response.Content.ReadAsStringAsync();
-            var problemDetails = JsonConvert.DeserializeObject<ProblemDetails>(errorMessage);
-            if (!string.IsNullOrEmpty(problemDetails!.Title))
+            var errorText = await response.Content.ReadAsStringAsync();
+            try
             {
-                ExceptionMessage = problemDetails.Title;
-                snackbar.Add(problemDetails.Title, Severity.Warning);
+                var problem = JsonConvert.DeserializeObject<ProblemDetails>(errorText);
+                var title = problem?.Title;
+
+                if (!string.IsNullOrWhiteSpace(title))
+                {
+                    ExceptionMessage = title;
+                    snackbar.Add(title, Severity.Warning);
+                    return;
+                }
             }
+            catch
+            {
+                /* ignore parse errors */
+            }
+
+            // Фолбэк — покажем общий текст/статус
+            var msg = string.IsNullOrWhiteSpace(errorText)
+                ? $"Ошибка: {(int)response.StatusCode} {response.StatusCode}"
+                : errorText;
+            ExceptionMessage = msg;
+            snackbar.Add(msg, Severity.Error);
         }
     }
 }

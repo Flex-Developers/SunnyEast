@@ -1,7 +1,7 @@
 using Application.Common.Interfaces.Services;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace Infrastructure.Services.Verification;
+namespace Infrastructure.Services.Sms;
 
 public sealed class VerificationSessionStore(IMemoryCache cache) : IVerificationSessionStore
 {

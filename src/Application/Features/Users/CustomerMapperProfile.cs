@@ -18,6 +18,7 @@ public class CustomerMapperProfile : Profile
             .ForMember(d => d.Name,    o => o.MapFrom(s => s.Name))
             .ForMember(d => d.Surname, o => o.MapFrom(s => s.Surname))
             .ForMember(d => d.RegisteredAt, o => o.MapFrom(s => (DateTime?)s.CreatedAt))
-            .ForMember(d => d.IsStaff,      o => o.Ignore()); 
+            .ForMember(d => d.IsStaff,      o => o.Ignore())
+            .ForMember(d => d.IsSuperAdmin, o => o.Ignore());
     }
 }

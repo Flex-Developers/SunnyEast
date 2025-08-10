@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Application.Common;
 using Application.Common.Exceptions;
 using Application.Common.Interfaces.Contexts;
+using Application.Common.Interfaces.Services;
 using Application.Contract.Identity;
 using Application.Contract.Staff.Commands;
 using Application.Contract.Staff.Enums;
@@ -14,11 +15,15 @@ namespace Application.Features.Staff.Commands;
 
 public sealed class ChangeUserRoleCommandHandler(
     IApplicationDbContext context,
-    UserManager<ApplicationUser> userManager)
+    UserManager<ApplicationUser> userManager,
+    ICurrentUserService currentUser)
     : IRequestHandler<ChangeUserRoleCommand, Unit>
 {
     public async Task<Unit> Handle(ChangeUserRoleCommand req, CancellationToken ct)
     {
+        if (currentUser.GetUserId() == req.UserId)
+            throw new ForbiddenException("Нельзя изменять собственную роль.");
+
         // Получаем пользователя ТОЛЬКО через UserManager
         var user = await userManager.FindByIdAsync(req.UserId.ToString())
                    ?? throw new NotFoundException("Пользователь не найден.");
@@ -51,10 +56,10 @@ public sealed class ChangeUserRoleCommandHandler(
         {
             staff = new Domain.Entities.Staff
             {
-                UserId    = req.UserId,
-                IsActive  = true,
+                UserId = req.UserId,
+                IsActive = true,
                 StaffRole = (Domain.Enums.StaffRole)req.Role,
-                ShopId    = null
+                ShopId = null
             };
             await context.Staff.AddAsync(staff, ct);
         }
@@ -63,10 +68,11 @@ public sealed class ChangeUserRoleCommandHandler(
             staff.StaffRole = (Domain.Enums.StaffRole)req.Role;
             if (req.Role == StaffRole.None)
             {
-                staff.ShopId  = null;
+                staff.ShopId = null;
                 staff.IsActive = false;
             }
         }
+
         await userManager.UpdateSecurityStampAsync(user);
         await context.SaveChangesAsync(ct);
         return Unit.Value;

@@ -7,7 +7,8 @@ using Domain.Entities;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Contexts;
 using Infrastructure.Services;
-using Infrastructure.Services.Verification;
+using Infrastructure.Services.Email;
+using Infrastructure.Services.Sms;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -93,10 +94,17 @@ public static class DependencyInitializer
 
         services.AddAuthorization();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        
+        // Memory cache
+        services.AddMemoryCache();
+        
+        // E-mail
+        services.AddTransient<IEmailSenderService, MailKitEmailSender>();
 
         // >>> ВЕРИФИКАЦИЯ + SMSInt
-        services.AddMemoryCache();
         services.AddHttpClient<ISmsSenderService, SmsIntService>();
+        
+        // OTP Sessions
         services.AddSingleton<IVerificationSessionStore, VerificationSessionStore>();
         services.AddSingleton<ISmsDailyQuotaService, SmsDailyQuotaService>();
 

@@ -1,7 +1,9 @@
 using System.Text.RegularExpressions;
 using Application.Contract.Account.Commands;
 using Application.Contract.Account.Responses;
+using Application.Contract.Verification.Commands;
 using Client.Infrastructure.Auth;
+using Client.Infrastructure.Services.Verification;
 using Microsoft.JSInterop;
 using MudBlazor;
 
@@ -9,14 +11,13 @@ namespace Client.Pages.Clients;
 
 public partial class Account
 {
-     private bool _loading = true;
+    private bool _loading = true;
     private bool _isMobile = false;
     private int _tab;
-    
+
     private bool _showCurrentPwd;
     private bool _showNewPwd;
     private bool _showConfirmPwd;
-
 
     private string _pwdConfirm = "";
     private string? _pwdConfirmError;
@@ -37,12 +38,16 @@ public partial class Account
     private MudForm _emailForm = null!;
     private MudForm _phoneForm = null!;
     private MudForm _pwdForm = null!;
-    
+
     private bool _logoutSelfLoading;
     private bool _deletingAccount;
 
     // Состояния
     private bool _savingProfile, _savingEmail, _savingPhone, _savingPwd;
+
+    // Подсказки/прогресс по отправке кодов
+    private bool _promptEmailConfirm, _promptPhoneConfirm;
+    private bool _sendingEmailCode, _sendingPhoneCode;
 
     protected override async Task OnInitializedAsync()
     {
@@ -58,12 +63,12 @@ public partial class Account
         // Уже заполненные значения в TextField-ах
         _profile.Name = myAccountResponse.Name;
         _profile.Surname = myAccountResponse.Surname;
-        _email.NewEmail = myAccountResponse.Email ?? string.Empty; // <-- ВАЖНО: сразу показываем текущий e‑mail
+        _email.NewEmail = myAccountResponse.Email ?? string.Empty;
         _phone = (myAccountResponse.Phone ?? "").Replace("+7-", ""); // показываем без +7-
 
         _loading = false;
     }
-    
+
     // выйти ТОЛЬКО на этом устройстве (клиентский логаут)
     private async Task LogoutThisDevice()
     {
@@ -79,7 +84,7 @@ public partial class Account
         }
     }
 
-    // подтвердить и удалить аккаунт (сервер -> удалить пользователя, клиент -> разлогиниться)
+    // подтвердить и удалить аккаунт
     private async Task ConfirmDeleteAccount()
     {
         var ok = await DialogService.ShowMessageBox(
@@ -119,7 +124,7 @@ public partial class Account
         Snackbar.Add("Скопировано.", Severity.Success);
     }
 
-    // --- Делегаты валидации (единый тип для MudForm) ---
+    // --- Валидации для MudForm ---
     private Func<object, string, Task<IEnumerable<string>>> ProfileValidate => async (model, prop) =>
     {
         var m = (UpdateProfileCommand)model;
@@ -184,8 +189,7 @@ public partial class Account
         return errs;
     };
 
-    // --- Обработчики ---
-
+    // --- Профиль ---
     private async Task SaveProfile()
     {
         _savingProfile = true;
@@ -214,6 +218,15 @@ public partial class Account
         }
     }
 
+    private void CancelProfileEdit()
+    {
+        if (_account is null) return;
+        _profile.Name = _account.Name;
+        _profile.Surname = _account.Surname;
+        _editProfile = false;
+    }
+
+    // --- Пароль ---
     private async Task SavePassword()
     {
         _savingPwd = true;
@@ -227,7 +240,6 @@ public partial class Account
                 return;
             }
 
-            // Доп. проверка: новый пароль и подтверждение должны совпадать
             if (string.IsNullOrWhiteSpace(_pwdConfirm) || _pwd.NewPassword != _pwdConfirm)
             {
                 _pwdConfirmError = "Пароли не совпадают.";
@@ -239,7 +251,6 @@ public partial class Account
             if (ok)
             {
                 Snackbar.Add("Пароль изменён. Другие сессии завершены.", Severity.Success);
-                // очистим поля
                 _pwd = new ChangePasswordCommand { CurrentPassword = "", NewPassword = "" };
                 _pwdConfirm = "";
                 _pwdConfirmError = null;
@@ -255,35 +266,34 @@ public partial class Account
         }
     }
 
-    private void CancelProfileEdit()
-    {
-        if (_account is null) return;
-        _profile.Name = _account.Name;
-        _profile.Surname = _account.Surname;
-        _editProfile = false;
-    }
-
+    // --- Email: сохранить = показать подсказку, а не сразу слать код ---
     private async Task SaveEmail()
     {
+        var newMail = (_email.NewEmail ?? "").Trim();
+        var oldMail = (_account?.Email ?? "").Trim();
+
+        if (string.Equals(newMail, oldMail, StringComparison.OrdinalIgnoreCase))
+        {
+            Snackbar.Add("Этот e-mail уже привязан к вашему аккаунту.", Severity.Info);
+            _editEmail = false;
+            return;
+        }
+        
         _savingEmail = true;
         try
         {
             await _emailForm.Validate();
             if (!_emailForm.IsValid)
             {
-                Snackbar.Add("Введите корректный e‑mail.", Severity.Warning);
+                Snackbar.Add("Введите корректный e-mail.", Severity.Warning);
                 return;
             }
 
-            var ok = await AccountService.ChangeEmailAsync(_email);
-            if (ok)
-            {
-                await AccountService.RefreshTokenAsync();
-                _account = await AccountService.GetAsync();
-                _editEmail = false;
-                Snackbar.Add("E‑mail изменён.", Severity.Success);
-            }
-            else Snackbar.Add("E‑mail уже занят или ошибка сервера.", Severity.Error);
+            _promptEmailConfirm = true;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
         }
         finally
         {
@@ -291,14 +301,66 @@ public partial class Account
         }
     }
 
-    private void CancelEmailEdit()
+    private async Task StartSendEmailCodeAsync()
     {
+        var newMail = (_email.NewEmail ?? "").Trim();
+        var oldMail = (_account?.Email ?? "").Trim();
+        if (string.Equals(newMail, oldMail, StringComparison.OrdinalIgnoreCase))
+        {
+            Snackbar.Add("E-mail не изменился.", Severity.Info);
+            return;
+        }
+
+        
+        if (string.IsNullOrWhiteSpace(_email.NewEmail)) 
+            return;
+
+        _sendingEmailCode = true;
+        try
+        {
+            var start = await AccountService.StartLinkEmailAsync(_email.NewEmail);
+
+            var ch = start.Selected.ToString(); // "email"
+            var to = Uri.EscapeDataString(start.MaskedEmail ?? _email.NewEmail);
+
+            Nav.NavigateTo(
+                $"/verify?purpose=link&channel={ch}&to={to}&title=Подтверждение%20e-mail&len={start.CodeLength}&sid={start.SessionId}&returnUrl=%2Faccount");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _sendingEmailCode = false;
+        }
+    }
+
+    private void CancelEmailPrompt()
+    {
+        _promptEmailConfirm = false;
         _email.NewEmail = _account?.Email ?? "";
         _editEmail = false;
     }
 
+    private void CancelEmailEdit()
+    {
+        _promptEmailConfirm = false;
+        _email.NewEmail = _account?.Email ?? "";
+        _editEmail = false;
+    }
+
+    // --- Телефон: сохранить = показать подсказку ---
     private async Task SavePhone()
     {
+        var fullPhone = $"+7-{_phone}";
+        if (string.Equals(fullPhone, _account?.Phone ?? "", StringComparison.Ordinal))
+        {
+            Snackbar.Add("Этот номер уже привязан к вашему аккаунту.", Severity.Info);
+            _editPhone = false;
+            return;
+        }
+
         _savingPhone = true;
         try
         {
@@ -309,15 +371,11 @@ public partial class Account
                 return;
             }
 
-            var ok = await AccountService.ChangePhoneAsync(new ChangePhoneCommand { NewPhone = $"+7-{_phone}" });
-            if (ok)
-            {
-                await AccountService.RefreshTokenAsync();
-                _account = await AccountService.GetAsync();
-                _editPhone = false;
-                Snackbar.Add("Телефон изменён.", Severity.Success);
-            }
-            else Snackbar.Add("Телефон уже занят или ошибка сервера.", Severity.Error);
+            _promptPhoneConfirm = true;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
         }
         finally
         {
@@ -325,8 +383,46 @@ public partial class Account
         }
     }
 
+    private async Task StartSendPhoneCodeAsync()
+    {
+        var fullPhone = $"+7-{_phone}";
+        if (string.Equals(fullPhone, _account?.Phone ?? "", StringComparison.Ordinal))
+        {
+            Snackbar.Add("Номер телефона не изменился.", Severity.Info);
+            return;
+        }
+
+        _sendingPhoneCode = true;
+        try
+        {
+            var start = await AccountService.StartLinkPhoneAsync(fullPhone);
+
+            var ch = start.Selected.ToString(); // "phone"
+            var to = Uri.EscapeDataString(start.MaskedPhone ?? _phone);
+
+            Nav.NavigateTo(
+                $"/verify?purpose=link&channel={ch}&to={to}&title=Подтверждение%20телефона&len={start.CodeLength}&sid={start.SessionId}&returnUrl=%2Faccount");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _sendingPhoneCode = false;
+        }
+    }
+
+    private void CancelPhonePrompt()
+    {
+        _promptPhoneConfirm = false;
+        _phone = (_account?.Phone ?? "").Replace("+7-", "");
+        _editPhone = false;
+    }
+
     private void CancelPhoneEdit()
     {
+        _promptPhoneConfirm = false;
         _phone = (_account?.Phone ?? "").Replace("+7-", "");
         _editPhone = false;
     }
