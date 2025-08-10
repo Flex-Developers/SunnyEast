@@ -19,7 +19,7 @@ public sealed class ApplicationDbContextInitializer(
 {
     private const string AllProductsSlug = "AllProducts";
 
-    public async Task SeedAsync()
+    public async Task SeedAsync(bool isDevelopment)
     {
         // 1) Базовые справочники
         await EnsureBaseCategoryAsync();
@@ -28,15 +28,20 @@ public sealed class ApplicationDbContextInitializer(
         await EnsureRolesAsync();
 
         // 3) Пользователи и их роли (эксклюзивно — только одна целевая роль)
-        var superAdmin = await EnsureUserAsync(
-            phoneNumber: "+7-999-123-45-67",
-            email: "superadmin@gmail.com",
-            displayName: "Super Admin",
-            password: "Admin@123");
-        await EnsureUserInRoleAsync(superAdmin, ApplicationRoles.SuperAdmin, exclusive: true);
 
-        // Пример: при необходимости можно добавить универсальный e-mail claim
-        await EnsureEmailClaimAsync(superAdmin);
+        if (isDevelopment)
+        {
+            var superAdmin = await EnsureUserAsync(
+                phoneNumber: "+7-999-123-45-67",
+                email: "superadmin@gmail.com",
+                displayName: "Super Admin",
+                password: "Admin@123");
+
+            await EnsureUserInRoleAsync(superAdmin, ApplicationRoles.SuperAdmin, exclusive: true);
+
+            // Пример: при необходимости можно добавить универсальный e-mail claim
+            await EnsureEmailClaimAsync(superAdmin);
+        }
     }
 
     /// <summary>
@@ -79,17 +84,18 @@ public sealed class ApplicationDbContextInitializer(
     /// <summary>
     /// Возвращает существующего пользователя или создаёт нового.
     /// </summary>
-    private async Task<ApplicationUser> EnsureUserAsync(string email,string phoneNumber, string displayName, string password)
+    private async Task<ApplicationUser> EnsureUserAsync(string email, string phoneNumber, string displayName,
+        string password)
     {
         var user = await userManager.FindByEmailAsync(email);
-        if (user != null) 
+        if (user != null)
             return user;
 
         user = new ApplicationUser
         {
             PhoneNumber = phoneNumber,
             Email = email,
-            UserName = email,      // держим UserName = email для простоты логина
+            UserName = email, // держим UserName = email для простоты логина
             Name = displayName
         };
 
@@ -110,7 +116,7 @@ public sealed class ApplicationDbContextInitializer(
         if (!currentRoles.Contains(requiredRole, StringComparer.OrdinalIgnoreCase))
             await userManager.AddToRoleAsync(user, requiredRole);
 
-        if (!exclusive) 
+        if (!exclusive)
             return;
 
         var rolesToRemove = currentRoles
@@ -136,7 +142,7 @@ public sealed class ApplicationDbContextInitializer(
             addEmailClaim.ThrowInvalidOperationIfError();
         }
     }
-    
+
     private async Task EnsureStaffRecordAsync(ApplicationUser user)
     {
         // Определяем staff-роль из Identity-ролей
@@ -159,16 +165,16 @@ public sealed class ApplicationDbContextInitializer(
         {
             await db.Staff.AddAsync(new Staff
             {
-                UserId    = user.Id,
+                UserId = user.Id,
                 StaffRole = role.Value, // доменный enum
-                IsActive  = true,
-                ShopId    = null
+                IsActive = true,
+                ShopId = null
             });
         }
         else
         {
             staff.StaffRole = role.Value;
-            staff.IsActive  = true;
+            staff.IsActive = true;
             // ShopId не трогаем
         }
 

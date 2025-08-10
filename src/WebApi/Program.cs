@@ -39,7 +39,7 @@ using (var scope = app.Services.CreateScope())
         await dbContext.Database.MigrateAsync();
     }
 
-    await dbContextInitializer.SeedAsync();
+    await dbContextInitializer.SeedAsync(app.Environment.IsDevelopment());
 }
 
 if (app.Environment.IsDevelopment())
