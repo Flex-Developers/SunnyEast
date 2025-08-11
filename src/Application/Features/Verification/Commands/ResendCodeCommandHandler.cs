@@ -38,8 +38,8 @@ public sealed class ResendCodeCommandHandler(
                 throw new BadRequestException("Превышен дневной лимит отправки SMS. Попробуйте завтра.");
 
             var smsText = s.Purpose == "reset"
-                ? $"Ваш код для сброса пароля: {s.Code}"
-                : $"Ваш код подтверждения: {s.Code}";
+                ? $"Solnechny-vostok.ru Ваш код для сброса пароля: {s.Code}"
+                : $"Solnechny-vostok.ru Ваш код подтверждения: {s.Code}";
 
             await sms.SendTextAsync("Sol-vostok",
                 PhoneMasking.ToSmsIntRecipient(s.Phone),
