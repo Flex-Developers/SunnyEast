@@ -83,8 +83,8 @@ public sealed class StartVerificationCommandHandler(
         if (selected == OtpChannel.phone)
         {
             var smsText = request.Purpose == "reset"
-                ? $"Ваш код для сброса пароля: {code}"
-                : $"Ваш код подтверждения: {code}";
+                ? $"Solnechny-vostok.ru Ваш код для сброса пароля: {code}"
+                : $"Solnechny-vostok.ru Ваш код подтверждения: {code}";
 
             await sms.SendTextAsync("Sol-vostok",
                 PhoneMasking.ToSmsIntRecipient(phoneE164!),
