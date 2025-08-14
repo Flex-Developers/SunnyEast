@@ -76,17 +76,17 @@
             <MudIconButton Icon="@Icons.Material.Filled.Person" Color="Color.Inherit"/>
         </ActivatorContent>
         <ChildContent>
-            <div class="py-2" style="min-width: 220px">
+            <div class="py-2" style="min-width: 220px; margin-top: 5px;">
                 <AuthorizeView>
                     <Authorized>
-
-                        <MudMenuItem OnClick="@(Profile)">
-                            <div class="d-flex">
-                                <MudIcon Class="mx-2" Icon="@Icons.Material.Filled.Person"/>
-                                <MudText>Аккаунт</MudText>
+                            <div class="mx-4">
+                                <MudButton Color="Color.Success" FullWidth="true"
+                                           StartIcon="@Icons.Material.Filled.Person"
+                                           Variant="Variant.Filled" OnClick="@(Profile)">
+                                    Аккаунт
+                                </MudButton>
                             </div>
-                        </MudMenuItem>
-                        <div class="mt-4 mx-4">
+                        <div class="mt-3 mx-4">
                             <MudButton Color="Color.Error" FullWidth="true"
                                        StartIcon="@Icons.Material.Filled.Logout"
                                        Variant="Variant.Filled" OnClick="@(Logout)">
