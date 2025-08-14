@@ -86,25 +86,30 @@
     {
         if (!string.IsNullOrWhiteSpace(Command.Name))
         {
-            if (SelectedVolumes.Count > 5)
+            if (Command.Name != "Все продукты")
             {
-                Snackbar.Add("Можно выбрать максимум 5 объемов.", Severity.Warning);
-                return;
-            }
-            if (SelectedVolumes.Count < 3)
-            {
-                Snackbar.Add("Нужно выбрать минимум 3 объема.", Severity.Warning);
-                return;
-            }
-            if (!CategoryVolumesValidationService.VolumesAreFromOneGroup(SelectedVolumes, out var error))
-            {
-                Snackbar.Add(error!, Severity.Warning); 
-                return;
-            }
+                if (SelectedVolumes.Count > 5)
+                {
+                    Snackbar.Add("Можно выбрать максимум 5 объемов.", Severity.Warning);
+                    return;
+                }
 
-            Command.ProductVolumes = ProductVolumes
-                .Where(v => SelectedVolumes.Contains(v))
-                .ToArray();
+                if (SelectedVolumes.Count < 3)
+                {
+                    Snackbar.Add("Нужно выбрать минимум 3 объема.", Severity.Warning);
+                    return;
+                }
+
+                if (!CategoryVolumesValidationService.VolumesAreFromOneGroup(SelectedVolumes, out var error))
+                {
+                    Snackbar.Add(error!, Severity.Warning);
+                    return;
+                }
+
+                Command.ProductVolumes = ProductVolumes
+                    .Where(v => SelectedVolumes.Contains(v))
+                    .ToArray();
+            }
 
             var success = await CategoryService.Put(Command);
             if (success)

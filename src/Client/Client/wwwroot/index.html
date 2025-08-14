@@ -29,12 +29,19 @@
 
     <link href="manifest.webmanifest" rel="manifest"/>
 
-    <!-- Meta tags for mobile PWA -->
+    <!-- PWA base -->
+    <link rel="manifest" href="manifest.webmanifest">
     <meta name="theme-color" content="#512da8">
+
+    <!-- Android legacy (можно добавить для тишины в консоли) -->
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- iOS (по-прежнему требуется Safari) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="SunnyEast">
-    <link rel="apple-touch-icon" href="Logo1.png">
+    <meta name="apple-mobile-web-app-title" content="Солнечный восток">
+    <link rel="apple-touch-icon" sizes="180x180" href="Logo1.png">
+
 </head>
 
 <body>
