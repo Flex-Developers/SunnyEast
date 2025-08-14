@@ -8,7 +8,7 @@ self.addEventListener('fetch', event => event.respondWith(onFetch(event)));
 self.addEventListener('push', event => {
     const data = event.data ? event.data.json() : {};
     const title = data.title || 'Notification';
-    const options = {body: data.body || '', icon: 'icon-192.png', badge: 'icon-192.png'};
+    const options = {body: data.body || '', icon: 'Logo1.png', badge: 'Logo1.png'};
     event.waitUntil(self.registration.showNotification(title, options));
 });
 
