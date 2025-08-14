@@ -67,8 +67,8 @@
                                 <div class="skills-container">
                                     @{
                                         var skills = index == 0
-                                            ? new[] { "C#", ".NET", "Blazor", "LINQ", "UI/UX", "Clean architecture", "CQRS" }
-                                            : new[] { "C#", "Design", "C++", "Backend", "Python", "SignalR" };
+                                            ? new[] { "C#", ".NET", "Blazor", "LINQ", "UI/UX", "SEO", "Clean architecture", "CQRS", "Testing" }
+                                            : new[] { "C#", "Design-Patterns", "C++", "Backend", "DevOps", "Python", "SignalR" };
                                     }
                                     @foreach (var skill in skills)
                                     {
@@ -181,7 +181,7 @@
                         <div class="stat-icon">
                             <MudIcon Icon="@Icons.Material.Filled.Favorite" Size="Size.Large"/>
                         </div>
-                        <div class="stat-number">1</div>
+                        <div class="stat-number">+1</div>
                         <div class="stat-label">Проект мечты</div>
                     </MudPaper>
                 </MudItem>
@@ -217,14 +217,14 @@
     private readonly List<Developer> Team =
     [
         new("Avazbek Olimov", "Full‑Stack .NET Developer, UI/UX Designer",
-            "Разработка серверной логики на ASP.NET Core и клиентской части на Blazor. Ответственность за UI-дизайн, адаптивную верстку и пользовательский опыт.",
+            "Разработка серверной логики на ASP.NET Core и клиентской части на Blazor. Ответственность за UI-дизайн, адаптивную верстку, пользовательский опыт, а также за SEO оптимизацию.",
             "avazbekolimov722@gmail.com",
             "https://github.com/Avazbek22",
             "/Media/Developers/Avazbek.jpg",
             "Full-Stack Developer, UI Designer"),
 
         new("Firuz Isoboev", "Backend Developer, Team Lead, Solution Architect",
-            "Архитектурные решения, аутентификация, интеграция с базой данных и построение серверной логики. Ведущий команды и дизайнер архитектуры системы.",
+            "Архитектурные решения, аутентификация, интеграция с базой данных и построение серверной логики. Ведущий команды и дизайнер архитектуры системы. а также DevOps.",
             null,
             "https://github.com/Firuz2006", // GitHub скрыт
             null, // Фото заменено на аватар
