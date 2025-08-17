@@ -8,7 +8,6 @@
                        Value="SelectedCategory"
                        ValueChanged="@(async v => await OnCategoryChanged(v))"
                        Style="flex: 0 0 70%; margin-right: 0.5rem;">
-
                 @foreach (var c in _categories)
                 {
                     <MudSelectItem Value="@c.Name">@c.Name</MudSelectItem>
@@ -39,7 +38,6 @@
                            ValueChanged="@(async v => await OnCategoryChanged(v))"
                            FullWidth="true"
                            Style="flex: 1 1 0; min-width: 160%; margin-right: 0.5rem;">
-
                     @foreach (var c in _categories)
                     {
                         <MudSelectItem Value="@c.Name">@c.Name</MudSelectItem>
@@ -67,6 +65,12 @@
             }
         </MudToolBar>
     </MudHidden>
+
+    @if (IsBusy || _isSearchBusy)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+
 </MudPaper>
 
 <style>
@@ -84,34 +88,26 @@
     .desktop-toolbar {
         display: flex;
         align-items: center;
-        padding: 0 1rem; /* можно убрать, если не нужно */
-    }
-
-    /* ==== DESKTOP ==== */
-    .desktop-toolbar .toolbar-category {
-        /* оставляем flex: 0 0 200px; max-width:250px; */
+        padding: 0 1rem;
     }
 
     .desktop-toolbar .toolbar-search {
         flex: 1 1 auto;
-        max-width: 400px; /* было 400px */
+        max-width: 400px;
         margin-left: auto;
     }
 
     /* ==== MOBILE ==== */
-    /* вместо full-width делаем 70% ширины контейнера */
     .mobile-toolbar .toolbar-category-mobile {
-        flex: 0 0 150%; /* занимает 70% ширины тулбара */
-        max-width: 150%; /* то же самое */
-        margin-right: 0.5rem; /* немного отступа от иконки */
+        flex: 0 0 150%;
+        max-width: 150%;
+        margin-right: 0.5rem;
     }
 
-    /* иконка поиска на мобилке справа */
     .mobile-toolbar .mud-icon-button {
         flex: 0 0 auto;
     }
 
-    /* анимация разворота поля поиска */
     .mobile-toolbar .toolbar-search-mobile {
         transition: width 0.3s ease;
     }
@@ -120,13 +116,10 @@
     .category-select .mud-select-input,
     .category-select .mud-input-slot,
     .category-select input {
-              
-        text-overflow: ellipsis;   /* троеточие */
-        white-space: nowrap;       /* ровно одна строка */
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
-    /* дополнительное страхование: селект всегда можно ужать */
     .category-select { min-width: 80% !important; }
-
-
+    
 </style>

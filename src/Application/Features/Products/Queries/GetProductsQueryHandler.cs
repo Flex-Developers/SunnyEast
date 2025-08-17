@@ -31,13 +31,8 @@ public class GetProductsQueryHandler(IApplicationDbContext context, IMapper mapp
             .ToDictionaryAsync(c => c.Slug, cancellationToken);
         
         foreach (var product in result)
-        {
             if (categories.TryGetValue(product.ProductCategorySlug, out var category))
-            {
                 product.ProductVolumes = category.ProductVolumes;
-                product.SelectedVolume = product.ProductVolumes![0];
-            }
-        }
 
         return result;
     }

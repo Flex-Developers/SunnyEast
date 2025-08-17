@@ -159,7 +159,6 @@
     protected override async Task OnInitializedAsync()
     {
         _loading = true;
-        StateHasChanged();
         _shops = await ShopService.GetShopsAsync();
         _staff = await StaffService.GetAsync();
         _loading = false;
@@ -191,7 +190,6 @@
 
         StateHasChanged();
     }
-
 
     private async Task OpenRoleDialogAsync(StaffResponse row)
     {
