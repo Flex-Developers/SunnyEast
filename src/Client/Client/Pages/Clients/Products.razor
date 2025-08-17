@@ -48,7 +48,8 @@
                              ItemsSource="product.Images"
                              Context="img"
                              EnableSwipeGesture="true"
-                             AutoCycle="true"
+                             AutoCycle="hasImages"
+                             BulletsColor="Color.Dark"
                              BulletsPosition="Position.Bottom"
                              ShowBullets="hasImages"
                              ShowArrows="hasImages">
@@ -59,7 +60,7 @@
 
                 <MudCardContent Class="card-content">
                     <!-- название -->
-                    <MudText Typo="Typo.body1" Class="product-name">
+                    <MudText Typo="Typo.h6" Class="product-name">
                         @(product.Name.Length > 100 ? product.Name[..100] + "…" : product.Name)
                     </MudText>
 
@@ -137,7 +138,7 @@
 </MudGrid>
 
 <div class="pager-wrap">
-    <MudPagination @bind-Selected="Page" Count="@PageCount" Disabled="@(_products.Count <= _pageSize)"/>
+    <MudPagination @bind-Selected="Page" Size="Size.Large" Count="@PageCount" Disabled="@(_products.Count <= _pageSize)"/>
 </div>
 
 @code {

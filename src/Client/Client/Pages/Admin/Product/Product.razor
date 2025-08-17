@@ -43,9 +43,14 @@
                                      product.Images[0]?.StartsWith("http", StringComparison.OrdinalIgnoreCase) == true;
                 }
 
-                <MudCarousel Style="height: 250px; border-radius: 10px;" ItemsSource="@product.Images"
-                             Context="imgContext" EnableSwipeGesture="true"
-                             BulletsPosition="Position.Bottom" ShowBullets="hasImages" AutoCycle="true" TData="string"
+                <MudCarousel Style="height: 250px; border-radius: 10px;" 
+                             ItemsSource="@product.Images"
+                             Context="imgContext" 
+                             EnableSwipeGesture="true"
+                             BulletsPosition="Position.Bottom" 
+                             ShowBullets="hasImages" 
+                             AutoCycle="hasImages" 
+                             TData="string"
                              BulletsColor="Color.Dark"
                              ShowArrows="hasImages">
 
@@ -119,7 +124,7 @@
 </MudGrid>
 
 <div class="pager-wrap">
-    <MudPagination @bind-Selected="Page" Count="@PageCount" Disabled="@(_products.Count <= _pageSize)"/>
+    <MudPagination @bind-Selected="Page" Count="@PageCount" Size="Size.Large" Disabled="@(_products.Count <= _pageSize)"/>
 </div>
 
 
@@ -141,7 +146,9 @@
         get => _page;
         set
         {
-            if (_page == value) return;
+            if (_page == value) 
+                return;
+            
             _page = value;
             _ = JS.InvokeVoidAsync("scrollToTargetSmooth", "#products-top", -100); // плавный скролл вверх
         }
@@ -227,7 +234,7 @@
                 : SelectedCategory)!))!.Slug
         });
 
-        await OnInitializedAsync();
+        await LoadProductsAsync(SelectedCategory!, false);
     }
 
     private async Task EditProductAsync(ProductResponse product)
@@ -281,7 +288,7 @@
             });
     }
 
-    private async Task LoadProductsAsync(string category)
+    private async Task LoadProductsAsync(string category, bool changePage = false)
     {
         _loading = true;
 
@@ -309,7 +316,9 @@
 
         await LocalStorage.SetItemAsync("selectedCategory", category);
 
-        Page = 1;
+        if (changePage)
+            Page = 1;
+        
         _loading = false;
         StateHasChanged();
     }
