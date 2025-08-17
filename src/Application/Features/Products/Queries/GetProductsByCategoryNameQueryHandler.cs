@@ -22,13 +22,8 @@ public class GetProductsByCategoryNameQueryHandler(IApplicationDbContext context
             .FirstOrDefaultAsync(c => c.Name == request.CategoryName, cancellationToken);
 
         if (category is not null)
-        {
             foreach (var product in result)
-            {
                 product.ProductVolumes = category.ProductVolumes;
-                product.SelectedVolume = product.ProductVolumes![0];
-            }
-        }
 
         return result;
     }

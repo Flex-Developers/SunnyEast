@@ -1,20 +1,19 @@
 // Components/ProductToolBar.razor.cs
-
 using Application.Contract.ProductCategory.Responses;
 using Microsoft.AspNetCore.Components;
 
-namespace Client.Components.Common; // замените на фактический namespace проекта
+namespace Client.Components.Common;
 
 public partial class ProductToolBar
 {
     /// <summary>
-    /// Список категорий, приходящий от родительского компонента/страницы.
+    /// Список категорий, приходит от родителя.
     /// </summary>
     [Parameter, EditorRequired]
     public IEnumerable<ProductCategoryResponse> Categories
     {
         get => _categories;
-        set => _categories = value;
+        set => _categories = value ?? [];
     }
 
     /// <summary>
@@ -24,15 +23,11 @@ public partial class ProductToolBar
     public string SelectedCategory { get; set; } = string.Empty;
 
     [Parameter]
-    public EventCallback<string> SelectedCategoryChanged { get; set; }   // нужен для @bind
-
-    // локальное поле для строки поиска
-    private string _searchTerm = string.Empty;
+    public EventCallback<string> SelectedCategoryChanged { get; set; }
 
     /// <summary>
     /// Строка поиска (двустороннее связывание).
-    /// Каждый ввод символа мгновенно передаётся родителю через
-    /// EventCallback SearchTermChanged.
+    /// При каждом изменении коротко показываем прогресс-бар (_isSearchBusy).
     /// </summary>
     [Parameter]
     public string SearchTerm
@@ -40,37 +35,73 @@ public partial class ProductToolBar
         get => _searchTerm;
         set
         {
-            if (_searchTerm == value) return;                 // ничего не поменялось
-            _searchTerm = value ?? string.Empty;
+            var newValue = value ?? string.Empty;
+            if (_searchTerm == newValue) return;
+            _searchTerm = newValue;
 
-            // уведомляем родительский компонент
             if (SearchTermChanged.HasDelegate)
                 _ = SearchTermChanged.InvokeAsync(_searchTerm);
+
+            // визуальный «эффект поиска» после каждого изменения
+            _ = TriggerSearchBusyAsync();
         }
     }
 
-
     [Parameter]
-    public EventCallback<string> SearchTermChanged { get; set; }         // нужен для @bind
-
-    /* --------------------------------------------------------- */
-
-    private IEnumerable<ProductCategoryResponse> _categories = new List<ProductCategoryResponse>();
-    private bool _isSearchOpen;
+    public EventCallback<string> SearchTermChanged { get; set; }
 
     /// <summary>
-    /// Выбор категории из списка.
+    /// Показывать ли индикатор загрузки в тулбаре (внешний, например при получении данных).
     /// </summary>
+    [Parameter] public bool IsBusy { get; set; }
+
+    /// <summary>
+    /// Длительность «эффекта поиска» в миллисекундах.
+    /// </summary>
+    [Parameter]
+    public int SearchBusyMs { get; set; } = 400;
+
+    /* ----------------- internal state ----------------- */
+    private IEnumerable<ProductCategoryResponse> _categories = new List<ProductCategoryResponse>();
+    private bool _isSearchOpen;
+    private string _searchTerm = string.Empty;
+
+    private bool _isSearchBusy;
+    private CancellationTokenSource? _searchCts;
+
     private async Task OnCategoryChanged(string newCategory)
     {
         SelectedCategory = newCategory;
-
         if (SelectedCategoryChanged.HasDelegate)
             await SelectedCategoryChanged.InvokeAsync(newCategory);
     }
 
-    /// <summary>
-    /// Показ / скрытие поля поиска на мобильном.
-    /// </summary>
     private void ToggleSearch() => _isSearchOpen = !_isSearchOpen;
+
+    private async Task TriggerSearchBusyAsync()
+    {
+        // отменяем предыдущее «мигание», чтобы не наслаивалось
+        await _searchCts?.CancelAsync()!;
+        _searchCts?.Dispose();
+        var cts = new CancellationTokenSource();
+        _searchCts = cts;
+
+        _isSearchBusy = true;
+        StateHasChanged();
+
+        try
+        {
+            await Task.Delay(SearchBusyMs, cts.Token);
+        }
+        catch (TaskCanceledException)
+        {
+            // игнорируем
+        }
+
+        if (!cts.IsCancellationRequested)
+        {
+            _isSearchBusy = false;
+            StateHasChanged();
+        }
+    }
 }

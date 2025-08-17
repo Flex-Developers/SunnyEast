@@ -14,30 +14,45 @@
 @inject IDialogService DialogService
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject Client.Infrastructure.Services.Cart.ICartService CartService
+@inject IJSRuntime JS
+@implements IDisposable
 
+<div id="products-top"></div>
 
 <ProductToolBar
     Categories="@_categories"
     SelectedCategory="@SelectedCategory"
     SelectedCategoryChanged="@(cat => OnCategoryChanged(cat))"
     SearchTerm="@SearchTerm"
+    IsBusy="@(_loading || _busySearch)"
     SearchTermChanged="@(txt => SearchTerm = txt)"/>
 
 
 <MudGrid Spacing="3" Justify="Justify.FlexStart" Style="margin-top:3px;margin-bottom:50px">
-    @foreach (var product in _products)
+    @foreach (var product in PagedProducts)
     {
-        <MudItem xs="12" sm="6" md="4" lg="3">
+        
+        <MudItem xs="12" sm="6" md="4" lg="3" @key="product">
             <MudCard Elevation="3" Class="product-card">
 
+                @{
+                    var volumePrice = product.Prices
+                                          .FirstOrDefault(x => x.Volume == product.SelectedVolume)
+                                      ?? product.Prices.First();
+                    
+                    bool hasImages = product.Images is { Length: > 1 } &&
+                                     product.Images[0]?.StartsWith("http", StringComparison.OrdinalIgnoreCase) == true;
+                }
                 <!-- Карусель изображений -->
                 <MudCarousel Style="height:290px;border-radius:10px"
                              ItemsSource="product.Images"
                              Context="img"
-                             EnableSwipeGesture AutoCycle
+                             EnableSwipeGesture="true"
+                             AutoCycle="hasImages"
+                             BulletsColor="Color.Dark"
                              BulletsPosition="Position.Bottom"
-                             ShowBullets="false"
-                             ShowArrows="@(product.Images?.Length > 1 && product.Images[0].StartsWith("http"))">
+                             ShowBullets="hasImages"
+                             ShowArrows="hasImages">
                     <ItemTemplate>
                         <MudCardMedia Image="@img"/>
                     </ItemTemplate>
@@ -45,7 +60,7 @@
 
                 <MudCardContent Class="card-content">
                     <!-- название -->
-                    <MudText Typo="Typo.body1" Class="product-name">
+                    <MudText Typo="Typo.h6" Class="product-name">
                         @(product.Name.Length > 100 ? product.Name[..100] + "…" : product.Name)
                     </MudText>
 
@@ -63,22 +78,18 @@
                         }
                     </MudChipSet>
 
-                    @{
-                        var vp = product.Prices
-                                         .FirstOrDefault(x => x.Volume == product.SelectedVolume)
-                                     ?? product.Prices.First();
-                    }
+                    
                     <div class="discount-container">
                         <MudText Typo="Typo.body1">Цена:&nbsp;</MudText>
 
-                        @if (vp.Discount is not null)
+                        @if (volumePrice.Discount is not null)
                         {
-                            <MudText Typo="Typo.h6" Class="discounted-price">@($"{vp.Discount:N2}")</MudText>
-                            <MudText Typo="Typo.body2" Class="price">@($"{vp.Full:N2}")</MudText>
+                            <MudText Typo="Typo.h6" Class="discounted-price">@($"{volumePrice.Discount:N2}")</MudText>
+                            <MudText Typo="Typo.body2" Class="price">@($"{volumePrice.Full:N2}")</MudText>
                         }
                         else
                         {
-                            <MudText Typo="Typo.body1" Style="margin-left:5px">@($"{vp.Full:N2}")</MudText>
+                            <MudText Typo="Typo.body1" Style="margin-left:5px">@($"{volumePrice.Full:N2}")</MudText>
                         }
                     </div>
 
@@ -126,15 +137,41 @@
     }
 </MudGrid>
 
+<div class="pager-wrap">
+    <MudPagination @bind-Selected="Page" Size="Size.Large" Count="@PageCount" Disabled="@(_products.Count <= _pageSize)"/>
+</div>
+
 @code {
     private List<ProductResponse> _products = new();
     private List<ProductCategoryResponse> _categories = new();
     private HashSet<string> _cartKeys = new();
     private string? _searchTerm;
+    private bool _loading;
+    private bool _busySearch;
+    private bool _isSearchOpen;
     private List<ProductResponse> _allProducts = new();
     [Parameter] public string SelectedCategory { get; set; } = string.Empty;
+    private readonly int _pageSize = 20;
 
-    private bool _isSearchOpen;
+    private int _page = 1;
+
+    private int Page
+    {
+        get => _page;
+        set
+        {
+            if (_page == value) return;
+            _page = value;
+            _ = JS.InvokeVoidAsync("scrollToTargetSmooth", "#products-top", -100); // плавный скролл вверх
+        }
+    }
+
+    private IEnumerable<ProductResponse> PagedProducts =>
+        _products.Skip((Page - 1) * _pageSize).Take(_pageSize);
+
+    private int PageCount =>
+        Math.Max(1, (int)Math.Ceiling((_products.Count) / (double)_pageSize));
+
 
     private void ToggleSearch()
     {
@@ -147,20 +184,44 @@
         set
         {
             _searchTerm = value;
-            ApplySearch(value);
+            _ = ApplySearchAsync(value);
         }
     }
 
     protected override async Task OnInitializedAsync()
     {
+        _loading = true;
         _categories = (await CategoryService.Get())!;
         var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
         var cat = System.Web.HttpUtility.ParseQueryString(uri.Query)["category"];
         SelectedCategory = cat ?? await LoadSelectedCategoryAsync();
+
         CartService.OnChange += SyncCart;
 
         await LoadProductsAsync(SelectedCategory);
         await LoadCartStateAsync();
+    }
+    
+    private static void NormalizeSelectedVolume(ProductResponse p)
+    {
+        if (p is null || p.Prices is null || p.Prices.Count == 0)
+            return;
+
+        var hasSelected = !string.IsNullOrWhiteSpace(p.SelectedVolume) &&
+                          p.Prices.Any(x => x.Volume == p.SelectedVolume);
+
+        if (!hasSelected)
+            p.SelectedVolume = p.Prices[0].Volume;
+    }
+
+    private static void SyncVitrineFields(ProductResponse p)
+    {
+        if (p is null || p.Prices is null || p.Prices.Count == 0)
+            return;
+
+        var chosen = p.Prices.FirstOrDefault(x => x.Volume == p.SelectedVolume) ?? p.Prices[0];
+        p.Price = chosen.Full ?? p.Price;
+        p.DiscountPrice = chosen.Discount;
     }
 
     private async void SyncCart()
@@ -229,7 +290,6 @@
         }
     }
 
-
     private async Task AddToCart(ProductResponse p)
     {
         var volumePrice = p.Prices.First(x => x.Volume == p.SelectedVolume);
@@ -262,12 +322,19 @@
     {
         SelectedCategory = v;
         SearchTerm = null;
+        Page = 1;
         await LoadProductsAsync(v);
-        StateHasChanged();
     }
 
-    private void ApplySearch(string? term)
+    private async Task ApplySearchAsync(string? term)
     {
+        if (_loading) 
+            return;
+
+        _busySearch = true;
+        await InvokeAsync(StateHasChanged);
+        await Task.Yield(); // даём кадр, чтобы прогресс показался
+
         if (string.IsNullOrWhiteSpace(term))
         {
             _products = _allProducts.ToList();
@@ -279,38 +346,61 @@
                 .ToList();
         }
 
-        StateHasChanged();
+        Page = 1;
+
+        await Task.Delay(140);
+        _busySearch = false;
+        await InvokeAsync(StateHasChanged);
     }
+
 
     private async Task LoadProductsAsync(string category)
     {
-        if (string.IsNullOrEmpty(category))
-            return;
+        _loading = true;
 
-        var result = category == "Все продукты"
-            ? await ProductService.Get(new GetProductsQuery())
-            : await ProductService.GetByCategoryName(category);
-
-        foreach (var p in result)
+        try
         {
-            if (p.ProductVolumes?.Length > 0)
-                p.SelectedVolume = p.ProductVolumes[0];
+            if (string.IsNullOrEmpty(category))
+            {
+                _allProducts = new();
+                _products = new();
+                _loading = false;
+                await InvokeAsync(StateHasChanged);
+                return; 
+            }
 
-            OnVolumeChanged(p, p.SelectedVolume);
+            var result = category == "Все продукты"
+                ? await ProductService.Get(new GetProductsQuery())
+                : await ProductService.GetByCategoryName(category);
+
+            // (если нужно) нормализуем витрину
+            foreach (var p in result)
+            {
+                NormalizeSelectedVolume(p);
+                SyncVitrineFields(p);
+            }
+
+            _allProducts = result;
+
+            _products = string.IsNullOrWhiteSpace(_searchTerm)
+                ? _allProducts.ToList()
+                : _allProducts
+                    .Where(p => p.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+            await LocalStorage.SetItemAsync("selectedCategory", category);
         }
-
-        _allProducts = result;
-
-        if (string.IsNullOrWhiteSpace(_searchTerm))
-            _products = _allProducts.ToList();
-        else
-            ApplySearch(_searchTerm);
-
-        await LocalStorage.SetItemAsync("selectedCategory", category);
+        finally
+        {
+            Page = 1;
+            _loading = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task<string> LoadSelectedCategoryAsync()
     {
+        _loading = true;
         var selected = await LocalStorage.GetItemAsync<string>("selectedCategory");
 
         if (!string.IsNullOrWhiteSpace(selected))
@@ -324,6 +414,7 @@
             if (category.Name == "Все продукты")
                 return category.Name;
 
+        _loading = false;
         Snackbar.Add("Категория по умолчанию 'Все продукты' не найдена.", Severity.Info);
         return string.Empty;
     }
@@ -344,6 +435,12 @@
 
 <style>
 
+    .pager-wrap {
+        display: flex;
+        justify-content: center;
+        margin: 8px 0;
+    }
+    
     .product-card {
         position: relative;
         border-radius: 10px;

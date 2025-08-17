@@ -38,6 +38,19 @@ function initializeScrollAnimations() {
     });
 }
 
+// Плавный скролл к элементу (либо к началу страницы), с опциональным смещением
+function scrollToTargetSmooth(selector, offset = 0) {
+    const el = selector ? document.querySelector(selector) : null;
+    const top = el
+        ? el.getBoundingClientRect().top + window.pageYOffset + (offset || 0)
+        : 0;
+
+    window.scrollTo({ top, behavior: 'smooth' });
+}
+
+
+
 // Экспортируем функции для Blazor
+window.scrollToTargetSmooth = scrollToTargetSmooth;
 window.initializeProductCarousel = initializeProductCarousel;
 window.initializeScrollAnimations = initializeScrollAnimations;

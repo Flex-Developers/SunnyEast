@@ -1,57 +1,632 @@
 ﻿@page "/About"
 
-<MudPaper Class="p-4" Elevation="3">
-    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">О нас</MudText>
+<!-- Героический раздел -->
+<div class="hero-section">
+    <MudContainer MaxWidth="MaxWidth.Large">
+        <div class="hero-content">
+            <div class="hero-text">
+                <div class="hero-logo">
+                    <img src="Logo1.png" alt="Солнечный Восток" class="logo-image" />
+                </div>
+                <MudText Typo="Typo.h2" Class="hero-title">Солнечный восток</MudText>
+                <MudText Typo="Typo.h6" Class="hero-subtitle">
+                    Ваша дверь в мир восточных традиций и уникальных товаров
+                </MudText>
+            </div>
+        </div>
+    </MudContainer>
+</div>
 
-    <MudText Typo="Typo.body1" Class="mt-4">
-        Добро пожаловать в Солнечный Восток – вашу дверь в мир восточных традиций и уникальных товаров!
-    </MudText>
+<!-- Основной контент -->
+<MudContainer MaxWidth="MaxWidth.Large" Class="main-content">
+    
+    <!-- Вступительная секция -->
+    <MudPaper Class="intro-section" Elevation="0">
+        <div class="section-content animate-on-scroll">
+            <div class="floating-icon">🏪</div>
+            <MudText Typo="Typo.body1" Class="intro-text">
+                Добро пожаловать в Солнечный Восток – вашу дверь в мир восточных традиций и уникальных товаров!
+            </MudText>
+            
+            <MudText Typo="Typo.body1" Class="intro-text">
+                Сеть магазинов Солнечный Восток была основана в 2022 году и с тех пор зарекомендовала себя как надежный поставщик товаров, которые привносят атмосферу восточной культуры в каждый дом. Мы гордимся тем, что наш первый магазин был открыт в самом сердце города Тверь, и за короткий срок наша сеть расширилась до четырех магазинов, с каждым из которых мы стремимся дарить вам атмосферу уюта и тепла Востока.
+            </MudText>
+        </div>
+    </MudPaper>
 
-    <MudText Typo="Typo.body1" Class="mt-4">
-        Сеть магазинов Солнечный Восток была основана в 2022 году и с тех пор зарекомендовала себя как надежный поставщик товаров, которые привносят атмосферу восточной культуры в каждый дом. Мы гордимся тем, что наш первый магазин был открыт в самом сердце города Тверь, и за короткий срок наша сеть расширилась до четырех магазинов, с каждым из которых мы стремимся дарить вам атмосферу уюта и тепла Востока.
-    </MudText>
+    <!-- Что мы предлагаем -->
+    <div class="products-section">
+        <div class="section-header animate-on-scroll">
+            <div class="section-icon">🛍️</div>
+            <MudText Typo="Typo.h4" Class="section-title">Мы предлагаем вам</MudText>
+            <div class="title-decoration"></div>
+        </div>
 
-    <MudText Typo="Typo.h6" Class="mt-6 mb-3">Мы предлагаем вам:</MudText>
-    <MudText Typo="Typo.body1" Class="mt-2">
-        <strong>Восточные товары:</strong> уникальные и качественные изделия, которые привезены с самых разных уголков Востока.
-    </MudText>
-    <MudText Typo="Typo.body1" Class="mt-2">
-        <strong>Ножи:</strong> изысканные коллекции ножей, которые понравятся как опытным коллекционерам, так и тем, кто ценит острые и практичные инструменты.
-    </MudText>
-    <MudText Typo="Typo.body1" Class="mt-2">
-        <strong>Казаны:</strong> для любителей кулинарных традиций Востока. Наши казаны – это сочетание удобства и качества для самых вкусных блюд.
-    </MudText>
-    <MudText Typo="Typo.body1" Class="mt-2">
-        <strong>Сухофрукты:</strong> только лучшие плоды, которые сохраняют всю пользу и натуральный вкус.
-    </MudText>
-    <MudText Typo="Typo.body1" Class="mt-2">
-        <strong>Восточная посуда:</strong> от изысканных чайников до великолепных сервизов, которые украсят вашу трапезу.
-    </MudText>
-    <MudText Typo="Typo.body1" Class="mt-2">
-        <strong>Напитки и сладости:</strong> настоящие восточные напитки и сладости, которые подарят вам незабываемые моменты наслаждения.
-    </MudText>
-    <MudText Typo="Typo.body1" Class="mt-2">
-        <strong>Орехи:</strong> лучшие сорта орехов, которые могут быть прекрасным дополнением к вашему рациону.
-    </MudText>
-    <MudText Typo="Typo.body1" Class="mt-2">
-        <strong>Чай:</strong> отборные сорта чая, которые порадуют даже самых требовательных гурманов.
-    </MudText>
+        <MudGrid Spacing="4" Class="products-grid">
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Class="product-card animate-on-scroll" Elevation="3">
+                    <div class="product-icon">🏺</div>
+                    <MudText Typo="Typo.h6" Class="product-title">Восточные товары</MudText>
+                    <MudText Typo="Typo.body2" Class="product-description">
+                        уникальные и качественные изделия, которые привезены с самых разных уголков Востока.
+                    </MudText>
+                </MudPaper>
+            </MudItem>
 
-    <MudText Typo="Typo.h6" Class="mt-6 mb-3">Почему выбирают нас?</MudText>
-    <MudText Typo="Typo.body1" Class="mt-2">
-        <strong>Качество:</strong> мы тщательно отбираем каждый товар, чтобы вы могли наслаждаться только лучшими продуктами.
-    </MudText>
-    <MudText Typo="Typo.body1" Class="mt-2">
-        <strong>Широкий ассортимент:</strong> наш магазин – это место, где можно найти всё, что связано с Востоком, и каждый клиент найдет что-то по душе.
-    </MudText>
-    <MudText Typo="Typo.body1" Class="mt-2">
-        <strong>Приятные цены:</strong> мы стремимся предоставить вам лучшие товары по доступным ценам, чтобы вы могли наслаждаться восточной культурой без лишних затрат.
-    </MudText>
-    <MudText Typo="Typo.body1" Class="mt-2">
-        <strong>Дружелюбный сервис:</strong> в наших магазинах всегда рады помочь вам, будь то вопрос о товаре или помощь с выбором.
-    </MudText>
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Class="product-card animate-on-scroll" Elevation="3">
+                    <div class="product-icon">🗡️</div>
+                    <MudText Typo="Typo.h6" Class="product-title">Ножи</MudText>
+                    <MudText Typo="Typo.body2" Class="product-description">
+                        изысканные коллекции ножей, которые понравятся как опытным коллекционерам, так и тем, кто ценит острые и практичные инструменты.
+                    </MudText>
+                </MudPaper>
+            </MudItem>
 
-    <MudText Typo="Typo.body1" Class="mt-6">
-        Присоединяйтесь к нашему сообществу любителей Востока! Мы рады делиться с вами красотой и уникальностью восточной культуры через наши товары. Каждый визит в Солнечный Восток – это путешествие в мир ароматов, традиций и качественного сервиса.
-    </MudText>
-</MudPaper>
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Class="product-card animate-on-scroll" Elevation="3">
+                    <div class="product-icon">🍯</div>
+                    <MudText Typo="Typo.h6" Class="product-title">Казаны</MudText>
+                    <MudText Typo="Typo.body2" Class="product-description">
+                        для любителей кулинарных традиций Востока. Наши казаны – это сочетание удобства и качества для самых вкусных блюд.
+                    </MudText>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Class="product-card animate-on-scroll" Elevation="3">
+                    <div class="product-icon">🍇</div>
+                    <MudText Typo="Typo.h6" Class="product-title">Сухофрукты</MudText>
+                    <MudText Typo="Typo.body2" Class="product-description">
+                        только лучшие плоды, которые сохраняют всю пользу и натуральный вкус.
+                    </MudText>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Class="product-card animate-on-scroll" Elevation="3">
+                    <div class="product-icon">🫖</div>
+                    <MudText Typo="Typo.h6" Class="product-title">Восточная посуда</MudText>
+                    <MudText Typo="Typo.body2" Class="product-description">
+                        от изысканных чайников до великолепных сервизов, которые украсят вашу трапезу.
+                    </MudText>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Class="product-card animate-on-scroll" Elevation="3">
+                    <div class="product-icon">🍬</div>
+                    <MudText Typo="Typo.h6" Class="product-title">Напитки и сладости</MudText>
+                    <MudText Typo="Typo.body2" Class="product-description">
+                        настоящие восточные напитки и сладости, которые подарят вам незабываемые моменты наслаждения.
+                    </MudText>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Class="product-card animate-on-scroll" Elevation="3">
+                    <div class="product-icon">🥜</div>
+                    <MudText Typo="Typo.h6" Class="product-title">Орехи</MudText>
+                    <MudText Typo="Typo.body2" Class="product-description">
+                        лучшие сорта орехов, которые могут быть прекрасным дополнением к вашему рациону.
+                    </MudText>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Class="product-card animate-on-scroll" Elevation="3">
+                    <div class="product-icon">🍵</div>
+                    <MudText Typo="Typo.h6" Class="product-title">Чай</MudText>
+                    <MudText Typo="Typo.body2" Class="product-description">
+                        отборные сорта чая, которые порадуют даже самых требовательных гурманов.
+                    </MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </div>
+
+    <!-- Почему выбирают нас -->
+    <div class="advantages-section">
+        <div class="section-header animate-on-scroll">
+            <div class="section-icon">💎</div>
+            <MudText Typo="Typo.h4" Class="section-title">Почему выбирают нас?</MudText>
+            <div class="title-decoration"></div>
+        </div>
+
+        <MudGrid Spacing="6" Class="advantages-grid">
+            <MudItem xs="12" md="6">
+                <MudPaper Class="advantage-card animate-on-scroll" Elevation="5">
+                    <div class="advantage-content">
+                        <div class="advantage-icon">⭐</div>
+                        <div class="advantage-text">
+                            <MudText Typo="Typo.h6" Class="advantage-title">Качество</MudText>
+                            <MudText Typo="Typo.body2" Class="advantage-description">
+                                мы тщательно отбираем каждый товар, чтобы вы могли наслаждаться только лучшими продуктами.
+                            </MudText>
+                        </div>
+                    </div>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudPaper Class="advantage-card animate-on-scroll" Elevation="5">
+                    <div class="advantage-content">
+                        <div class="advantage-icon">🎯</div>
+                        <div class="advantage-text">
+                            <MudText Typo="Typo.h6" Class="advantage-title">Широкий ассортимент</MudText>
+                            <MudText Typo="Typo.body2" Class="advantage-description">
+                                наш магазин – это место, где можно найти всё, что связано с Востоком, и каждый клиент найдет что-то по душе.
+                            </MudText>
+                        </div>
+                    </div>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudPaper Class="advantage-card animate-on-scroll" Elevation="5">
+                    <div class="advantage-content">
+                        <div class="advantage-icon">💰</div>
+                        <div class="advantage-text">
+                            <MudText Typo="Typo.h6" Class="advantage-title">Приятные цены</MudText>
+                            <MudText Typo="Typo.body2" Class="advantage-description">
+                                мы стремимся предоставить вам лучшие товары по доступным ценам, чтобы вы могли наслаждаться восточной культурой без лишних затрат.
+                            </MudText>
+                        </div>
+                    </div>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudPaper Class="advantage-card animate-on-scroll" Elevation="5">
+                    <div class="advantage-content">
+                        <div class="advantage-icon">🤝</div>
+                        <div class="advantage-text">
+                            <MudText Typo="Typo.h6" Class="advantage-title">Дружелюбный сервис</MudText>
+                            <MudText Typo="Typo.body2" Class="advantage-description">
+                                в наших магазинах всегда рады помочь вам, будь то вопрос о товаре или помощь с выбором.
+                            </MudText>
+                        </div>
+                    </div>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </div>
+
+    <!-- Заключение -->
+    <MudPaper Class="conclusion-section animate-on-scroll" Elevation="0">
+        <div class="conclusion-content">
+            <div class="conclusion-icon">🌟</div>
+            <MudText Typo="Typo.body1" Class="conclusion-text">
+                Присоединяйтесь к нашему сообществу любителей Востока! Мы рады делиться с вами красотой и уникальностью восточной культуры через наши товары. Каждый визит в Солнечный Восток – это путешествие в мир ароматов, традиций и качественного сервиса.
+            </MudText>
+        </div>
+    </MudPaper>
+
+</MudContainer>
+
+<style>
+    /* Героический раздел */
+    .hero-section {
+        min-height: 60vh;
+        background: linear-gradient(135deg, #FF6600, #FFCC00, #019934);
+        display: flex;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 4rem;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        animation: heroRotate 20s linear infinite;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        color: white;
+    }
+
+    .hero-logo {
+        margin-bottom: 2rem;
+        animation: heroFloat 3s ease-in-out infinite;
+    }
+
+    .logo-image {
+        width: 250px;
+        height: 250px;
+        object-fit: contain;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 15px;
+        backdrop-filter: blur(10px);
+    }
+
+    .hero-title {
+        font-weight: 700;
+        margin-bottom: 1rem;
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        animation: heroSlideIn 1s ease-out;
+    }
+
+    .hero-subtitle {
+        opacity: 0.9;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        animation: heroSlideIn 1s ease-out 0.3s both;
+    }
+
+    /* Основной контент */
+    .main-content {
+        padding-bottom: 4rem;
+    }
+
+    /* Вступительная секция */
+    .intro-section {
+        padding: 3rem 2rem;
+        border-radius: 25px;
+        background: linear-gradient(135deg, rgba(255, 102, 0, 0.05), rgba(1, 153, 52, 0.05));
+        margin-bottom: 4rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .floating-icon {
+        position: absolute;
+        top: 1rem;
+        right: 2rem;
+        font-size: 3rem;
+        opacity: 0.2;
+        animation: iconFloat 4s ease-in-out infinite;
+    }
+
+    .intro-text {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        margin-bottom: 1.5rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    /* Заголовки секций */
+    .section-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        position: relative;
+    }
+
+    .section-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        animation: sectionIconBounce 2s ease-in-out infinite;
+    }
+
+    .section-title {
+        font-weight: 600;
+        background: linear-gradient(45deg, #FF6600, #019934);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+    }
+
+    .title-decoration {
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(45deg, #FF6600, #FFCC00);
+        margin: 0 auto;
+        border-radius: 2px;
+        animation: decorationGlow 2s ease-in-out infinite alternate;
+    }
+
+    /* Карточки продуктов */
+    .products-section {
+        margin-bottom: 5rem;
+    }
+
+    .product-card {
+        padding: 2rem 1.5rem;
+        border-radius: 20px;
+        text-align: center;
+        height: 100%;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 2px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .product-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 102, 0, 0.1), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .product-card:hover::before {
+        left: 100%;
+    }
+
+    .product-card:hover {
+        transform: translateY(-10px) scale(1.03);
+        border-color: #019934;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .product-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        animation: productIconFloat 3s ease-in-out infinite;
+    }
+
+    .product-title {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #FF6600;
+    }
+
+    .product-description {
+        line-height: 1.6;
+        opacity: 0.8;
+    }
+
+    /* Преимущества */
+    .advantages-section {
+        margin-bottom: 5rem;
+    }
+
+    .advantage-card {
+        padding: 2.5rem 2rem;
+        border-radius: 20px;
+        height: 100%;
+        transition: all 0.4s ease;
+        background: linear-gradient(135deg, rgba(255, 102, 0, 0.02), rgba(1, 153, 52, 0.02));
+        border: 2px solid transparent;
+    }
+
+    .advantage-card:hover {
+        transform: translateY(-8px);
+        border-color: #FFCC00;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+    }
+
+    .advantage-content {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .advantage-icon {
+        font-size: 3rem;
+        flex-shrink: 0;
+        animation: advantageIconPulse 2s ease-in-out infinite;
+    }
+
+    .advantage-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #FF6600;
+    }
+
+    .advantage-description {
+        line-height: 1.6;
+        opacity: 0.85;
+    }
+
+    /* Заключение */
+    .conclusion-section {
+        padding: 3rem 2rem;
+        border-radius: 25px;
+        text-align: center;
+        background: linear-gradient(135deg, rgba(255, 204, 0, 0.1), rgba(255, 102, 0, 0.1));
+        margin-top: 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .conclusion-icon {
+        font-size: 4rem;
+        margin-bottom: 2rem;
+        animation: conclusionIconSpin 4s ease-in-out infinite;
+    }
+
+    .conclusion-text {
+        font-size: 1.2rem;
+        line-height: 1.8;
+        max-width: 800px;
+        margin: 0 auto;
+        font-weight: 500;
+    }
+
+    /* Анимации */
+    @@keyframes heroRotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    @@keyframes heroFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    @@keyframes heroSlideIn {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @@keyframes iconFloat {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-15px) rotate(10deg); }
+    }
+
+    @@keyframes sectionIconBounce {
+        0%, 100% { transform: translateY(0) scale(1); }
+        50% { transform: translateY(-5px) scale(1.1); }
+    }
+
+    @@keyframes decorationGlow {
+        from { box-shadow: 0 0 5px rgba(255, 102, 0, 0.3); }
+        to { box-shadow: 0 0 20px rgba(255, 102, 0, 0.8); }
+    }
+
+    @@keyframes productIconFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+    }
+
+    @@keyframes advantageIconPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
+    @@keyframes conclusionIconSpin {
+        0% { transform: rotate(0deg) scale(1); }
+        25% { transform: rotate(90deg) scale(1.1); }
+        50% { transform: rotate(180deg) scale(1); }
+        75% { transform: rotate(270deg) scale(1.1); }
+        100% { transform: rotate(360deg) scale(1); }
+    }
+
+    /* Анимация появления при скролле */
+    .animate-on-scroll {
+        opacity: 0;
+        transform: translateY(30px);
+        animation: fadeInUp 0.8s ease-out forwards;
+    }
+
+    .animate-on-scroll:nth-child(1) { animation-delay: 0.1s; }
+    .animate-on-scroll:nth-child(2) { animation-delay: 0.2s; }
+    .animate-on-scroll:nth-child(3) { animation-delay: 0.3s; }
+    .animate-on-scroll:nth-child(4) { animation-delay: 0.4s; }
+    .animate-on-scroll:nth-child(5) { animation-delay: 0.5s; }
+    .animate-on-scroll:nth-child(6) { animation-delay: 0.6s; }
+    .animate-on-scroll:nth-child(7) { animation-delay: 0.7s; }
+    .animate-on-scroll:nth-child(8) { animation-delay: 0.8s; }
+
+    @@keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Адаптивность */
+    @@media (max-width: 960px) {
+        .logo-image {
+            width: 200px;
+            height: 200px;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+        }
+
+        .intro-section {
+            padding: 2rem 1.5rem;
+        }
+
+        .floating-icon {
+            font-size: 2rem;
+            top: 0.5rem;
+            right: 1rem;
+        }
+
+        .section-icon {
+            font-size: 2.5rem;
+        }
+
+        .product-card {
+            padding: 1.5rem 1rem;
+        }
+
+        .product-icon {
+            font-size: 2.5rem;
+        }
+
+        .advantage-content {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .conclusion-section {
+            padding: 2rem 1.5rem;
+        }
+
+        .conclusion-icon {
+            font-size: 3rem;
+        }
+
+        .conclusion-text {
+            font-size: 1.1rem;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .hero-section {
+            min-height: 50vh;
+        }
+
+        .logo-image {
+            width: 200px;
+            height: 200px;
+        }
+
+        .hero-title {
+            font-size: 2rem;
+        }
+
+        .intro-section {
+            margin: 2rem 0;
+            padding: 1.5rem 1rem;
+        }
+
+        .products-section,
+        .advantages-section {
+            margin-bottom: 3rem;
+        }
+
+        .section-header {
+            margin-bottom: 2rem;
+        }
+
+        .product-card {
+            padding: 1.5rem 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .advantage-card {
+            padding: 2rem 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .floating-icon {
+            display: none;
+        }
+    }
+
+    /* Финальные штрихи для производительности */
+    .product-card,
+    .advantage-card,
+    .hero-logo,
+    .section-icon,
+    .floating-icon {
+        will-change: transform;
+        backface-visibility: hidden;
+        transform: translateZ(0);
+    }
+</style>

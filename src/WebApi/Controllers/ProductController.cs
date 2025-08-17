@@ -15,6 +15,13 @@ public class ProductController : ApiControllerBase
         var response = await Mediator.Send(command);
         return Ok(response);
     }
+    
+    [HttpPost("unlink-image")]
+    public async Task<IActionResult> UnlinkImage([FromBody] UnlinkProductImageByUrlCommand command)
+    {
+        var updated = await Mediator.Send(command);
+        return Ok(new { updated });
+    }
 
     [HttpPut("{slug}")]
     public async Task<IActionResult> UpdateProduct(string slug, [FromBody] UpdateProductCommand command)
