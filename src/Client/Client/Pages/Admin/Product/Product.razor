@@ -14,6 +14,9 @@
 @inject ICategoryService CategoryService
 @inject IDialogService DialogService
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject IJSRuntime JS
+
+<div id="products-top"></div>
 
 <div class="create-btn-wrapper">
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="CreateAsync" Class="button-create">
@@ -21,28 +24,29 @@
     </MudButton>
 </div>
 
-
 <ProductToolBar
     Categories="@_categories"
     SelectedCategory="@SelectedCategory"
     SelectedCategoryChanged="@(cat => OnCategoryChanged(cat))"
     SearchTerm="@SearchTerm"
     IsBusy="@(_loading || _busySearch)"
-    SearchTermChanged="@(txt => SearchTerm = txt)" />
+    SearchTermChanged="@(txt => SearchTerm = txt)"/>
 
 <MudGrid Spacing="3" Justify="Justify.FlexStart" Style="margin-top: 3px; margin-bottom: 50px">
-    @foreach (var product in _products)
+    @foreach (var product in PagedProducts)
     {
         <MudItem xs="12" sm="6" md="4" lg="2" @key="product.Slug">
             <MudCard Elevation="3" Class="product-card">
-                
+
                 @{
                     bool hasImages = product.Images is { Length: > 1 } &&
                                      product.Images[0]?.StartsWith("http", StringComparison.OrdinalIgnoreCase) == true;
                 }
-                
-                <MudCarousel Style="height: 250px; border-radius: 10px;" ItemsSource="@product.Images" Context="imgContext" EnableSwipeGesture="true"
-                             BulletsPosition="Position.Bottom" ShowBullets="hasImages" AutoCycle="true" TData="string" BulletsColor="Color.Dark"
+
+                <MudCarousel Style="height: 250px; border-radius: 10px;" ItemsSource="@product.Images"
+                             Context="imgContext" EnableSwipeGesture="true"
+                             BulletsPosition="Position.Bottom" ShowBullets="hasImages" AutoCycle="true" TData="string"
+                             BulletsColor="Color.Dark"
                              ShowArrows="hasImages">
 
                     <ItemTemplate>
@@ -72,39 +76,52 @@
 
                         @if (product.DiscountPrice.HasValue)
                         {
-                            <MudText Typo="Typo.body2" Align="Align.Left" Class="discounted-price"> @($"{product.DiscountPrice}") </MudText>
+                            <MudText Typo="Typo.body2" Align="Align.Left"
+                                     Class="discounted-price"> @($"{product.DiscountPrice}") </MudText>
 
-                            <MudText Typo="Typo.body1" Align="Align.Right" Class="price"> @($"{product.Price}") </MudText>
+                            <MudText Typo="Typo.body1" Align="Align.Right"
+                                     Class="price"> @($"{product.Price}") </MudText>
                         }
                         else
                         {
-                            <MudText Typo="Typo.body2" Align="Align.Left" Style="margin-left: 5px;"> @($"{product.Price}") </MudText>
+                            <MudText Typo="Typo.body2" Align="Align.Left"
+                                     Style="margin-left: 5px;"> @($"{product.Price}") </MudText>
                         }
                     </div>
 
                     <div class="description-container">
-                        <MudLink Typo="Typo.caption" Style="padding-left: 0" OnClick="@(async () => await OpenDescriptionAsync(product))"> Читать описание...</MudLink>
+                        <MudLink Typo="Typo.caption" Style="padding-left: 0"
+                                 OnClick="@(async () => await OpenDescriptionAsync(product))"> Читать описание...
+                        </MudLink>
 
                         <div class="buttons-container">
-                            <MudButton Color="Color.Primary" Variant="Variant.Text" Size="Size.Small" Class="button" OnClick="@(async () => await DuplicateProduct(product))">
+                            <MudButton Color="Color.Primary" Variant="Variant.Text" Size="Size.Small" Class="button"
+                                       OnClick="@(async () => await DuplicateProduct(product))">
                                 <MudIcon Icon="@Icons.Material.Filled.ContentCopy"/>
                             </MudButton>
 
-                            <MudButton Color="Color.Default" Variant="Variant.Text" Size="Size.Small" Class="button" OnClick="@(async () => await EditProductAsync(product))">
+                            <MudButton Color="Color.Default" Variant="Variant.Text" Size="Size.Small" Class="button"
+                                       OnClick="@(async () => await EditProductAsync(product))">
                                 <MudIcon Icon="@Icons.Material.Filled.Edit"/>
                             </MudButton>
 
-                            <MudButton Color="Color.Error" Variant="Variant.Text" Size="Size.Small" Class="button" OnClick="@(async () => await DeleteProductAsync(product))">
+                            <MudButton Color="Color.Error" Variant="Variant.Text" Size="Size.Small" Class="button"
+                                       OnClick="@(async () => await DeleteProductAsync(product))">
                                 <MudIcon Icon="@Icons.Material.Filled.Delete"/>
                             </MudButton>
                         </div>
                     </div>
-
+                    
                 </MudCardContent>
             </MudCard>
         </MudItem>
     }
 </MudGrid>
+
+<div class="pager-wrap">
+    <MudPagination @bind-Selected="Page" Count="@PageCount" Disabled="@(_products.Count <= _pageSize)"/>
+</div>
+
 
 
 @code {
@@ -113,47 +130,61 @@
     private string? _searchTerm;
     private bool _loading;
     private bool _busySearch;
-    private List<ProductResponse> _allProducts = new(); 
-    
+    private List<ProductResponse> _allProducts = new();
+
+    private readonly int _pageSize = 20;
+
+    private int _page = 1;
+
+    private int Page
+    {
+        get => _page;
+        set
+        {
+            if (_page == value) return;
+            _page = value;
+            _ = JS.InvokeVoidAsync("scrollToTargetSmooth", "#products-top", -100); // плавный скролл вверх
+        }
+    }
+
+    private IEnumerable<ProductResponse> PagedProducts =>
+        _products.Skip((Page - 1) * _pageSize).Take(_pageSize);
+
+    private int PageCount =>
+        Math.Max(1, (int)Math.Ceiling((_products.Count) / (double)_pageSize));
+
+
     private string? SearchTerm
     {
         get => _searchTerm;
         set
         {
             _searchTerm = value;
-            _ = ApplySearchAsync(value); 
+            _ = ApplySearchAsync(value);
         }
     }
-    
-    [Parameter]
-    public string? SelectedCategory { get; set; } = string.Empty;
+
+    [Parameter] public string? SelectedCategory { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
+        _loading = true;
         _categories = (await CategoryService.Get())!;
         var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
         var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
         SelectedCategory = query["category"] ?? await LoadSelectedCategoryAsync();
         await LoadProductsAsync(SelectedCategory);
-        StateHasChanged();
-    }
-    
-    private async Task ShowLoaderFrameAsync()
-    {
-        await InvokeAsync(StateHasChanged); 
-        await Task.Yield();                
-        // (по желанию) чтобы спиннер не «мигнул» на быстрых ответах:
-        // await Task.Delay(120);
+        _loading = false;
     }
 
     private async Task OnCategoryChanged(string value)
     {
         SelectedCategory = value;
         SearchTerm = null;
+        Page = 1;
         await LoadProductsAsync(SelectedCategory);
-        StateHasChanged();
     }
-   
+
     private async Task ApplySearchAsync(string? term)
     {
         _busySearch = true;
@@ -171,18 +202,18 @@
                 .ToList();
         }
 
-        await Task.Delay(140);
+        Page = 1;
 
+        await Task.Delay(140);
         _busySearch = false;
         await InvokeAsync(StateHasChanged);
     }
-
 
     private async Task DuplicateProduct(ProductResponse currentProduct)
     {
         string baseName = currentProduct.Name.Split('(')[0].Trim();
         int copyNumber = _products.Count(p => p.Name.StartsWith(baseName)) + 1;
-    
+
         await ProductService.Post(new CreateProductCommand
         {
             Name = $"{baseName}({copyNumber})",
@@ -191,7 +222,7 @@
             DiscountPrice = currentProduct.DiscountPrice,
             Images = currentProduct.Images!,
             Price = currentProduct.Price,
-            ProductCategorySlug  = (await CategoryService.GetByName((SelectedCategory == "Все продукты"
+            ProductCategorySlug = (await CategoryService.GetByName((SelectedCategory == "Все продукты"
                 ? _categories.First(c => c.Slug == currentProduct.ProductCategorySlug).Name
                 : SelectedCategory)!))!.Slug
         });
@@ -213,14 +244,14 @@
         };
 
         string categoryName = SelectedCategory!;
-        
+
         if (categoryName == "Все продукты")
             categoryName = _categories.FirstOrDefault(c => c.Slug == product.ProductCategorySlug)!.Name;
-        
+
         var parameters = new DialogParameters<EditProductDialog>
         {
             { "UpdateCommand", updateCommand },
-            { "CategoryName", categoryName},
+            { "CategoryName", categoryName },
             { "OnSuccessfullyCreate", new Action(async () => await OnInitializedAsync()) },
             { "Categories", _categories.Where(c => c.Name != "Все продукты").ToList() }
         };
@@ -253,7 +284,6 @@
     private async Task LoadProductsAsync(string category)
     {
         _loading = true;
-        await ShowLoaderFrameAsync(); // ← было единожды StateHasChanged — заменяем
 
         if (string.IsNullOrEmpty(category))
         {
@@ -279,17 +309,20 @@
 
         await LocalStorage.SetItemAsync("selectedCategory", category);
 
+        Page = 1;
         _loading = false;
-        await InvokeAsync(StateHasChanged);
+        StateHasChanged();
     }
 
     private async Task<string> LoadSelectedCategoryAsync()
     {
+        _loading = true;
         string selectedCategory = (await LocalStorage.GetItemAsync<string>("selectedCategory"))!;
 
         if (_categories.Any(c => c.Name == selectedCategory))
             return selectedCategory;
 
+        _loading = false;
         return string.IsNullOrEmpty(selectedCategory) ? "Все продукты" : _categories.FirstOrDefault(c => c.Name == "Все продукты")?.Name ?? "Все продукты";
     }
 
@@ -299,27 +332,34 @@
         {
             { "CategoryName", SelectedCategory },
             { "OnSuccessfullyCreate", new Action(async () => await OnInitializedAsync()) },
-            { "Categories", _categories.Where(c => c.Name != "Все продукты").ToList()}
+            { "Categories", _categories.Where(c => c.Name != "Все продукты").ToList() }
         };
 
         await DialogService.ShowAsync<CreateProductDialog>("Create", parameters);
     }
+
 }
 
 <style>
     .create-btn-wrapper {
         margin-bottom: 15px;
-        display: flex;          
-        justify-content: flex-end; 
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .pager-wrap {
+        display: flex;
+        justify-content: center;
+        margin: 8px 0;
     }
 
     .product-card {
         position: relative;
         border-radius: 10px;
-        max-width: 100%; 
-        height: 500px; 
-        display: flex; 
-        flex-direction: column; 
+        max-width: 100%;
+        height: 500px;
+        display: flex;
+        flex-direction: column;
         justify-content: space-between;
         transition: box-shadow 0.3s ease, border 0.3s ease;
         z-index: 1;
@@ -330,7 +370,7 @@
         border: 1px solid #019934;
         box-shadow: 0 0 6px rgba(25, 118, 210, 0.3);
     }
-    
+
     .card-content {
         padding: 5px 0 7px 8px;
         flex-grow: 1;
@@ -338,32 +378,32 @@
         flex-direction: column;
         justify-content: flex-start;
     }
-    
+
     .product-name {
-        margin: 0; 
-        white-space: normal; 
-        word-wrap: break-word; 
+        margin: 0;
+        white-space: normal;
+        word-wrap: break-word;
         line-height: 1.2;
         flex: 0 0 auto;
     }
-    
+
     .discount-container {
-        display: flex; 
-        flex-direction: row; 
+        display: flex;
+        flex-direction: row;
         align-items: center;
         margin-top: auto;
         margin-bottom: 10px;
     }
-    
+
     .discounted-price {
-        margin-left: 5px; 
+        margin-left: 5px;
         color: red;
     }
-    
+
     .price {
-        margin-left: auto; 
-        margin-right: 15px; 
-        text-decoration: line-through; 
+        margin-left: auto;
+        margin-right: 15px;
+        text-decoration: line-through;
         font-size: larger;
     }
 
@@ -379,13 +419,13 @@
         align-items: center;
         margin-bottom: -7px;
     }
-    
+
     .buttons-container {
-        display: flex; 
-        gap: 1px; 
+        display: flex;
+        gap: 1px;
         margin-bottom: 5px
     }
-    
+
     .button {
         min-width: 25px
     }
