@@ -27,30 +27,36 @@
     SelectedCategory="@SelectedCategory"
     SelectedCategoryChanged="@(cat => OnCategoryChanged(cat))"
     SearchTerm="@SearchTerm"
+    IsBusy="@(_loading || _busySearch)"
     SearchTermChanged="@(txt => SearchTerm = txt)" />
 
 <MudGrid Spacing="3" Justify="Justify.FlexStart" Style="margin-top: 3px; margin-bottom: 50px">
     @foreach (var product in _products)
     {
-        <MudItem xs="12" sm="6" md="4" lg="2">
+        <MudItem xs="12" sm="6" md="4" lg="2" @key="product.Slug">
             <MudCard Elevation="3" Class="product-card">
                 
-                <MudCarousel Style="height: 250px; border-radius: 10px;" ItemsSource="@product.Images" Context="imgContext" EnableSwipeGesture="true" 
-                             BulletsPosition="Position.Bottom" ShowBullets="false" AutoCycle="true" TData="string" BulletsColor="Color.Dark"
-                             ShowArrows="@(@product.Images != null && product.Images.Length > 1 && product.Images[0].StartsWith("http"))">
-                    
+                @{
+                    bool hasImages = product.Images is { Length: > 1 } &&
+                                     product.Images[0]?.StartsWith("http", StringComparison.OrdinalIgnoreCase) == true;
+                }
+                
+                <MudCarousel Style="height: 250px; border-radius: 10px;" ItemsSource="@product.Images" Context="imgContext" EnableSwipeGesture="true"
+                             BulletsPosition="Position.Bottom" ShowBullets="hasImages" AutoCycle="true" TData="string" BulletsColor="Color.Dark"
+                             ShowArrows="hasImages">
+
                     <ItemTemplate>
                         <MudCardMedia Image="@imgContext"></MudCardMedia>
                     </ItemTemplate>
-                    
+
                 </MudCarousel>
 
                 <MudCardContent Class="card-content">
-                    
+
                     <MudText Typo="Typo.subtitle1" Align="Align.Left" Class="product-name">
                         @(product.Name.Length > 70 ? product.Name.Substring(0, 70) + "..." : product.Name)
                     </MudText>
-                    
+
                     <!--объём -->
                     <MudChipSet T="string" ReadOnly="true" Style="margin-top:8px; margin-left:-5px">
                         @foreach (var vp in product.Prices)
@@ -77,13 +83,13 @@
                     </div>
 
                     <div class="description-container">
-                        <MudLink Typo="Typo.caption" Style="padding-left: 0" OnClick="() => OpenDescriptionAsync(product)"> Читать описание... </MudLink>
+                        <MudLink Typo="Typo.caption" Style="padding-left: 0" OnClick="@(async () => await OpenDescriptionAsync(product))"> Читать описание...</MudLink>
 
                         <div class="buttons-container">
                             <MudButton Color="Color.Primary" Variant="Variant.Text" Size="Size.Small" Class="button" OnClick="@(async () => await DuplicateProduct(product))">
                                 <MudIcon Icon="@Icons.Material.Filled.ContentCopy"/>
                             </MudButton>
-                            
+
                             <MudButton Color="Color.Default" Variant="Variant.Text" Size="Size.Small" Class="button" OnClick="@(async () => await EditProductAsync(product))">
                                 <MudIcon Icon="@Icons.Material.Filled.Edit"/>
                             </MudButton>
@@ -105,6 +111,8 @@
     private List<ProductResponse> _products = new();
     private List<ProductCategoryResponse> _categories = new();
     private string? _searchTerm;
+    private bool _loading;
+    private bool _busySearch;
     private List<ProductResponse> _allProducts = new(); 
     
     private string? SearchTerm
@@ -113,7 +121,7 @@
         set
         {
             _searchTerm = value;
-            ApplySearch(value); 
+            _ = ApplySearchAsync(value); 
         }
     }
     
@@ -129,7 +137,14 @@
         await LoadProductsAsync(SelectedCategory);
         StateHasChanged();
     }
-
+    
+    private async Task ShowLoaderFrameAsync()
+    {
+        await InvokeAsync(StateHasChanged); 
+        await Task.Yield();                
+        // (по желанию) чтобы спиннер не «мигнул» на быстрых ответах:
+        // await Task.Delay(120);
+    }
 
     private async Task OnCategoryChanged(string value)
     {
@@ -138,13 +153,16 @@
         await LoadProductsAsync(SelectedCategory);
         StateHasChanged();
     }
-
    
-    private void ApplySearch(string? term)
+    private async Task ApplySearchAsync(string? term)
     {
+        _busySearch = true;
+        await InvokeAsync(StateHasChanged);
+        await Task.Yield();
+
         if (string.IsNullOrWhiteSpace(term))
         {
-            _products = _allProducts.ToList(); 
+            _products = _allProducts.ToList();
         }
         else
         {
@@ -153,8 +171,12 @@
                 .ToList();
         }
 
-        StateHasChanged();
+        await Task.Delay(140);
+
+        _busySearch = false;
+        await InvokeAsync(StateHasChanged);
     }
+
 
     private async Task DuplicateProduct(ProductResponse currentProduct)
     {
@@ -230,21 +252,35 @@
 
     private async Task LoadProductsAsync(string category)
     {
-        if (!string.IsNullOrEmpty(category))
+        _loading = true;
+        await ShowLoaderFrameAsync(); // ← было единожды StateHasChanged — заменяем
+
+        if (string.IsNullOrEmpty(category))
         {
-            _allProducts = category == "Все продукты"
-                ? await ProductService.Get(new GetProductsQuery())
-                : await ProductService.GetByCategoryName(category);
-
-            _products = _allProducts.ToList();            
-            await SaveSelectedCategoryAsync(category);
+            _allProducts = new();
+            _products = new();
+            _loading = false;
+            await InvokeAsync(StateHasChanged);
+            return;
         }
-    }
 
+        var result = category == "Все продукты"
+            ? await ProductService.Get(new GetProductsQuery())
+            : await ProductService.GetByCategoryName(category);
 
-    private async Task SaveSelectedCategoryAsync(string category)
-    {
+        _allProducts = result;
+
+        if (string.IsNullOrWhiteSpace(_searchTerm))
+            _products = _allProducts.ToList();
+        else
+            _products = _allProducts
+                .Where(p => p.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
         await LocalStorage.SetItemAsync("selectedCategory", category);
+
+        _loading = false;
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task<string> LoadSelectedCategoryAsync()
