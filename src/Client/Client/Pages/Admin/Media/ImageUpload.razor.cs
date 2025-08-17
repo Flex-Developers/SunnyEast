@@ -282,10 +282,17 @@ public partial class ImageUpload
 
             if (resp.Success)
             {
+                // Отвязываем URL от всех продуктов в нашей БД
+                // Дёргаем ProductController, команду UnlinkProductImageByUrlCommand
+                var unlinkResp = await HttpClient.PostAsJsonAsync("/api/product/unlink-image", new { url = img.Url });
+                if (!unlinkResp.Success)
+                    Snackbar.Add("Предупреждение: файл удалён в CDN, но не удалось отвязать URL у товаров.", Severity.Warning);
+
                 await RemoveFromLocalGallery(img);
                 _uploadedFiles.Remove(img.Name);
-                Snackbar.Add("Файл удалён на сервере", Severity.Success);
+                Snackbar.Add("Файл удалён в CDN и отвязан у товаров", Severity.Success);
             }
+
             else
             {
                 Snackbar.Add($"Сервер отклонил удаление: {resp.StatusCode}", Severity.Error);
