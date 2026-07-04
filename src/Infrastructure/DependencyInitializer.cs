@@ -22,13 +22,13 @@ public static class DependencyInitializer
 {
     public static void AddInfrastructure(this IServiceCollection services, IConfiguration configurations)
     {
-        var mySqlConnectionString = configurations.GetConnectionString("mySql");
+        var postgresConnectionString = configurations.GetConnectionString("Postgres");
         services.AddDbContext<ApplicationDbContext>(options =>
         {
             if (configurations["UseInMemoryDatabase"] == "True")
                 options.UseInMemoryDatabase("testDb");
             else
-                options.UseMySql(mySqlConnectionString, ServerVersion.AutoDetect(mySqlConnectionString));
+                options.UseNpgsql(postgresConnectionString);
         });
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IApplicationDbContext, ApplicationDbContext>();
