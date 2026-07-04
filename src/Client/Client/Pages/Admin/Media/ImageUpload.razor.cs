@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
@@ -8,22 +9,14 @@ namespace Client.Pages.Admin.Media;
 
 public partial class ImageUpload
 {
-    private IReadOnlyList<IBrowserFile> _files = new List<IBrowserFile>();
-    private readonly Dictionary<string, string> _uploadedFiles = new();         // текущее окно
-    private readonly Dictionary<string, double> _uploadProgress = new();
-    private bool _isUploading;
-    private string _cdnApiBaseUrl = string.Empty;
     private const long MaxFileSize = 10L * 1024 * 1024; // 10MB
 
     private const string LocalStorageKey = "se_uploaded_images";
-    private List<UploadedImageInfo> _gallery = new();   // постоянный список (LocalStorage)
-
-    private record UploadedImageInfo(string Name, string Url, DateTime UploadedAt);
-
-    protected override void OnInitialized()
-    {
-        _cdnApiBaseUrl = Configuration.GetSection("CdnApi:BaseUrl").Value ?? "http://localhost:5000";
-    }
+    private readonly Dictionary<string, string> _uploadedFiles = new(); // текущее окно
+    private readonly Dictionary<string, double> _uploadProgress = new();
+    private IReadOnlyList<IBrowserFile> _files = new List<IBrowserFile>();
+    private List<UploadedImageInfo> _gallery = []; // постоянный список (LocalStorage)
+    private bool _isUploading;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -41,25 +34,19 @@ public partial class ImageUpload
     private async Task OnInputFileChanged(InputFileChangeEventArgs e)
     {
         var fileList = new List<IBrowserFile>();
-        var selectedFiles = e.GetMultipleFiles(10);
+        var selectedFiles = e.GetMultipleFiles();
 
         foreach (var file in selectedFiles)
-        {
             if (IsValidImageFile(file))
-            {
                 fileList.Add(file);
-            }
             else
-            {
                 Snackbar.Add($"Файл {file.Name} не поддерживается или слишком большой", Severity.Warning);
-            }
-        }
 
         _files = fileList;
         await InvokeAsync(StateHasChanged);
     }
 
-    private bool IsValidImageFile(IBrowserFile file)
+    private static bool IsValidImageFile(IBrowserFile file)
     {
         var allowedTypes = new[] { "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp" };
         return allowedTypes.Contains(file.ContentType.ToLower()) && file.Size <= MaxFileSize;
@@ -88,9 +75,9 @@ public partial class ImageUpload
 
             using var content = new MultipartFormDataContent();
 
-            using var stream = file.OpenReadStream(MaxFileSize);
+            await using var stream = file.OpenReadStream(MaxFileSize);
             using var fileContent = new StreamContent(stream);
-            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
             content.Add(fileContent, "file", file.Name);
 
             _uploadProgress[file.Name] = 50;
@@ -98,7 +85,7 @@ public partial class ImageUpload
 
             // ВАЖНО: этот вызов ориентирован на Ваш CDN API.
             // Если используете свой WebApi контроллер ниже — скорректируйте маршрут.
-            var response = await HttpClient.PostAsync($"{_cdnApiBaseUrl}/api/Images/upload", content);
+            var response = await HttpClient.PostAsync("/api/Images/upload", content);
 
             if (response.Success)
             {
@@ -109,8 +96,8 @@ public partial class ImageUpload
 
                 if (!string.IsNullOrWhiteSpace(url))
                 {
-                    _uploadedFiles[file.Name] = url!;
-                    UpsertToLocalGallery(file.Name, url!);
+                    _uploadedFiles[file.Name] = url;
+                    UpsertToLocalGallery(file.Name, url);
                     await SaveLocalGallery();
 
                     Snackbar.Add($"Файл {file.Name} успешно загружен", Severity.Success);
@@ -144,12 +131,14 @@ public partial class ImageUpload
     }
 
     private double GetUploadProgress(IBrowserFile file)
-        => _uploadProgress.TryGetValue(file.Name, out var progress) ? progress : 0;
+    {
+        return _uploadProgress.GetValueOrDefault(file.Name, 0);
+    }
 
     private static string FormatFileSize(long bytes)
     {
-        string[] suffixes = { "B", "KB", "MB", "GB" };
-        int counter = 0;
+        string[] suffixes = ["B", "KB", "MB", "GB"];
+        var counter = 0;
         decimal number = bytes;
 
         while (Math.Round(number / 1024) >= 1 && counter < suffixes.Length - 1)
@@ -157,6 +146,7 @@ public partial class ImageUpload
             number /= 1024;
             counter++;
         }
+
         return $"{number:n1}{suffixes[counter]}";
     }
 
@@ -223,10 +213,7 @@ public partial class ImageUpload
     private void UpsertToLocalGallery(string name, string url)
     {
         var existing = _gallery.FirstOrDefault(x => x.Name == name);
-        if (existing is not null)
-        {
-            _gallery.Remove(existing);
-        }
+        if (existing is not null) _gallery.Remove(existing);
         _gallery.Insert(0, new UploadedImageInfo(name, url, DateTime.UtcNow));
     }
 
@@ -243,7 +230,7 @@ public partial class ImageUpload
         var confirm = await Dialog.ShowMessageBox(
             "Очистить список",
             "Удалить все записи только из локального списка? Файлы на сервере останутся.",
-            yesText: "Да", cancelText: "Отмена");
+            "Да", cancelText: "Отмена");
         if (confirm == true)
         {
             _gallery.Clear();
@@ -266,9 +253,9 @@ public partial class ImageUpload
         var confirm = await Dialog.ShowMessageBox(
             "Удалить на сервере",
             "Удалить этот файл на сервере? Отменить будет нельзя.",
-            yesText: "Удалить", cancelText: "Отмена");
+            "Удалить", cancelText: "Отмена");
 
-        if (confirm != true) 
+        if (confirm != true)
             return;
 
         try
@@ -277,8 +264,8 @@ public partial class ImageUpload
             // Ожидаемый маршрут: DELETE {BaseUrl}/api/Images/{fileName}
             Console.WriteLine(fileName);
             Console.WriteLine(WebUtility.UrlEncode(fileName));
-            Console.WriteLine($"{_cdnApiBaseUrl}/api/Images/{WebUtility.UrlEncode(fileName)}");
-            var resp = await HttpClient.DeleteAbsoluteUrlAsync($"{_cdnApiBaseUrl}/api/Images/{WebUtility.UrlEncode(fileName)}");
+            Console.WriteLine($"/api/Images/{WebUtility.UrlEncode(fileName)}");
+            var resp = await HttpClient.DeleteAbsoluteUrlAsync($"/api/Images/{WebUtility.UrlEncode(fileName)}");
 
             if (resp.Success)
             {
@@ -286,7 +273,8 @@ public partial class ImageUpload
                 // Дёргаем ProductController, команду UnlinkProductImageByUrlCommand
                 var unlinkResp = await HttpClient.PostAsJsonAsync("/api/product/unlink-image", new { url = img.Url });
                 if (!unlinkResp.Success)
-                    Snackbar.Add("Предупреждение: файл удалён в CDN, но не удалось отвязать URL у товаров.", Severity.Warning);
+                    Snackbar.Add("Предупреждение: файл удалён в CDN, но не удалось отвязать URL у товаров.",
+                        Severity.Warning);
 
                 await RemoveFromLocalGallery(img);
                 _uploadedFiles.Remove(img.Name);
@@ -323,4 +311,6 @@ public partial class ImageUpload
             return idx >= 0 ? url[(idx + 1)..] : url;
         }
     }
+
+    private record UploadedImageInfo(string Name, string Url, DateTime UploadedAt);
 }
