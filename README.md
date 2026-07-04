@@ -1,124 +1,155 @@
-# SunnyEast/Солнечный восток
+# SunnyEast / Солнечный восток
 
-## What is this
+## 🌍 Overview
+SunnyEast is a full-stack commerce and operations platform built for a multi-store retail business. It combines a customer-facing storefront, an internal staff workspace, and an admin back office in one system.
 
-A web-based B2B/B2C order management and storefront platform. It combines user accounts, shops, products, categories, carts and orders with role-based administration (super admin, staff, salesman, customers) and full database snapshot backup/restore. It's built to serve businesses that need a multi-store catalog, staff assignment, and order processing with JWT auth.
+This project is used for a real business and is designed as a production-ready system, not as a demo-only showcase. It covers the full product flow: authentication, role-based access, catalog management, carts, checkout, pickup orders, real-time status updates, push notifications, staff management, and database backup/restore for operational safety.
 
-## Quick purpose
 
-* **Business:** Retail/wholesale e-commerce with staff-managed shops and order workflows. Super-admin can snapshot and restore the entire MySQL database.
-* **Core value:** Reliable data portability (full DB snapshot), role-aware UI, and modular clean backend with commands/queries.
+## 🔗 Live Project
+Website: https://solnechny-vostok.ru/
 
-## Tech stack
+SunnyEast is live and publicly accessible. The repository reflects the actual application structure behind the running product.
 
-* .NET 9 (Web API backend + EF Core for MySQL)
-* Blazor WebAssembly client with MudBlazor UI
-* JWT authentication / role-based authorization
-* MySqlBackup.NET for full database dumps and restores
-* CQRS-style handlers in Application layer (some controllers still use mediator-like patterns)
 
-## Setup (local)
+## ✨ Highlights
+- Production-oriented full-stack application for a real retail business.
+- Public storefront and internal business tooling in one system.
+- Role-based workflows for customers, staff, administrators, and super admin.
+- Real-time order updates, push notifications, and operational recovery tools.
+- Clear layered architecture with separate domain, application, infrastructure, API, and client projects.
 
-1. **Clone repository** and open solution.
-2. **Configure `appsettings.json`/environment**:
 
-   * Connection string named `mySql` pointing to your MySQL instance.
-   * Optional `Backups` section (defaults if missing):
+## 👥 Roles In The System
+| Role | What they can do |
+| --- | --- |
+| Customer | Browse categories and products, manage cart, choose a pickup shop, place orders, view order history, manage account data, and receive order status notifications. |
+| Salesman | Work with orders assigned to their shop, receive new orders in real time, update order statuses, and archive completed or canceled orders. |
+| Administrator | Manage catalog data, work with categories and products, handle operational order flow, and use media upload tools for product content. |
+| Super Admin | Has full control over the system: shops, users, staff, assignments, business data, and database backup/restore operations. |
 
-     ```json
-     "Backups": {
-       "Directory": "App_Data/Backups",
-       "FilePrefix": "snapshot",
-       "RunMigrationsAfterRestore": true,
-       "KeepLastLocalCopies": 10
-     }
-     ```
-3. **Run backend**: it applies pending EF migrations on startup and seeds roles/users.
-4. **Run WASM client** (default expects backend at configured API base URL in client config). Ensure CORS policy allows the client origin.
-5. **Authenticate** as super admin (seeded or created) to access `/admin/database`.
 
-## Features overview
+## 🧩 Product Capabilities
+- Multi-store storefront with shop-specific order routing.
+- Category and product management with discounts, images, and volume-based pricing.
+- Cart and checkout flow with pickup store selection.
+- Order lifecycle management: `Submitted -> Ready -> Issued / Canceled -> Archived`.
+- Role-based UI and API authorization.
+- JWT authentication with ASP.NET Identity.
+- Email and SMS verification flows with cooldowns and quota control.
+- Account management with contact linking and password reset.
+- Real-time order updates via SignalR.
+- Web Push notifications for staff and customers.
+- PWA support with service worker and installable client behavior.
+- Media upload workflow for product images.
+- Full MySQL database snapshot and restore flow with automatic pre-restore backup.
 
-* **Database snapshot**: full dump export to `.sql.gz` with all schema, routines, triggers, events; import restores entire DB with an automatic pre-restore backup.
-* **Role-based pages**: SuperAdmin, Staff, Salesman, Customer with granular access in controllers via roles.
-* **JWT tokens** for API auth; client stores token in local storage and injects into headers.
-* **HttpClient wrapper** with unified error handling, timeout override, and byte download support.
 
-## Backup & Restore behaviour
+## 🛍️ What The Platform Actually Does
+From the user's side, SunnyEast works like a modern pickup-based online store: customers explore products, add items to cart, choose a shop, place an order, and follow its status.
 
-* `CreateBackupGzipAsync`: grabs a global lock (unless skipped), exports full MySQL database to temporary `.sql`, compresses to `.gz`, logs timings, returns path. Export includes routines/procedures/views/events; does not drop database on restore to avoid destructive blowaway.
-* `RestoreFromDumpAsync`: holds the global lock, saves uploaded file, creates an **automatic backup** (without deadlock), decompresses if needed, imports via MySqlBackup.NET (with infinite command timeout), then optionally runs EF migrations if enabled. Cleans temp files.
-* Retains last `KeepLastLocalCopies` auto-backups in configured folder; older ones are pruned.
+From the business side, it behaves like a lightweight ERP/back-office system: staff members process incoming orders, administrators maintain catalog data, and the super admin manages users, stores, permissions, and recovery operations.
 
-### Idempotent / edge cases
+That combination is the strongest part of the project. It is both a storefront and an internal business system.
 
-* Restoring the same snapshot over itself is safe: dump includes DROP TABLE and recreates schema; EF migrations are no-ops if already up to date.
-* Partial failures: automatic backup failure does not abort restore; import errors are logged, and EF migrations run only if configured.
 
-## Authentication & Authorization
+## 🔔 Real-Time And Operational Features
+- New orders are pushed instantly to the relevant staff members and to the customer.
+- Staff dashboards react to order changes without manual refresh.
+- Push notifications keep users informed outside the active browser tab.
+- Database restore is protected by an automatic backup step before import.
+- Backup rotation and restore flow show operational thinking, not just feature coding.
 
-* JWT tokens are issued by the backend; client attaches token to `Authorization: Bearer` header.
-* Roles defined (e.g., `SuperAdmin`) guard controllers via `[Authorize(Roles=...)]` attributes.
 
-## Client behavior
+## 🧠 Interesting Technical Details
+- Volume-based pricing is calculated from category-defined units such as grams, kilograms, milliliters, liters, and pieces.
+- Staff access is scoped by role and by shop assignment, which is closer to a real business model than a global admin panel.
+- SignalR authentication supports JWT tokens through query-based hub access.
+- The project includes contact verification and account merge-like behavior when linking email or phone data.
+- Startup applies migrations and seeds base roles automatically.
 
-* Blazor WASM uses `HttpClientService` to centralize calls, handle unauthorized responses and redirect to login.
-* Database admin UI uses JS interop (`downloadFileFromBytes`) to save backups locally and multipart upload for restore with extended timeout.
 
-## Logging
+## 🏗️ Architecture
+The solution is organized in a layered structure inspired by Clean Architecture principles:
 
-* Uses built-in Microsoft.Extensions.Logging.
-* Startup logs to console (development) by default. Configure additional providers in `Program.cs` if needed (e.g., file, external). Logs include:
+```text
+src/
+  Domain                -> entities and enums
+  Application           -> business logic, handlers, mapping, validation
+  Application.Contract  -> DTOs, commands, queries, responses
+  Infrastructure        -> EF Core, identity, external services, persistence
+  WebApi                -> controllers, auth, SignalR hub, API composition
+  Client                -> Blazor WebAssembly UI
+  Client.Infrastructure -> client services, auth state, HTTP, realtime, preferences
+```
 
-  * EF Core SQL commands (with timings)
-  * Snapshot/restore progress, errors, and durations.
-* In production, ensure appropriate log levels and persistence (e.g., redirect console to file or use a sink).
 
-## Common commands
+This separation makes the project easier to reason about and shows clear boundaries between domain logic, infrastructure, API surface, and UI.
 
+## 🛠️ Tech Stack
+- `ASP.NET Core` Web API
+- `Blazor WebAssembly`
+- `.NET 9`
+- `Entity Framework Core`
+- `MySQL`
+- `ASP.NET Identity`
+- `JWT authentication`
+- `SignalR`
+- `MudBlazor`
+- `MediatR`
+- `AutoMapper`
+- `FluentValidation`
+- `MailKit`
+- `Web Push`
+- `Docker`
+- `GitHub Actions`
+
+
+## 🚀 Local Setup
+### 1. Configure backend settings
+Set the required values in `src/WebApi/appsettings.json` or in environment variables:
+- `ConnectionStrings:mySql`
+- `JWT:Secret`
+- email settings
+- SMS provider settings
+- VAPID keys for push notifications
+- optional backup settings
+
+### 2. Configure client settings
+Check `src/Client/Client/wwwroot/appsettings.json`:
+- API base URL
+- CDN base URL if you use image upload flow
+- push notification public key
+
+### 3. Run the backend
 ```bash
-# run backend
 dotnet run --project src/WebApi/WebApi.csproj
+```
 
-# run client
+### 4. Run the client
+```bash
 dotnet run --project src/Client/Client.csproj
 ```
 
-## Folder structure summary
+On startup, the backend applies pending migrations and seeds base roles. In development mode, it also creates a seeded `SuperAdmin`.
 
-* `Application` / `Application.Contract`: business logic, commands, queries, DTOs.
-* `Domain`: entity definitions.
-* `Infrastructure`: persistence, services, EF migrations.
-* `WebApi`: API surface, snapshot service, controllers, authorization.
-* `Client` & `Client.Infrastructure`: Blazor front-end and shared HTTP/auth services.
 
-## Deployment notes
+## 🔐 Security And Access Model
+- Protected API endpoints use role-based authorization.
+- The client stores and attaches JWT access tokens for authenticated requests.
+- SignalR order updates also work with authenticated token-based access.
+- Sensitive database operations are restricted to `SuperAdmin`.
 
-* Increase Kestrel timeouts only for snapshot/restore endpoints; global long timeouts can impact connection throughput—consider using dedicated endpoint with extended limits or chunked processing in heavy scenarios.
-* Secure JWT secrets and database credentials via environment variables or secret store.
-* For production backups, offload snapshot files to durable storage instead of temp (adapt `DbSnapshotService`).
+## 📦 Delivery And DevOps
+- A GitHub Actions workflow builds the solution on pull requests.
+- A production workflow versions releases, builds Docker images for API and client, and pushes them to Docker Hub.
+- The repository includes separate container build flows for backend and frontend delivery.
 
-## Troubleshooting
+## 📈 What This Project Demonstrates About Me
+- I can build more than pages and endpoints. I can model a real workflow.
+- I can connect UX, business rules, API design, persistence, and infrastructure into one coherent product.
+- I understand authorization, role separation, operational tooling, and real-time interaction.
+- I can structure a medium-sized .NET solution in a way that remains navigable and scalable.
 
-* If restore hangs: check logs for import errors, ensure MySQL user has necessary privileges, and no other concurrent restore/backup is running due to global semaphore.
-* If tokens fail: verify local storage contains valid `JwtTokenResponse` and backend JWT config matches client usage.
-* CORS issues: make sure the client origin is allowed in backend policy.
-
-## Recommended improvements
-
-* Add validation/size limits and progress feedback for restore uploads.
-* Move backup storage to cloud (S3 / Blob) with signed access.
-* Secure UI behind MFA for super admin actions.
-* Add checksum/validation for snapshot files before restore.
-
-## Ready for PR checklist
-
-* [ ] All new code has logging and error handling.
-* [ ] Snapshot/restore tested locally (export then restore identical snapshot).
-* [ ] Roles and auth verified on protected endpoints.
-* [ ] Environment-specific configuration (secrets) not leaked.
-* [ ] README updated (this file) and concise for reviewers.
-
----
-
-Last updated: 2025-08
+## 📌 Final Note
+SunnyEast is a real-world product built around actual business workflows: selling products, managing orders, coordinating staff, and supporting daily operations across multiple stores.

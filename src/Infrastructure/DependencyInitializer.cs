@@ -22,13 +22,13 @@ public static class DependencyInitializer
 {
     public static void AddInfrastructure(this IServiceCollection services, IConfiguration configurations)
     {
-        var mySqlConnectionString = configurations.GetConnectionString("mySql");
+        var postgresConnectionString = configurations.GetConnectionString("Postgres");
         services.AddDbContext<ApplicationDbContext>(options =>
         {
             if (configurations["UseInMemoryDatabase"] == "True")
                 options.UseInMemoryDatabase("testDb");
             else
-                options.UseMySql(mySqlConnectionString, ServerVersion.AutoDetect(mySqlConnectionString));
+                options.UseNpgsql(postgresConnectionString);
         });
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IApplicationDbContext, ApplicationDbContext>();
@@ -61,17 +61,17 @@ public static class DependencyInitializer
         services.AddAuthentication(o =>
             {
                 o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                o.DefaultChallengeScheme    = JwtBearerDefaults.AuthenticationScheme;
+                o.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
             .AddJwtBearer(op =>
             {
                 op.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey         = new SymmetricSecurityKey(
+                    IssuerSigningKey = new SymmetricSecurityKey(
                         Encoding.UTF8.GetBytes(configurations["JWT:Secret"]!)),
-                    ValidateIssuer           = false,
-                    ValidateAudience         = false
+                    ValidateIssuer = false,
+                    ValidateAudience = false
                 };
 
                 // >>> ВАЖНО: разрешаем токен в query для хаба /hubs/orders
@@ -80,13 +80,14 @@ public static class DependencyInitializer
                     OnMessageReceived = context =>
                     {
                         var accessToken = context.Request.Query["access_token"];
-                        var path        = context.HttpContext.Request.Path;
+                        var path = context.HttpContext.Request.Path;
 
                         if (!string.IsNullOrEmpty(accessToken) &&
                             path.StartsWithSegments("/hubs/orders"))
                         {
                             context.Token = accessToken;
                         }
+
                         return Task.CompletedTask;
                     }
                 };
@@ -94,19 +95,21 @@ public static class DependencyInitializer
 
         services.AddAuthorization();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
-        
+
         // Memory cache
         services.AddMemoryCache();
-        
+
         // E-mail
         services.AddTransient<IEmailSenderService, MailKitEmailSender>();
 
         // >>> ВЕРИФИКАЦИЯ + SMSInt
         services.AddHttpClient<ISmsSenderService, SmsIntService>();
-        
+
         // OTP Sessions
         services.AddSingleton<IVerificationSessionStore, VerificationSessionStore>();
         services.AddSingleton<ISmsDailyQuotaService, SmsDailyQuotaService>();
 
+        // Register services
+        services.AddScoped<IFileService, FileService>();
     }
 }
